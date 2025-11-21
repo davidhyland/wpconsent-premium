@@ -72,6 +72,8 @@ window.WPConsentOnboarding = window.WPConsentOnboarding || (
 			},
 			handleRenderingScan() {
 				$( document ).on( 'wpconsent_after_scan', function ( e, response ) {
+					// Save usage tracking preference when scan completes.
+					app.saveUsageTrackingPreference();
 					app.nextStep();
 					const list = app.servicesForm.querySelector( '.wpconsent-onboarding-selectable-list' );
 					// Let's empty the target list first.
@@ -138,6 +140,18 @@ window.WPConsentOnboarding = window.WPConsentOnboarding || (
 						}
 					} );
 				} );
+			},
+			saveUsageTrackingPreference() {
+				const usageTrackingCheckbox = document.getElementById( 'wpconsent-usage-tracking' );
+				if ( usageTrackingCheckbox ) {
+					const isEnabled = usageTrackingCheckbox.checked ? 1 : 0;
+					// Save the preference via AJAX.
+					$.post( ajaxurl, {
+						action: 'wpconsent_save_usage_tracking',
+						nonce: wpconsent.nonce,
+						usage_tracking: isEnabled
+					} );
+				}
 			},
 		};
 		return app;

@@ -27,6 +27,7 @@ require_once 'wpconsent-premium.php';
 
 // Clear any scheduled events.
 wp_clear_scheduled_hook( 'wpconsent_auto_scanner' );
+wp_clear_scheduled_hook( 'wpconsent_usage_tracking_cron' );
 
 // Remove notifications.
 if ( class_exists( 'WPConsent_Notifications' ) ) {
@@ -34,9 +35,9 @@ if ( class_exists( 'WPConsent_Notifications' ) ) {
 }
 
 // Let's see if the uninstall_data option is set.
-$settings = get_option( 'wpconsent_settings', array() );
+$wpconsent_settings = get_option( 'wpconsent_settings', array() );
 
-if ( ! empty( $settings['uninstall_data'] ) ) {
+if ( ! empty( $wpconsent_settings['uninstall_data'] ) ) {
 
 	// Remove custom post types and taxonomies.
 	global $wpdb;
@@ -56,12 +57,12 @@ if ( ! empty( $settings['uninstall_data'] ) ) {
 		)
 	);
 
-	foreach ( $wpconsent_cookies as $cookie_id ) {
-		wp_delete_post( $cookie_id, true );
+	foreach ( $wpconsent_cookies as $wpconsent_cookie_id ) {
+		wp_delete_post( $wpconsent_cookie_id, true );
 	}
 
 	// Delete all terms and taxonomies.
-	$terms = get_terms(
+	$wpconsent_category_terms = get_terms(
 		array(
 			'taxonomy'   => 'wpconsent_category',
 			'hide_empty' => false,
@@ -69,9 +70,9 @@ if ( ! empty( $settings['uninstall_data'] ) ) {
 		)
 	);
 
-	if ( ! is_wp_error( $terms ) ) {
-		foreach ( $terms as $term_id ) {
-			wp_delete_term( $term_id, 'wpconsent_category' );
+	if ( ! is_wp_error( $wpconsent_category_terms ) ) {
+		foreach ( $wpconsent_category_terms as $wpconsent_category_term_id ) {
+			wp_delete_term( $wpconsent_category_term_id, 'wpconsent_category' );
 		}
 	}
 
@@ -92,31 +93,31 @@ if ( ! empty( $settings['uninstall_data'] ) ) {
 	$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '\_site\_transient\_timeout\_wpconsent\_%'" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
 	// Remove uploaded files.
-	$uploads_directory = wp_upload_dir();
-	if ( empty( $uploads_directory['error'] ) ) {
+	$wpconsent_uploads_directory = wp_upload_dir();
+	if ( empty( $wpconsent_uploads_directory['error'] ) ) {
 		global $wp_filesystem;
 		WP_Filesystem();
 
 		// Remove the wpconsent directory from uploads.
-		$wp_filesystem->rmdir( $uploads_directory['basedir'] . '/wpconsent/', true );
+		$wp_filesystem->rmdir( $wpconsent_uploads_directory['basedir'] . '/wpconsent/', true );
 	}
 
 	// Remove translation files.
-	$languages_directory = defined( 'WP_LANG_DIR' ) ? trailingslashit( WP_LANG_DIR ) : trailingslashit( WP_CONTENT_DIR ) . 'languages/';
-	$translations        = glob( wp_normalize_path( $languages_directory . 'plugins/wpconsent-*' ) );
+	$wpconsent_languages_directory = defined( 'WP_LANG_DIR' ) ? trailingslashit( WP_LANG_DIR ) : trailingslashit( WP_CONTENT_DIR ) . 'languages/';
+	$wpconsent_translations        = glob( wp_normalize_path( $wpconsent_languages_directory . 'plugins/wpconsent-*' ) );
 
-	if ( ! empty( $translations ) ) {
+	if ( ! empty( $wpconsent_translations ) ) {
 		global $wp_filesystem;
 		WP_Filesystem();
 
-		foreach ( $translations as $file ) {
-			$wp_filesystem->delete( $file );
+		foreach ( $wpconsent_translations as $wpconsent_file ) {
+			$wp_filesystem->delete( $wpconsent_file );
 		}
 	}
 
 	// Maybe drop the "records of consent" table.
 	if ( class_exists( 'WPConsent_Consent_Log' ) ) {
-		$records_table = $wpdb->prefix . 'wpconsent_consent_logs';
-		$wpdb->query( "DROP TABLE IF EXISTS {$records_table}" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpconsent_records_table = $wpdb->prefix . 'wpconsent_consent_logs';
+		$wpdb->query( "DROP TABLE IF EXISTS {$wpconsent_records_table}" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 	}
 }

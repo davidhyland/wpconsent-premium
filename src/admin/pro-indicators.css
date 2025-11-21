@@ -17,3 +17,11 @@
 		opacity: 0.5;
 	}
 }
+
+/* PRO indicators for delete log buttons */
+.delete-consent-logs-lite,
+.delete-dnt-logs-lite {
+	.wpconsent-button {
+		opacity: 0.5;
+	}
+}

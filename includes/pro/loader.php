@@ -23,6 +23,8 @@ if ( is_admin() || defined( 'DOING_CRON' ) && DOING_CRON ) {
 	require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/admin/admin-ajax-handlers.php';
 	// Export handler.
 	require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/admin/class-wpconsent-export-handler.php';
+	// Delete handler.
+	require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/admin/class-wpconsent-delete-handler.php';
 	// Pro-specific language picker trait.
 	require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/admin/pages/trait-wpconsent-language-picker.php';
 	// Review request.
@@ -35,6 +37,10 @@ if ( is_admin() || defined( 'DOING_CRON' ) && DOING_CRON ) {
 	require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/admin/class-wpconsent-addons.php';
 	// Addons Pro manager.
 	require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/admin/class-wpconsent-addons-pro.php';
+	// Usage tracking abstract.
+	require_once WPCONSENT_PLUGIN_PATH . 'includes/admin/class-wpconsent-usage-tracking.php';
+	// Usage tracking pro.
+	require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/admin/class-wpconsent-usage-tracking-pro.php';
 }
 
 // Pro install routine.
@@ -61,6 +67,15 @@ require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/class-wpconsent-multilanguage
 require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/class-wpconsent-banner-pro.php';
 // Pro cookies.
 require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/class-wpconsent-cookies-pro.php';
+// Pro compatibility.
+require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/compatibility/loader.php';
+
+// IAB TCF Vendors.
+require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/class-wpconsent-iab-tcf-vendors.php';
+// IAB TCF integration.
+require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/class-wpconsent-iab-tcf.php';
+// IAB TCF frontend.
+require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/class-wpconsent-iab-tcf-frontend.php';
 
 add_action( 'plugins_loaded', 'wpconsent_load_pro_updates', 15 );
 

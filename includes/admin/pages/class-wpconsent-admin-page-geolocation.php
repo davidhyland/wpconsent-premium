@@ -91,7 +91,8 @@ class WPConsent_Admin_Page_Geolocation extends WPConsent_Admin_Page {
 	 * @return void
 	 */
 	public function output_location_groups_list( $location_groups ) {
-		echo $this->get_location_groups_list_content( $location_groups );
+		// Everything in the method is escaped.
+		echo $this->get_location_groups_list_content( $location_groups ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 
 	/**
@@ -146,9 +147,9 @@ class WPConsent_Admin_Page_Geolocation extends WPConsent_Admin_Page {
 					<td class="column-consent-settings">
 						<?php
 						$consent_settings = array(
-								'enable_script_blocking'  => __( 'Block Script', 'wpconsent-cookies-banner-privacy-suite' ),
-								'show_banner'             => __( 'Show Banner', 'wpconsent-cookies-banner-privacy-suite' ),
-								'enable_consent_floating' => __( 'Show Settings Button', 'wpconsent-cookies-banner-privacy-suite' ),
+							'enable_script_blocking'  => __( 'Block Script', 'wpconsent-cookies-banner-privacy-suite' ),
+							'show_banner'             => __( 'Show Banner', 'wpconsent-cookies-banner-privacy-suite' ),
+							'enable_consent_floating' => __( 'Show Settings Button', 'wpconsent-cookies-banner-privacy-suite' ),
 						);
 
 						foreach ( $consent_settings as $key => $label ) {
@@ -200,9 +201,9 @@ class WPConsent_Admin_Page_Geolocation extends WPConsent_Admin_Page {
 	public function output_predefined_rules_metabox() {
 		$content = $this->get_predefined_rules_content();
 		$this->metabox(
-				__( 'Location-based Rules', 'wpconsent-cookies-banner-privacy-suite' ),
-				$content,
-				__( 'Quickly add predefined rules for common privacy regulations. Each rule will automatically configure the relevant countries and settings for the location.', 'wpconsent-cookies-banner-privacy-suite' )
+			__( 'Location-based Rules', 'wpconsent-cookies-banner-privacy-suite' ),
+			$content,
+			__( 'Quickly add predefined rules for common privacy regulations. Each rule will automatically configure the relevant countries and settings for the location.', 'wpconsent-cookies-banner-privacy-suite' )
 		);
 	}
 

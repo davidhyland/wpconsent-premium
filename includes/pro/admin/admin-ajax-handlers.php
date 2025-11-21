@@ -33,6 +33,9 @@ add_action( 'wp_ajax_wpconsent_start_translation', 'wpconsent_ajax_start_transla
 add_action( 'wp_ajax_wpconsent_check_translation_progress', 'wpconsent_ajax_check_translation_progress' );
 add_action( 'wp_ajax_wpconsent_reset_translation', 'wpconsent_ajax_reset_translation' );
 
+add_action( 'wp_ajax_wpconsent_delete_roc_start', 'wpconsent_handle_delete_roc_start' );
+add_action( 'wp_ajax_wpconsent_delete_roc_batch', 'wpconsent_handle_delete_roc_batch' );
+
 /**
  * Verify license via Ajax.
  *
@@ -1269,6 +1272,138 @@ function wpconsent_ajax_reset_translation() {
 		wp_send_json_error(
 			array(
 				'message' => esc_html__( 'Failed to reset translation.', 'wpconsent-premium' ),
+			)
+		);
+	}
+}
+
+/**
+ * Handle initial RoC delete request via Ajax.
+ *
+ * @throws Exception If an error occurs during the delete process.
+ * @since 1.0.0
+ *
+ * @return void
+ */
+function wpconsent_handle_delete_roc_start() {
+	try {
+		check_ajax_referer( 'wpconsent_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => 'Permission denied' ) );
+		}
+
+		$period = isset( $_POST['period'] ) ? sanitize_text_field( wp_unslash( $_POST['period'] ) ) : '';
+
+		$handler        = new WPConsent_Delete_Handler();
+		$date_threshold = $handler->get_date_threshold( $period );
+		$total_records  = $handler->count_records_to_delete( $date_threshold );
+
+		if ( 0 === $total_records ) {
+			wp_send_json_error(
+				array(
+					'message' => __( 'No records found for the selected period.', 'wpconsent-premium' ),
+					'code'    => 'no_records',
+				)
+			);
+		}
+
+		$request_id = 'roc_' . time() . '_' . wp_rand();
+
+		$handler->update_progress(
+			$request_id,
+			WPConsent_Delete_Handler::STATUS_PENDING,
+			array(
+				'total_records' => (int) $total_records,
+				'deleted_count' => 0,
+				'period'        => $period,
+			)
+		);
+
+		wp_send_json_success(
+			array(
+				'request_id'     => $request_id,
+				'total_records'  => (int) $total_records,
+				'date_threshold' => $date_threshold,
+			)
+		);
+
+	} catch ( Exception $e ) {
+		wp_send_json_error( array( 'message' => $e->getMessage() ) );
+	}
+}
+
+/**
+ * Handle batch processing of RoC deletions.
+ *
+ * @since 1.0.0
+ *
+ * @return void
+ */
+function wpconsent_handle_delete_roc_batch() {
+	try {
+		check_ajax_referer( 'wpconsent_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => 'Permission denied' ) );
+		}
+
+		$request_id     = isset( $_POST['request_id'] ) ? sanitize_text_field( wp_unslash( $_POST['request_id'] ) ) : '';
+		$batch_number   = isset( $_POST['batch_number'] ) ? intval( $_POST['batch_number'] ) : 0;
+		$date_threshold = isset( $_POST['date_threshold'] ) ? sanitize_text_field( wp_unslash( $_POST['date_threshold'] ) ) : '';
+
+		$handler  = new WPConsent_Delete_Handler();
+		$progress = $handler->get_progress( $request_id );
+
+		if ( ! $progress ) {
+			wp_send_json_error(
+				array(
+					'message' => 'Delete session expired',
+					'code'    => 'session_expired',
+				)
+			);
+		}
+
+		if ( WPConsent_Delete_Handler::STATUS_FAILED === $progress['status'] ) {
+			wp_send_json_error(
+				array(
+					'message' => $progress['error'] ?? 'Delete failed',
+					'code'    => 'delete_failed',
+				)
+			);
+		}
+
+		$deleted       = $handler->delete_batch( $date_threshold, $batch_number );
+		$total_deleted = ( $progress['deleted_count'] ?? 0 ) + $deleted;
+		$is_last       = $total_deleted >= $progress['total_records'] || 0 === $deleted;
+
+		$handler->update_progress(
+			$request_id,
+			$is_last ? WPConsent_Delete_Handler::STATUS_COMPLETED : WPConsent_Delete_Handler::STATUS_PROCESSING,
+			array( 'deleted_count' => $total_deleted )
+		);
+
+		if ( $is_last ) {
+			$handler->cleanup_progress( $request_id );
+		}
+
+		wp_send_json_success(
+			array(
+				'batch'         => $batch_number,
+				'deleted_count' => $deleted,
+				'total_deleted' => $total_deleted,
+				'total_records' => $progress['total_records'],
+				'is_last'       => $is_last,
+				'status'        => $is_last ? WPConsent_Delete_Handler::STATUS_COMPLETED : WPConsent_Delete_Handler::STATUS_PROCESSING,
+			)
+		);
+
+	} catch ( Exception $e ) {
+		error_log( 'Delete batch failed: ' . $e->getMessage() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+		wp_send_json_error(
+			array(
+				'message' => $e->getMessage(),
+				'code'    => 'batch_failed',
 			)
 		);
 	}

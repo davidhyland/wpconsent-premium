@@ -9,7 +9,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-require_once WPCONSENT_PLUGIN_PATH . 'includes/compatibility/php.php';
-require_once WPCONSENT_PLUGIN_PATH . 'includes/compatibility/wp-rocket.php';
-require_once WPCONSENT_PLUGIN_PATH . 'includes/compatibility/easy-digital-downloads.php';
-require_once WPCONSENT_PLUGIN_PATH . 'includes/compatibility/bricks.php';
+/**
+ * Load compatibility files for third-party plugins.
+ *
+ * @since 1.0.0
+ */
+function wpconsent_load_compatibility_files() {
+	$compatibility_files = array(
+		'php'                    => 'php.php',
+		'wp-rocket'              => 'wp-rocket.php',
+		'easy-digital-downloads' => 'easy-digital-downloads.php',
+		'bricks'                 => 'bricks.php',
+	);
+
+	foreach ( $compatibility_files as $slug => $file ) {
+		$enabled = apply_filters( 'wpconsent_enable_compatibility', true, $slug, $file );
+
+		if ( ! $enabled ) {
+			continue;
+		}
+
+		if ( ! apply_filters( "wpconsent_enable_compatibility_$slug", true, $file ) ) {
+			continue;
+		}
+
+		require_once WPCONSENT_PLUGIN_PATH . 'includes/compatibility/' . $file;
+	}
+}
+add_action( 'plugins_loaded', 'wpconsent_load_compatibility_files' );

@@ -36,6 +36,7 @@ class WPConsent_Admin_Page_Loader_Pro extends WPConsent_Admin_Page_Loader {
 		require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php';
 		require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/admin/pages/class-wpconsent-admin-page-scanner-pro.php';
 		require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/admin/pages/class-wpconsent-admin-page-do-not-track-pro.php';
+		require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/admin/pages/class-wpconsent-admin-page-tools-pro.php';
 	}
 
 	/**
@@ -49,6 +50,7 @@ class WPConsent_Admin_Page_Loader_Pro extends WPConsent_Admin_Page_Loader {
 		$this->pages['banner']       = 'WPConsent_Admin_Page_Banner_Pro';
 		$this->pages['cookies']      = 'WPConsent_Admin_Page_Cookies_Pro';
 		$this->pages['geolocation']  = 'WPConsent_Admin_Page_Geolocation_Pro';
+		$this->pages['tools']        = 'WPConsent_Admin_Page_Tools_Pro';
 		$this->pages['consent_logs'] = 'WPConsent_Admin_Page_Consent_Logs_Pro';
 		$this->pages['onboarding']   = 'WPConsent_Admin_Page_Onboarding_Pro';
 		$this->pages['scanner']      = 'WPConsent_Admin_Page_Scanner_Pro';

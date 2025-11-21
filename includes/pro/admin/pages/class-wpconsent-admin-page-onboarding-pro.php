@@ -71,4 +71,11 @@ class WPConsent_Admin_Page_Onboarding_Pro extends WPConsent_Admin_Page_Onboardin
 	 * @return void
 	 */
 	public function services_upsell_box( $slug = '' ) {}
+
+	/**
+	 * Don't show usage tracking toggle in pro version - it's always enabled.
+	 *
+	 * @return void
+	 */
+	public function usage_tracking_toggle() {}
 }

@@ -44,9 +44,9 @@ class WPConsent_Admin_Page_Do_Not_Track extends WPConsent_Admin_Page {
 	 */
 	public function page_hooks() {
 		$this->views = array(
-			'requests'      => __( 'Requests', 'wpconsent-cookies-banner-privacy-suite' ),
-			'configuration' => __( 'Configuration', 'wpconsent-cookies-banner-privacy-suite' ),
-			'export'        => __( 'Export', 'wpconsent-cookies-banner-privacy-suite' ),
+				'requests'      => __( 'Requests', 'wpconsent-cookies-banner-privacy-suite' ),
+				'configuration' => __( 'Configuration', 'wpconsent-cookies-banner-privacy-suite' ),
+				'export'        => __( 'Export', 'wpconsent-cookies-banner-privacy-suite' ),
 		);
 	}
 
@@ -151,7 +151,12 @@ class WPConsent_Admin_Page_Do_Not_Track extends WPConsent_Admin_Page {
 							<input type="submit" id="doaction" class="button action" value="<?php esc_attr_e( 'Apply', 'wpconsent-cookies-banner-privacy-suite' ); ?>">
 						</div>
 						<div class="tablenav-pages">
-							<span class="displaying-num"><?php echo esc_html( sprintf( _n( '%s item', '%s items', 10, 'wpconsent-cookies-banner-privacy-suite' ), number_format_i18n( 10 ) ) ); ?></span>
+							<span class="displaying-num">
+								<?php
+								// Translators: 10 is a placeholder number for the total items.
+								echo esc_html( sprintf( _n( '%s item', '%s items', 10, 'wpconsent-cookies-banner-privacy-suite' ), number_format_i18n( 10 ) ) );
+								?>
+							</span>
 						</div>
 						<br class="clear">
 					</div>
@@ -174,122 +179,122 @@ class WPConsent_Admin_Page_Do_Not_Track extends WPConsent_Admin_Page {
 						<?php
 						// Dummy data for the table.
 						$dummy_data = array(
-							array(
-								'request_id'     => 1,
-								'first_name'     => 'John',
-								'last_name'      => 'Doe',
-								'email'          => 'john.doe@example.com',
-								'city'           => 'New York',
-								'state'          => 'NY',
-								'country'        => 'USA',
-								'request_status' => 'received',
-								'created_at'     => date( 'Y-m-d H:i:s', strtotime( '-2 days' ) ),
-							),
-							array(
-								'request_id'     => 2,
-								'first_name'     => 'Jane',
-								'last_name'      => 'Smith',
-								'email'          => 'jane.smith@example.com',
-								'city'           => 'London',
-								'state'          => '',
-								'country'        => 'UK',
-								'request_status' => 'confirmed',
-								'created_at'     => date( 'Y-m-d H:i:s', strtotime( '-5 days' ) ),
-							),
-							array(
-								'request_id'     => 3,
-								'first_name'     => 'Robert',
-								'last_name'      => 'Johnson',
-								'email'          => 'robert.johnson@example.com',
-								'city'           => 'Paris',
-								'state'          => '',
-								'country'        => 'France',
-								'request_status' => 'processed',
-								'created_at'     => date( 'Y-m-d H:i:s', strtotime( '-10 days' ) ),
-								'processed_at'   => date( 'Y-m-d H:i:s', strtotime( '-8 days' ) ),
-							),
-							array(
-								'request_id'     => 4,
-								'first_name'     => 'Maria',
-								'last_name'      => 'Garcia',
-								'email'          => 'maria.garcia@example.com',
-								'city'           => 'Madrid',
-								'state'          => '',
-								'country'        => 'Spain',
-								'request_status' => 'received',
-								'created_at'     => date( 'Y-m-d H:i:s', strtotime( '-1 day' ) ),
-							),
-							array(
-								'request_id'     => 5,
-								'first_name'     => 'Michael',
-								'last_name'      => 'Brown',
-								'email'          => 'michael.brown@example.com',
-								'city'           => 'Sydney',
-								'state'          => 'NSW',
-								'country'        => 'Australia',
-								'request_status' => 'processed',
-								'created_at'     => date( 'Y-m-d H:i:s', strtotime( '-15 days' ) ),
-								'processed_at'   => date( 'Y-m-d H:i:s', strtotime( '-12 days' ) ),
-							),
-							array(
-								'request_id'     => 6,
-								'first_name'     => 'Emma',
-								'last_name'      => 'Wilson',
-								'email'          => 'emma.wilson@example.com',
-								'city'           => 'Toronto',
-								'state'          => 'ON',
-								'country'        => 'Canada',
-								'request_status' => 'received',
-								'created_at'     => date( 'Y-m-d H:i:s', strtotime( '-3 days' ) ),
-							),
-							array(
-								'request_id'     => 7,
-								'first_name'     => 'David',
-								'last_name'      => 'Lee',
-								'email'          => 'david.lee@example.com',
-								'city'           => 'Tokyo',
-								'state'          => '',
-								'country'        => 'Japan',
-								'request_status' => 'confirmed',
-								'created_at'     => date( 'Y-m-d H:i:s', strtotime( '-7 days' ) ),
-							),
-							array(
-								'request_id'     => 8,
-								'first_name'     => 'Sophia',
-								'last_name'      => 'Martinez',
-								'email'          => 'sophia.martinez@example.com',
-								'city'           => 'Berlin',
-								'state'          => '',
-								'country'        => 'Germany',
-								'request_status' => 'processed',
-								'created_at'     => date( 'Y-m-d H:i:s', strtotime( '-20 days' ) ),
-								'processed_at'   => date( 'Y-m-d H:i:s', strtotime( '-18 days' ) ),
-							),
-							array(
-								'request_id'     => 9,
-								'first_name'     => 'James',
-								'last_name'      => 'Taylor',
-								'email'          => 'james.taylor@example.com',
-								'city'           => 'Dublin',
-								'state'          => '',
-								'country'        => 'Ireland',
-								'request_status' => 'received',
-								'created_at'     => date( 'Y-m-d H:i:s', strtotime( '-1 day' ) ),
-							),
-							array(
-								'request_id'     => 10,
-								'first_name'     => 'Olivia',
-								'last_name'      => 'Anderson',
-								'email'          => 'olivia.anderson@example.com',
-								'city'           => 'Stockholm',
-								'state'          => '',
-								'country'        => 'Sweden',
-								'request_status' => 'confirmed',
-								'created_at'     => date( 'Y-m-d H:i:s', strtotime( '-4 days' ) ),
-							),
+								array(
+										'request_id'     => 1,
+										'first_name'     => 'John',
+										'last_name'      => 'Doe',
+										'email'          => 'john.doe@example.com',
+										'city'           => 'New York',
+										'state'          => 'NY',
+										'country'        => 'USA',
+										'request_status' => 'received',
+										'created_at'     => gmdate( 'Y-m-d H:i:s', strtotime( '-2 days' ) ),
+								),
+								array(
+										'request_id'     => 2,
+										'first_name'     => 'Jane',
+										'last_name'      => 'Smith',
+										'email'          => 'jane.smith@example.com',
+										'city'           => 'London',
+										'state'          => '',
+										'country'        => 'UK',
+										'request_status' => 'confirmed',
+										'created_at'     => gmdate( 'Y-m-d H:i:s', strtotime( '-5 days' ) ),
+								),
+								array(
+										'request_id'     => 3,
+										'first_name'     => 'Robert',
+										'last_name'      => 'Johnson',
+										'email'          => 'robert.johnson@example.com',
+										'city'           => 'Paris',
+										'state'          => '',
+										'country'        => 'France',
+										'request_status' => 'processed',
+										'created_at'     => gmdate( 'Y-m-d H:i:s', strtotime( '-10 days' ) ),
+										'processed_at'   => gmdate( 'Y-m-d H:i:s', strtotime( '-8 days' ) ),
+								),
+								array(
+										'request_id'     => 4,
+										'first_name'     => 'Maria',
+										'last_name'      => 'Garcia',
+										'email'          => 'maria.garcia@example.com',
+										'city'           => 'Madrid',
+										'state'          => '',
+										'country'        => 'Spain',
+										'request_status' => 'received',
+										'created_at'     => gmdate( 'Y-m-d H:i:s', strtotime( '-1 day' ) ),
+								),
+								array(
+										'request_id'     => 5,
+										'first_name'     => 'Michael',
+										'last_name'      => 'Brown',
+										'email'          => 'michael.brown@example.com',
+										'city'           => 'Sydney',
+										'state'          => 'NSW',
+										'country'        => 'Australia',
+										'request_status' => 'processed',
+										'created_at'     => gmdate( 'Y-m-d H:i:s', strtotime( '-15 days' ) ),
+										'processed_at'   => gmdate( 'Y-m-d H:i:s', strtotime( '-12 days' ) ),
+								),
+								array(
+										'request_id'     => 6,
+										'first_name'     => 'Emma',
+										'last_name'      => 'Wilson',
+										'email'          => 'emma.wilson@example.com',
+										'city'           => 'Toronto',
+										'state'          => 'ON',
+										'country'        => 'Canada',
+										'request_status' => 'received',
+										'created_at'     => gmdate( 'Y-m-d H:i:s', strtotime( '-3 days' ) ),
+								),
+								array(
+										'request_id'     => 7,
+										'first_name'     => 'David',
+										'last_name'      => 'Lee',
+										'email'          => 'david.lee@example.com',
+										'city'           => 'Tokyo',
+										'state'          => '',
+										'country'        => 'Japan',
+										'request_status' => 'confirmed',
+										'created_at'     => gmdate( 'Y-m-d H:i:s', strtotime( '-7 days' ) ),
+								),
+								array(
+										'request_id'     => 8,
+										'first_name'     => 'Sophia',
+										'last_name'      => 'Martinez',
+										'email'          => 'sophia.martinez@example.com',
+										'city'           => 'Berlin',
+										'state'          => '',
+										'country'        => 'Germany',
+										'request_status' => 'processed',
+										'created_at'     => gmdate( 'Y-m-d H:i:s', strtotime( '-20 days' ) ),
+										'processed_at'   => gmdate( 'Y-m-d H:i:s', strtotime( '-18 days' ) ),
+								),
+								array(
+										'request_id'     => 9,
+										'first_name'     => 'James',
+										'last_name'      => 'Taylor',
+										'email'          => 'james.taylor@example.com',
+										'city'           => 'Dublin',
+										'state'          => '',
+										'country'        => 'Ireland',
+										'request_status' => 'received',
+										'created_at'     => gmdate( 'Y-m-d H:i:s', strtotime( '-1 day' ) ),
+								),
+								array(
+										'request_id'     => 10,
+										'first_name'     => 'Olivia',
+										'last_name'      => 'Anderson',
+										'email'          => 'olivia.anderson@example.com',
+										'city'           => 'Stockholm',
+										'state'          => '',
+										'country'        => 'Sweden',
+										'request_status' => 'confirmed',
+										'created_at'     => gmdate( 'Y-m-d H:i:s', strtotime( '-4 days' ) ),
+								),
 						);
 
-						foreach ( $dummy_data as $item ) :
+						foreach ( $dummy_data as $item ) {
 							$status_labels = array(
 								'received'  => __( 'Received', 'wpconsent-cookies-banner-privacy-suite' ),
 								'confirmed' => __( 'Confirmed', 'wpconsent-cookies-banner-privacy-suite' ),
@@ -301,11 +306,8 @@ class WPConsent_Admin_Page_Do_Not_Track extends WPConsent_Admin_Page {
 							// Add processed date if available.
 							if ( 'processed' === $item['request_status'] && isset( $item['processed_at'] ) ) {
 								$processed_at = date_i18n( get_option( 'date_format' ), strtotime( $item['processed_at'] ) );
-								$status_text  .= ' <span class="description">' . sprintf(
-									/* translators: %s: date */
-										__( 'on %s', 'wpconsent-cookies-banner-privacy-suite' ),
-										$processed_at
-									) . '</span>';
+								// Translators: %s: date.
+								$status_text .= ' <span class="description">' . sprintf( __( 'on %s', 'wpconsent-cookies-banner-privacy-suite' ), $processed_at ) . '</span>';
 							}
 
 							// Build location string.
@@ -341,7 +343,7 @@ class WPConsent_Admin_Page_Do_Not_Track extends WPConsent_Admin_Page {
 								<td class="request_status column-request_status"><?php echo wp_kses_post( $status_text ); ?></td>
 								<td class="created_at column-created_at"><?php echo esc_html( date_i18n( get_option( 'date_format' ), strtotime( $item['created_at'] ) ) ); ?></td>
 							</tr>
-						<?php endforeach; ?>
+						<?php } ?>
 						</tbody>
 						<tfoot>
 						<tr>
@@ -368,7 +370,12 @@ class WPConsent_Admin_Page_Do_Not_Track extends WPConsent_Admin_Page {
 							<input type="submit" id="doaction2" class="button action" value="<?php esc_attr_e( 'Apply', 'wpconsent-cookies-banner-privacy-suite' ); ?>">
 						</div>
 						<div class="tablenav-pages">
-							<span class="displaying-num"><?php echo esc_html( sprintf( _n( '%s item', '%s items', 10, 'wpconsent-cookies-banner-privacy-suite' ), number_format_i18n( 10 ) ) ); ?></span>
+							<span class="displaying-num">
+								<?php
+								// Translators: 10 is a placeholder number for the total items.
+								echo esc_html( sprintf( _n( '%s item', '%s items', 10, 'wpconsent-cookies-banner-privacy-suite' ), number_format_i18n( 10 ) ) );
+								?>
+							</span>
 						</div>
 						<br class="clear">
 					</div>
@@ -384,9 +391,7 @@ class WPConsent_Admin_Page_Do_Not_Track extends WPConsent_Admin_Page {
 	 * @return void
 	 */
 	protected function output_view_configuration() {
-		// Display a preview of the configuration form from the addon
-
-		// Available fields that would be in the form
+		// Available fields that would be in the form.
 		$available_fields = array(
 			'first_name' => __( 'First Name', 'wpconsent-cookies-banner-privacy-suite' ),
 			'last_name'  => __( 'Last Name', 'wpconsent-cookies-banner-privacy-suite' ),
@@ -394,7 +399,7 @@ class WPConsent_Admin_Page_Do_Not_Track extends WPConsent_Admin_Page {
 			'address'    => __( 'Address', 'wpconsent-cookies-banner-privacy-suite' ),
 		);
 
-		// Required fields that cannot be .
+		// Required fields that cannot be empty.
 		$required_fields = array( 'first_name', 'last_name', 'email' );
 
 		?>
@@ -469,17 +474,17 @@ class WPConsent_Admin_Page_Do_Not_Track extends WPConsent_Admin_Page {
 										<label>
 											<input type="checkbox" value="1" <?php checked( true, $is_core_field ); ?> >
 											<?php esc_html_e( 'Enable this field', 'wpconsent-cookies-banner-privacy-suite' ); ?>
-											<?php if ( $is_core_field ) : ?>
+											<?php if ( $is_core_field ) { ?>
 												<span class="description"><?php esc_html_e( '(Required field, cannot be )', 'wpconsent-cookies-banner-privacy-suite' ); ?></span>
-											<?php endif; ?>
+											<?php } ?>
 										</label>
 										<br>
 										<label>
 											<input type="checkbox" value="1" <?php checked( true, $is_core_field ); ?> >
 											<?php esc_html_e( 'Make this field required', 'wpconsent-cookies-banner-privacy-suite' ); ?>
-											<?php if ( $is_core_field ) : ?>
+											<?php if ( $is_core_field ) { ?>
 												<span class="description"><?php esc_html_e( '(Always required)', 'wpconsent-cookies-banner-privacy-suite' ); ?></span>
-											<?php endif; ?>
+											<?php } ?>
 										</label>
 										<br>
 										<label>

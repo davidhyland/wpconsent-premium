@@ -343,3 +343,12 @@
 		color: #fff;
 	}
 }
+
+.wpconsent-usage-tracking-toggle {
+	.wpconsent-inline-styled-checkbox {
+		a {
+			color: inherit;
+			font-weight: 600;
+		}
+	}
+}

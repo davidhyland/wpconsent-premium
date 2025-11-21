@@ -80,8 +80,8 @@ class WPConsent_License {
 		$key = $this->get_setting( 'key', '', $multisite );
 
 		// Allow wp-config constant to pass key.
-		if ( empty( $key ) && defined( 'WPCONSENT_LICENSING_URL' ) ) {
-			$key = WPCONSENT_LICENSING_URL;
+		if ( empty( $key ) && defined( 'WPCONSENT_LICENSE_KEY' ) ) {
+			$key = WPCONSENT_LICENSE_KEY;
 		}
 
 		return $key;
@@ -111,7 +111,7 @@ class WPConsent_License {
 	 */
 	public function get_key_location() {
 
-		if ( defined( 'WPCONSENT_LICENSE_LEY' ) ) {
+		if ( defined( 'WPCONSENT_LICENSE_KEY' ) ) {
 			return 'constant';
 		}
 

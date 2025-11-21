@@ -56,3 +56,21 @@ function wpconsent_get_simplehtmldom( $html ) {
 
 	return wpconsent_str_get_html( $html );
 }
+
+/**
+ * Get the registrable domain from a hostname using the Public Suffix List.
+ *
+ * Lazy-loads the PSL library only when needed to avoid unnecessary memory usage.
+ *
+ * @param string $hostname The hostname to parse.
+ *
+ * @return string The registrable domain, or empty string on failure.
+ */
+function wpconsent_get_registrable_domain( $hostname ) {
+	if ( ! class_exists( 'WPConsent_Public_Suffix_List' ) ) {
+		// Load the Public Suffix List library only if we need it.
+		require_once WPCONSENT_PLUGIN_PATH . 'lib/public-suffix-list/class-wpconsent-public-suffix-list.php';
+	}
+
+	return WPConsent_Public_Suffix_List::get_registrable_domain( $hostname );
+}

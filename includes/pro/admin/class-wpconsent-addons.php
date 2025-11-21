@@ -494,7 +494,7 @@ class WPConsent_Addons {
 	 *
 	 * @return string|false The plugin path or false if not found.
 	 */
-	private function get_plugin_path( $addon_name ) {
+	public function get_plugin_path( $addon_name ) {
 		$plugins = get_plugins();
 		foreach ( $plugins as $plugin_path => $plugin_data ) {
 			if ( strpos( $plugin_path, $addon_name ) === 0 ) {

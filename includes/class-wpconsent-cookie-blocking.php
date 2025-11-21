@@ -386,7 +386,7 @@ class WPConsent_Cookie_Blocking {
 	private function get_placeholder_button( $category ) {
 		$button_text = sprintf(
 		/* translators: %s: The category name (e.g., analytics, marketing) */
-			esc_html__( 'Click here to accept %s cookies and load this content', 'wpconsent' ),
+			esc_html__( 'Click here to accept %s cookies and load this content', 'wpconsent-cookies-banner-privacy-suite' ),
 			esc_html( $category )
 		);
 

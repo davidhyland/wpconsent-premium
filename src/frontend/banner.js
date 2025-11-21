@@ -15,108 +15,139 @@ window.WPConsent = {
 	settingsProcessed: false,
 
 	// Register a display check function that returns a promise
-	registerDisplayCheck: function(checkFunction) {
-		this.displayChecks.push(checkFunction);
+	registerDisplayCheck: function ( checkFunction ) {
+		this.displayChecks.push( checkFunction );
 		this.checksPassed = false;
 	},
 
 	// Register a settings hook function that returns a promise
 	// The hook function receives the current settings object and should return a promise
 	// that resolves when settings modifications are complete
-	registerSettingsHook: function(hookFunction) {
-		this.settingsHooks.push(hookFunction);
+	registerSettingsHook: function ( hookFunction ) {
+		this.settingsHooks.push( hookFunction );
 		this.settingsProcessed = false;
 	},
 
 	// Run all display checks and return a promise
-	runDisplayChecks: function() {
-		if (this.displayChecks.length === 0) {
+	runDisplayChecks: function () {
+		if ( this.displayChecks.length === 0 ) {
 			this.checksPassed = true;
 			return Promise.resolve();
 		}
 
-		return Promise.all(this.displayChecks.map(check => check()))
-			.then(() => {
-				this.checksPassed = true;
-				return Promise.resolve();
-			})
-			.catch(error => {
-				console.error('Error in WPConsent display check:', error);
-				this.checksPassed = true; // Default to showing banner on error
-				return Promise.resolve();
-			});
+		return Promise.all( this.displayChecks.map( check => check() ) )
+		              .then( () => {
+			              this.checksPassed = true;
+			              return Promise.resolve();
+		              } )
+		              .catch( error => {
+			              console.error( 'Error in WPConsent display check:', error );
+			              this.checksPassed = true; // Default to showing banner on error
+			              return Promise.resolve();
+		              } );
 	},
 
 	// Run all settings hooks and return a promise
 	// This allows other scripts to modify the wpconsent settings before init proceeds
-	runSettingsHooks: function() {
-		if (this.settingsHooks.length === 0) {
+	runSettingsHooks: function () {
+		if ( this.settingsHooks.length === 0 ) {
 			this.settingsProcessed = true;
 			return Promise.resolve();
 		}
 
 		// Pass the current wpconsent settings to each hook
-		return Promise.all(this.settingsHooks.map(hook => hook(window.wpconsent)))
-			.then(() => {
-				this.settingsProcessed = true;
-				return Promise.resolve();
-			})
-			.catch(error => {
-				console.error('Error in WPConsent settings hook:', error);
-				this.settingsProcessed = true; // Continue with init even if hooks fail
-				return Promise.resolve();
-			});
+		return Promise.all( this.settingsHooks.map( hook => hook( window.wpconsent ) ) )
+		              .then( () => {
+			              this.settingsProcessed = true;
+			              return Promise.resolve();
+		              } )
+		              .catch( error => {
+			              console.error( 'Error in WPConsent settings hook:', error );
+			              this.settingsProcessed = true; // Continue with init even if hooks fail
+			              return Promise.resolve();
+		              } );
+	},
+
+	// Generic hook system for extensibility.
+	hooks: {
+		beforeShowPreferences: [],
+		afterShowPreferences: [],
+		beforeHideBanner: [],
+		afterHideBanner: [],
+		beforeShowBanner: [],
+		afterShowBanner: [],
+		accordionToggled: []
+	},
+
+	// Add a hook callback for a specific event.
+	addHook: function( hookName, callback ) {
+		if ( this.hooks[hookName] ) {
+			this.hooks[hookName].push( callback );
+		}
+	},
+
+	// Run all hooks for a specific event.
+	runHooks: function( hookName, ...args ) {
+		if ( this.hooks[hookName] && this.hooks[hookName].length > 0 ) {
+			this.hooks[hookName].forEach( callback => {
+				try {
+					callback( ...args );
+				} catch ( error ) {
+					console.error( `Error in WPConsent hook ${hookName}:`, error );
+				}
+			} );
+		}
 	},
 
 	// Core functions that need to be globally accessible
 	acceptAll: function () {
 		const preferences = {};
-		if (Array.isArray(wpconsent.slugs)) {
-			wpconsent.slugs.forEach(slug => {
+		if ( Array.isArray( wpconsent.slugs ) ) {
+			wpconsent.slugs.forEach( slug => {
 				preferences[slug] = true;
-			});
+			} );
 		}
-		this.savePreferences(preferences);
+		this.savePreferences( preferences );
 		this.closePreferences();
 	},
 
 	checkGPC: function () {
-		if (!wpconsent.respect_gpc || navigator.globalPrivacyControl !== true) {
+		if ( !wpconsent.respect_gpc || navigator.globalPrivacyControl !== true ) {
 			return;
 		}
 
 		// Check for existing preferences
-		const existingPreferences = this.getCookie('wpconsent_preferences');
+		const existingPreferences = this.getCookie( 'wpconsent_preferences' );
 		let currentPreferences = {};
 
-		if (existingPreferences) {
+		if ( existingPreferences ) {
 			try {
-				currentPreferences = JSON.parse(existingPreferences);
-			} catch (e) {
-				console.error('WPConsent: Error parsing existing preferences:', e);
+				currentPreferences = JSON.parse( existingPreferences );
+			} catch ( e ) {
+				console.error( 'WPConsent: Error parsing existing preferences:', e );
 			}
 		}
 
 		// If respect_gpc already exists, just return
-		if (currentPreferences.hasOwnProperty('respect_gpc')) {
+		if ( currentPreferences.hasOwnProperty( 'respect_gpc' ) ) {
 			return;
 		}
 
 		// If respect_gpc doesn't exist, create new GPC preferences
 		const gpcPreferences = {};
-		wpconsent.slugs.forEach(slug => {
-			const serviceCheckbox = this.shadowRoot?.querySelector(`#wpconsent-preferences-modal input[type="checkbox"][id="cookie-service-${slug}"]`);
-			if (serviceCheckbox && serviceCheckbox.disabled) {
+		wpconsent.slugs.forEach( slug => {
+			const serviceCheckbox = this.shadowRoot?.querySelector( `#wpconsent-preferences-modal input[type="checkbox"][id="cookie-service-${slug}"]` );
+			if ( serviceCheckbox && serviceCheckbox.disabled ) {
 				gpcPreferences[slug] = true;
 			} else {
 				gpcPreferences[slug] = false;
 			}
-		});
+		} );
 		gpcPreferences.essential = true; // Essential is always true
 		gpcPreferences.respect_gpc = true; // Mark that GPC was acknowledged
 
 		// Apply GPC preferences - savePreferences handles all the comparison logic
-		this.savePreferences(gpcPreferences, true); // This is automatic GPC application
+		this.savePreferences( gpcPreferences, true ); // This is automatic GPC application
 
 		// Disable banner
 		this.checksPassed = false;
@@ -128,24 +159,26 @@ window.WPConsent = {
 
 		// Parse existing preferences for proper comparison
 		let parsedExistingPreferences = null;
-		if (existingPreferences) {
+		if ( existingPreferences ) {
 			try {
-				parsedExistingPreferences = JSON.parse(existingPreferences);
-			} catch (e) {
-				console.error('WPConsent: Error parsing existing preferences:', e);
+				parsedExistingPreferences = JSON.parse( existingPreferences );
+			} catch ( e ) {
+				console.error( 'WPConsent: Error parsing existing preferences:', e );
 			}
 		}
 
 		// Clear cookies if the preferences changed OR if wpconsent.default_allow is true and not all settings are true.
-		if ( (parsedExistingPreferences && JSON.stringify( parsedExistingPreferences ) !== JSON.stringify( preferences )) || (
-			wpconsent.default_allow && Object.values(preferences).some(value => value === false)
-		) ) {
+		if ( (
+			     parsedExistingPreferences && JSON.stringify( parsedExistingPreferences ) !== JSON.stringify( preferences )
+		     ) || (
+			     wpconsent.default_allow && Object.values( preferences ).some( value => value === false )
+		     ) ) {
 			this.clearCookies();
 			reload = true;
 		}
 
 		// Check if GPC was overridden by user
-		if (wpconsent.respect_gpc && !isGPCChange && parsedExistingPreferences && parsedExistingPreferences.hasOwnProperty('respect_gpc')) {
+		if ( wpconsent.respect_gpc && !isGPCChange && parsedExistingPreferences && parsedExistingPreferences.hasOwnProperty( 'respect_gpc' ) ) {
 			preferences.respect_gpc = false;  // Mark that GPC was overridden by user
 		}
 
@@ -196,6 +229,10 @@ window.WPConsent = {
 			modal.style.display = 'flex';
 			// Set up focus trap for the preferences modal
 			this.setupFocusTrap( modal );
+
+			// Run afterShowPreferences hooks for extensions.
+			this.runHooks( 'afterShowPreferences' );
+
 			// Focus the preferences title
 			const modalTitle = this.shadowRoot?.querySelector( '#wpconsent-preferences-title' );
 			if ( modalTitle ) {
@@ -254,23 +291,32 @@ window.WPConsent = {
 	},
 
 	showBanner: function () {
-		if ( ! wpconsent.enable_consent_banner ) {
+		if ( !wpconsent.enable_consent_banner ) {
 			return;
 		}
 
 		const banner = this.shadowRoot?.querySelector( '#wpconsent-banner-holder' );
 		if ( banner ) {
+			// Run beforeShowBanner hooks for extensions.
+			this.runHooks( 'beforeShowBanner' );
+
 			banner.classList.add( 'wpconsent-banner-visible' );
 			// Update button visibility based on current settings
 			this.updateButtonVisibility( wpconsent );
 			// Set up focus trap for the banner
 			this.setupFocusTrap( banner );
+
+			// Run afterShowBanner hooks for extensions.
+			this.runHooks( 'afterShowBanner' );
 		}
 	},
 
 	hideBanner: function () {
 		const banner = this.shadowRoot?.querySelector( '#wpconsent-banner-holder' );
 		if ( banner ) {
+			// Run beforeHideBanner hooks for extensions.
+			this.runHooks( 'beforeHideBanner' );
+
 			banner.classList.remove( 'wpconsent-banner-visible' );
 			// Remove focus trap when banner is hidden
 			this.removeFocusTrap();
@@ -279,6 +325,9 @@ window.WPConsent = {
 				this.previouslyFocusedElement.focus( {preventScroll: true} );
 				this.previouslyFocusedElement = null;
 			}
+
+			// Run afterHideBanner hooks for extensions.
+			this.runHooks( 'afterHideBanner' );
 		}
 	},
 
@@ -300,17 +349,17 @@ window.WPConsent = {
 	// Get the appropriate domain string for cookie setting
 	getCookieDomain: function() {
 		// Check if subdomain sharing is enabled
-		if ( wpconsent.enable_shared_consent ) {
-			// Get the current hostname
-			const hostname = window.location.hostname;
+		if (!wpconsent.enable_shared_consent) {
+			return '';
+		}
 
-			// Split by dots and take the last two parts (domain.com)
-			const parts = hostname.split('.');
-
-			if ( parts.length >= 2 ) {
-				const domain = '.' + parts.slice(-2).join('.');
-				return 'domain=' + domain + ';';
-			}
+		// Use pre-calculated cookie domain from settings
+		if (wpconsent.cookie_domain && wpconsent.cookie_domain !== '') {
+			// Check if domain already starts with a dot to avoid double-dot issue
+			const domain = wpconsent.cookie_domain.startsWith('.')
+				? wpconsent.cookie_domain
+				: '.' + wpconsent.cookie_domain;
+			return 'domain=' + domain + ';';
 		}
 		// Return empty string for default behavior (current domain only)
 		// This ensures the cookie is set for the current domain without any domain attribute
@@ -346,9 +395,9 @@ window.WPConsent = {
 		}
 	},
 
-	shouldUnlockContent: function(preferences, service, category) {
+	shouldUnlockContent: function ( preferences, service, category ) {
 		// Essential category is always allowed
-		if (category === 'essential') {
+		if ( category === 'essential' ) {
 			return true;
 		}
 
@@ -356,8 +405,8 @@ window.WPConsent = {
 		const manualToggleServices = wpconsent.manual_toggle_services;
 
 		// If manual toggle services is enabled
-		if (manualToggleServices) {
-			if (service && preferences[service] !== undefined) {
+		if ( manualToggleServices ) {
+			if ( service && preferences[service] !== undefined ) {
 				return preferences[service];
 			}
 			return false;
@@ -372,7 +421,7 @@ window.WPConsent = {
 			const category = script.getAttribute( 'data-wpconsent-category' );
 			const service = script.getAttribute( 'data-wpconsent-name' );
 
-			if (this.shouldUnlockContent(preferences, service, category)) {
+			if ( this.shouldUnlockContent( preferences, service, category ) ) {
 				const newScript = document.createElement( 'script' );
 
 				// Copy all attributes except 'type'
@@ -411,7 +460,7 @@ window.WPConsent = {
 			const category = iframe.getAttribute( 'data-wpconsent-category' );
 			const service = iframe.getAttribute( 'data-wpconsent-name' );
 
-			if (this.shouldUnlockContent(preferences, service, category)) {
+			if ( this.shouldUnlockContent( preferences, service, category ) ) {
 				// Get the src from the data attribute
 				const src = iframe.getAttribute( 'data-wpconsent-src' );
 				if ( src ) {
@@ -431,7 +480,7 @@ window.WPConsent = {
 			const category = placeholder.getAttribute( 'data-wpconsent-category' );
 			const service = placeholder.getAttribute( 'data-wpconsent-name' );
 
-			if (this.shouldUnlockContent(preferences, service, category)) {
+			if ( this.shouldUnlockContent( preferences, service, category ) ) {
 				const thumbnail = placeholder.querySelector( '.wpconsent-iframe-thumbnail' );
 				const overlay = placeholder.querySelector( '.wpconsent-iframe-overlay-content' );
 				if ( thumbnail ) {
@@ -449,7 +498,7 @@ window.WPConsent = {
 	// Initialize the banner
 	init: function () {
 		// Run settings hooks first to allow other scripts to modify settings
-		this.runSettingsHooks().then(() => {
+		this.runSettingsHooks().then( () => {
 			this.initWordPress();
 
 			// Update button visibility after settings hooks have potentially modified settings
@@ -472,23 +521,23 @@ window.WPConsent = {
 				this.initializeKeyboardHandlers();
 
 				// Run all display checks before proceeding with banner initialization
-				this.runDisplayChecks().then(() => {
+				this.runDisplayChecks().then( () => {
 					// Only load CSS and potentially show banner after all checks have passed
-					this.loadExternalCSS(container).then(() => {
+					this.loadExternalCSS( container ).then( () => {
 						this.processBannerDisplay();
-					});
-				});
+					} );
+				} );
 			} else {
 				// If shadow root already exists, run display checks then process banner display
-				this.runDisplayChecks().then(() => {
+				this.runDisplayChecks().then( () => {
 					this.processBannerDisplay();
-				});
+				} );
 			}
-		});
+		} );
 	},
 
 	// Process banner display based on existing preferences
-	processBannerDisplay: function() {
+	processBannerDisplay: function () {
 		// Check for existing preferences.
 		const existingPreferences = this.getCookie( 'wpconsent_preferences' );
 		if ( existingPreferences ) {
@@ -499,14 +548,14 @@ window.WPConsent = {
 
 				// Check if preferences keys match current slugs
 				if (
-					wpconsent.slugs && Array.isArray(wpconsent.slugs) &&
-					!wpconsent.slugs.every(slug => preferences.hasOwnProperty(slug))
+					wpconsent.slugs && Array.isArray( wpconsent.slugs ) &&
+					!wpconsent.slugs.every( slug => preferences.hasOwnProperty( slug ) )
 				) {
 					// Preferences are outdated, clear cookie and check GPC before showing banner
-					this.setCookie('wpconsent_preferences', '', -1); // Expire the cookie
+					this.setCookie( 'wpconsent_preferences', '', - 1 ); // Expire the cookie
 					this.checkGPC(); // Check GPC for new preferences needed
 					// Only show banner if all checks have passed
-					if (this.checksPassed) {
+					if ( this.checksPassed ) {
 						this.showBanner();
 					}
 					return;
@@ -524,51 +573,51 @@ window.WPConsent = {
 			this.checkGPC();
 
 			// Only show banner if all checks have passed
-			if (this.checksPassed) {
+			if ( this.checksPassed ) {
 				this.showBanner();
 			}
 
 			// If default_allow is true, let's unlock scripts until the user accepts or declines.
-			if ( wpconsent.default_allow || ! wpconsent.enable_script_blocking ) {
+			if ( wpconsent.default_allow || !wpconsent.enable_script_blocking ) {
 				const allPreferences = {};
 				// Get all slugs and set them to true.
-				wpconsent.slugs.forEach(slug => {
+				wpconsent.slugs.forEach( slug => {
 					allPreferences[slug] = true;
-				});
-				this.unlockScripts(allPreferences);
-				this.unlockIframes(allPreferences);
+				} );
+				this.unlockScripts( allPreferences );
+				this.unlockIframes( allPreferences );
 			}
 		}
 
 		// Dispatch event to notify that the banner is fully initialized
-		window.dispatchEvent(new CustomEvent('wpconsent_banner_initialized'));
+		window.dispatchEvent( new CustomEvent( 'wpconsent_banner_initialized' ) );
 	},
 
 	// Load external CSS
 	loadExternalCSS: function ( container ) {
-		return new Promise((resolve, reject) => {
+		return new Promise( ( resolve, reject ) => {
 			try {
 				const cssUrl = `${wpconsent.css_url}?ver=${wpconsent.css_version}`;
-				fetch(cssUrl)
-					.then(response => response.text())
-					.then(css => {
-						const style = document.createElement('style');
+				fetch( cssUrl )
+					.then( response => response.text() )
+					.then( css => {
+						const style = document.createElement( 'style' );
 						style.textContent = css;
-						this.shadowRoot.appendChild(style);
+						this.shadowRoot.appendChild( style );
 						container.style.display = 'block';
 						resolve();
-					})
-					.catch(error => {
-						console.error('Failed to load WPConsent styles:', error);
+					} )
+					.catch( error => {
+						console.error( 'Failed to load WPConsent styles:', error );
 						// Still resolve so the flow continues even if CSS fails to load
 						resolve();
-					});
-			} catch (error) {
-				console.error('Failed to load WPConsent styles:', error);
+					} );
+			} catch ( error ) {
+				console.error( 'Failed to load WPConsent styles:', error );
 				// Still resolve so the flow continues even if CSS fails to load
 				resolve();
 			}
-		});
+		} );
 	},
 
 	// Initialize event listeners
@@ -576,20 +625,20 @@ window.WPConsent = {
 		// Accept all button
 		this.shadowRoot.querySelectorAll( '.wpconsent-accept-all' ).forEach( button => button.addEventListener( 'click', () => this.acceptAll() ) );
 
-		// Cancel all button
-		this.shadowRoot.querySelector( '#wpconsent-cancel-all' )?.addEventListener( 'click', () => {
+		// Cancel all button (reject all) - works for both initial banner and preferences modal.
+		this.shadowRoot.querySelectorAll( '.wpconsent-cancel-cookies' ).forEach( button => button.addEventListener( 'click', () => {
 			const preferences = {};
-			wpconsent.slugs.forEach(slug => {
-				const serviceCheckbox = this.shadowRoot.querySelector(`#wpconsent-preferences-modal input[type="checkbox"][id="cookie-service-${slug}"]`);
-				if (serviceCheckbox && serviceCheckbox.disabled) {
+			wpconsent.slugs.forEach( slug => {
+				const serviceCheckbox = this.shadowRoot.querySelector( `#wpconsent-preferences-modal input[type="checkbox"][id="cookie-service-${slug}"]` );
+				if ( serviceCheckbox && serviceCheckbox.disabled ) {
 					preferences[slug] = true;
 				} else {
 					preferences[slug] = false;
 				}
-			});
-			preferences.essential = true; // Essential is always true
+			} );
+			preferences.essential = true; // Essential is always true.
 			this.savePreferences( preferences );
-		} );
+		} ) );
 
 		// Close button
 		this.shadowRoot.querySelector( '#wpconsent-banner-close' )?.addEventListener( 'click', () => this.hideBanner() );
@@ -645,20 +694,20 @@ window.WPConsent = {
 		this.shadowRoot.querySelector( '.wpconsent-preferences-header-close' )?.addEventListener( 'click', () => this.closePreferences() );
 		this.shadowRoot.querySelector( '.wpconsent-save-preferences' )?.addEventListener( 'click', () => {
 			const checkboxes = this.shadowRoot.querySelectorAll( '#wpconsent-preferences-modal input[type="checkbox"]' );
-			const selectedCookies = Array.from(checkboxes)
-				.filter(checkbox => checkbox.checked)
-				.map(checkbox => checkbox.value);
+			const selectedCookies = Array.from( checkboxes )
+			                             .filter( checkbox => checkbox.checked )
+			                             .map( checkbox => checkbox.value );
 
 			const preferences = {};
 
-			wpconsent.slugs.forEach(slug => {
-				preferences[slug] = selectedCookies.includes(slug);
-			});
+			wpconsent.slugs.forEach( slug => {
+				preferences[slug] = selectedCookies.includes( slug );
+			} );
 
 			preferences.essential = true; // Essential is always true
 
-			this.savePreferences(preferences);
-		});
+			this.savePreferences( preferences );
+		} );
 		this.shadowRoot.querySelector( '.wpconsent-close-preferences' )?.addEventListener( 'click', () => this.closePreferences() );
 
 		window.addEventListener( 'wpconsent_consent_saved', function ( event ) {
@@ -696,53 +745,57 @@ window.WPConsent = {
 	},
 
 	// Initialize checkbox listeners for category and service checkboxes
-	initializeCheckboxListeners: function() {
-		const categoryCheckboxes = this.shadowRoot.querySelectorAll('#wpconsent-preferences-modal input[type="checkbox"][id^="cookie-category-"]');
+	initializeCheckboxListeners: function () {
+		const categoryCheckboxes = this.shadowRoot.querySelectorAll( '#wpconsent-preferences-modal input[type="checkbox"][id^="cookie-category-"]' );
 
-		categoryCheckboxes.forEach(categoryCheckbox => {
-			categoryCheckbox.addEventListener('change', (e) => {
-				this.handleCategoryCheckboxChange(e.target);
-			});
-		});
+		categoryCheckboxes.forEach( categoryCheckbox => {
+			categoryCheckbox.addEventListener( 'change', ( e ) => {
+				this.handleCategoryCheckboxChange( e.target );
+			} );
+		} );
 
-		const serviceCheckboxes = this.shadowRoot.querySelectorAll('#wpconsent-preferences-modal input[type="checkbox"][id^="cookie-service-"]');
+		const serviceCheckboxes = this.shadowRoot.querySelectorAll( '#wpconsent-preferences-modal input[type="checkbox"][id^="cookie-service-"]' );
 
-		serviceCheckboxes.forEach(serviceCheckbox => {
-			serviceCheckbox.addEventListener('change', (e) => {
-				this.handleServiceCheckboxChange(e.target);
-			});
-		});
+		serviceCheckboxes.forEach( serviceCheckbox => {
+			serviceCheckbox.addEventListener( 'change', ( e ) => {
+				this.handleServiceCheckboxChange( e.target );
+			} );
+		} );
 	},
 
-	handleCategoryCheckboxChange: function(categoryCheckbox) {
-		const categoryId = categoryCheckbox.id.replace('cookie-category-', '');
+	handleCategoryCheckboxChange: function ( categoryCheckbox ) {
+		const categoryId = categoryCheckbox.id.replace( 'cookie-category-', '' );
 
 		// Find all service checkboxes in this category
-		const serviceCheckboxes = this.shadowRoot.querySelectorAll(`#wpconsent-preferences-modal input[type="checkbox"][id^="cookie-service-"]`);
+		const serviceCheckboxes = this.shadowRoot.querySelectorAll( `#wpconsent-preferences-modal input[type="checkbox"][id^="cookie-service-"]` );
 
-		serviceCheckboxes.forEach(serviceCheckbox => {
+		serviceCheckboxes.forEach( serviceCheckbox => {
 			// Only update service checkboxes that belong to this category
-			if (serviceCheckbox.closest(`.wpconsent-cookie-category-${categoryId}`)) {
+			if ( serviceCheckbox.closest( `.wpconsent-cookie-category-${categoryId}` ) ) {
 				serviceCheckbox.checked = categoryCheckbox.checked;
 			}
-		});
+		} );
 	},
 
-	handleServiceCheckboxChange: function(serviceCheckbox) {
-		const categoryAccordion = serviceCheckbox.closest('.wpconsent-cookie-category');
-		if (!categoryAccordion) return;
+	handleServiceCheckboxChange: function ( serviceCheckbox ) {
+		const categoryAccordion = serviceCheckbox.closest( '.wpconsent-cookie-category' );
+		if ( !categoryAccordion ) {
+			return;
+		}
 
-		const categoryCheckbox = categoryAccordion.querySelector('input[type="checkbox"][id^="cookie-category-"]');
-		if (!categoryCheckbox) return;
+		const categoryCheckbox = categoryAccordion.querySelector( 'input[type="checkbox"][id^="cookie-category-"]' );
+		if ( !categoryCheckbox ) {
+			return;
+		}
 
-		const serviceCheckboxes = categoryAccordion.querySelectorAll('input[type="checkbox"][id^="cookie-service-"]');
+		const serviceCheckboxes = categoryAccordion.querySelectorAll( 'input[type="checkbox"][id^="cookie-service-"]' );
 
 		let anyChecked = false;
-		serviceCheckboxes.forEach(checkbox => {
-			if (checkbox.checked) {
+		serviceCheckboxes.forEach( checkbox => {
+			if ( checkbox.checked ) {
 				anyChecked = true;
 			}
-		});
+		} );
 
 		categoryCheckbox.checked = anyChecked;
 	},
@@ -759,6 +812,7 @@ window.WPConsent = {
 					if ( e.target.closest( '.wpconsent-preferences-checkbox-toggle' ) ) {
 						return;
 					}
+
 					this.toggleAccordion( accordion, content );
 				} );
 			}
@@ -778,9 +832,27 @@ window.WPConsent = {
 				parent.querySelectorAll( ':scope > .wpconsent-preferences-accordion-item.wpconsent-cookie-category' ).forEach( ( otherAccordion ) => {
 					if ( otherAccordion !== accordion ) {
 						otherAccordion.classList.remove( 'active' );
+						// Update aria-expanded on the toggle button.
+						const toggleButton = otherAccordion.querySelector( '.wpconsent-preferences-accordion-toggle' );
+						if ( toggleButton ) {
+							toggleButton.setAttribute( 'aria-expanded', 'false' );
+						}
 						// Also close all service accordions within this category
 						otherAccordion.querySelectorAll( '.wpconsent-cookie-service' ).forEach( ( service ) => {
 							service.classList.remove( 'active' );
+							// Update aria-expanded on service toggle buttons.
+							const serviceToggle = service.querySelector( '.wpconsent-preferences-accordion-toggle' );
+							if ( serviceToggle ) {
+								serviceToggle.setAttribute( 'aria-expanded', 'false' );
+							}
+							// Fire accordion toggled event for extensions.
+							this.runHooks( 'accordionToggled', {
+								accordion: service,
+								content: service.querySelector( '.wpconsent-preferences-accordion-content' ),
+								isActive: false,
+								isService: true,
+								isCategory: false
+							} );
 						} );
 					}
 				} );
@@ -793,6 +865,19 @@ window.WPConsent = {
 				parent.querySelectorAll( ':scope > .wpconsent-preferences-accordion-item.wpconsent-cookie-service' ).forEach( ( otherAccordion ) => {
 					if ( otherAccordion !== accordion ) {
 						otherAccordion.classList.remove( 'active' );
+						// Update aria-expanded on the toggle button.
+						const toggleButton = otherAccordion.querySelector( '.wpconsent-preferences-accordion-toggle' );
+						if ( toggleButton ) {
+							toggleButton.setAttribute( 'aria-expanded', 'false' );
+						}
+						// Fire accordion toggled event for extensions.
+						this.runHooks( 'accordionToggled', {
+							accordion: otherAccordion,
+							content: otherAccordion.querySelector( '.wpconsent-preferences-accordion-content' ),
+							isActive: false,
+							isService: true,
+							isCategory: false
+						} );
 					}
 				} );
 			}
@@ -800,7 +885,25 @@ window.WPConsent = {
 
 		// Toggle current accordion
 		accordion.classList.toggle( 'active' );
+
+		// Update aria-expanded on the current accordion's toggle button.
+		const currentToggle = accordion.querySelector( '.wpconsent-preferences-accordion-toggle' );
+		if ( currentToggle ) {
+			const isNowActive = accordion.classList.contains( 'active' );
+			currentToggle.setAttribute( 'aria-expanded', isNowActive ? 'true' : 'false' );
+		}
+
+		// Fire accordion toggled event for extensions.
+		const nowActive = accordion.classList.contains( 'active' );
+		this.runHooks( 'accordionToggled', {
+			accordion: accordion,
+			content: content,
+			isActive: nowActive,
+			isService: isService,
+			isCategory: isCategory
+		} );
 	},
+
 
 	// Initialize keyboard handlers for accessibility
 	initializeKeyboardHandlers: function () {
@@ -998,7 +1101,7 @@ window.WPConsent = {
 
 	// Show the floating button if enabled in settings
 	showFloatingButtonIfEnabled: function () {
-		if (wpconsent.enable_consent_floating) {
+		if ( wpconsent.enable_consent_floating ) {
 			const floatingButton = this.shadowRoot?.querySelector( '#wpconsent-consent-floating' );
 			if ( floatingButton ) {
 				floatingButton.style.display = 'block';

@@ -13,7 +13,7 @@ async function loadLanguageContent(locale, languageLinks = null) {
 				'.wpconsent-cancel-all': 'cancel_button_text',
 				'.wpconsent-preferences-all': 'preferences_button_text',
 				'#wpconsent-preferences-title': 'preferences_panel_title',
-				'.wpconsent_preferences_panel_description p': 'preferences_panel_description',
+				'.wpconsent_preferences_panel_description': 'preferences_panel_description',
 				'.wpconsent-cookie-policy-title': 'cookie_policy_title',
 				'.wpconsent-cookie-policy-text': 'cookie_policy_text',
 				'.wpconsent-save-preferences': 'save_preferences_button_text',

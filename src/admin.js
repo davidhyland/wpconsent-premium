@@ -25,3 +25,6 @@ import './admin/upsells.js';
 import './admin/manual-scan-input.js';
 import './admin/import-confirm.js';
 import './admin/banner-admin.js';
+import './admin/tools.js';
+import './admin/iab-tcf-vendors.js';
+import './admin/iab-tcf-vendors.css';

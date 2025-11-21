@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WPConsent Pro
  * Description: Improve your WordPress website privacy compliance. Custom cookie banner, website scanner, automatic script blocking, and easy cookie configuration.
- * Version:     1.1.0.1
+ * Version:     1.1.1
  * Author:      WPConsent
  * Author URI:  https://wpconsent.com
  * License:     GPL v2 or later
@@ -295,6 +295,13 @@ class WPConsent_Premium {
 	public $translation_services;
 
 	/**
+	 * The IAB TCF instance.
+	 *
+	 * @var WPConsent_IAB_TCF
+	 */
+	public $iab_tcf;
+
+	/**
 	 * Main instance of WPConsent.
 	 *
 	 * @return WPConsent_Premium
@@ -398,6 +405,7 @@ class WPConsent_Premium {
 
 			// Load the reminders.
 			new WPConsent_Reminders();
+			new WPConsent_Usage_Tracking_Pro();
 		}
 		$this->file_cache = new WPConsent_File_Cache();
 		$this->strings    = new WPConsent_Strings();
@@ -421,6 +429,8 @@ class WPConsent_Premium {
 		new WP_Consent_Auto_Scanner();
 		// Load multilanguage.
 		$this->multilanguage = new WPConsent_Multilanguage();
+
+		$this->iab_tcf = new WPConsent_IAB_TCF();
 
 		do_action( 'wpconsent_loaded' );
 	}

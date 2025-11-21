@@ -26,6 +26,10 @@ add_action( 'wp_ajax_wpconsent_save_scanner_items', 'wpconsent_ajax_save_scanner
 
 add_action( 'wp_ajax_wpconsent_reset_to_defaults', 'wpconsent_ajax_reset_to_defaults' );
 
+add_action( 'wp_ajax_wpconsent_save_usage_tracking', 'wpconsent_ajax_save_usage_tracking' );
+
+add_action( 'wp_ajax_wpconsent_verify_ssl', 'wpconsent_ajax_verify_ssl' );
+
 /**
  * Add a new category via AJAX.
  *
@@ -659,4 +663,67 @@ function wpconsent_ajax_reset_to_defaults() {
 	wpconsent()->cookies->reset_to_defaults();
 
 	wp_send_json_success();
+}
+
+/**
+ * Save usage tracking preference via AJAX.
+ *
+ * @return void
+ */
+function wpconsent_ajax_save_usage_tracking() {
+	check_ajax_referer( 'wpconsent_admin', 'nonce' );
+
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error(
+			array(
+				'message' => esc_html__( 'You do not have permission to perform this action.', 'wpconsent-cookies-banner-privacy-suite' ),
+			)
+		);
+	}
+
+	$usage_tracking = isset( $_POST['usage_tracking'] ) ? intval( $_POST['usage_tracking'] ) : 0;
+
+	// Save the usage tracking preference.
+	wpconsent()->settings->update_option( 'usage_tracking', $usage_tracking );
+
+	wp_send_json_success(
+		array(
+			'message' => esc_html__( 'Usage tracking preference saved successfully.', 'wpconsent-cookies-banner-privacy-suite' ),
+		)
+	);
+}
+
+/**
+ * Ajax handler to verify that the current web host can successfully
+ * make outbound SSL connections.
+ *
+ * @return void
+ */
+function wpconsent_ajax_verify_ssl() {
+	check_ajax_referer( 'wpconsent_admin', 'nonce' );
+
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error(
+			array(
+				'msg' => esc_html__( 'You do not have permission to perform this action.', 'wpconsent-cookies-banner-privacy-suite' ),
+			)
+		);
+	}
+
+	$response = wp_remote_post( 'https://wpconsent.com' );
+
+	if ( 200 === wp_remote_retrieve_response_code( $response ) ) {
+		wp_send_json_success(
+			array(
+				'msg' => esc_html__( 'Success! Your server can make SSL connections.', 'wpconsent-cookies-banner-privacy-suite' ),
+			)
+		);
+	}
+
+	wp_send_json_error(
+		array(
+			'msg'   => esc_html__( 'There was an error and the connection failed. Please contact your web host with the technical details below.', 'wpconsent-cookies-banner-privacy-suite' ),
+			'debug' => '<pre>' . print_r( map_deep( $response, 'wp_strip_all_tags' ), true ) . '</pre>', // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
+		)
+	);
 }

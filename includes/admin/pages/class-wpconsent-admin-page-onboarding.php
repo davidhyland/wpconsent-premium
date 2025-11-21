@@ -202,6 +202,7 @@ class WPConsent_Admin_Page_Onboarding extends WPConsent_Admin_Page {
 			</div>
 			<div class="wpconsent-onboarding-buttons">
 				<button type="button" class="wpconsent-button wpconsent-button-extra-large" id="wpconsent-start-scanner"><?php esc_html_e( 'Scan Your Website', 'wpconsent-cookies-banner-privacy-suite' ); ?></button>
+				<?php $this->usage_tracking_toggle(); ?>
 				<p class="wpconsent-disclaimer">
 					<?php
 					printf(
@@ -246,7 +247,7 @@ class WPConsent_Admin_Page_Onboarding extends WPConsent_Admin_Page {
 		<div class="wpconsent-onboarding-license-key">
 			<label for="wpconsent-setting-license-key"><?php esc_html_e( 'Your Email Address', 'wpconsent-cookies-banner-privacy-suite' ); ?></label>
 			<?php
-			echo $this->get_input_email(
+			echo $this->get_input_email( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				'scanner-email',
 				esc_attr( $email ),
 				esc_html__( 'We\'ll send you recommendations based on the scan results. You can unsubscribe at any time.', 'wpconsent-cookies-banner-privacy-suite' )
@@ -444,5 +445,31 @@ class WPConsent_Admin_Page_Onboarding extends WPConsent_Admin_Page {
 				),
 			),
 		);
+	}
+
+	/**
+	 * Output the usage tracking toggle for lite version.
+	 *
+	 * @return void
+	 */
+	public function usage_tracking_toggle() {
+		$privacy_policy_url = wpconsent_utm_url( 'https://wpconsent.com/privacy-policy/', 'onboarding', 'usage-tracking-privacy' );
+		?>
+		<div class="wpconsent-usage-tracking-toggle">
+			<label class="wpconsent-inline-styled-checkbox">
+				<span class="wpconsent-styled-checkbox checked">
+					<input type="checkbox" name="usage_tracking" id="wpconsent-usage-tracking" value="1" checked/>
+				</span>
+				<?php
+				printf(
+					// translators: %1$s is an opening link tag, %2$s is a closing link tag.
+					esc_html__( 'Help make WPConsent better for everyone. %1$sLearn More%2$s', 'wpconsent-cookies-banner-privacy-suite' ),
+					'<a target="_blank" rel="noopener noreferrer" href="' . esc_url( $privacy_policy_url ) . '">',
+					'</a>'
+				);
+				?>
+			</label>
+		</div>
+		<?php
 	}
 }

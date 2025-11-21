@@ -2,14 +2,14 @@
 # This file is distributed under the GPL v2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: WPConsent Pro 1.1.0.1\n"
+"Project-Id-Version: WPConsent Pro 1.1.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/wpconsent-premium\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-10-17T05:24:36+00:00\n"
+"POT-Creation-Date: 2025-11-20T10:53:34+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.5.0\n"
 "X-Domain: wpconsent-premium\n"
@@ -30,457 +30,456 @@ msgstr ""
 msgid "https://wpconsent.com"
 msgstr ""
 
-#: includes/admin/pages/class-wpconsent-admin-page-cookies.php:1791
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:303
-msgid "The \"Translate\" button appears for languages that are supported by our translation service. Click the button to start the automatic translation process for your consent banner content. Translation happens asynchronously in the background, and you will be notified when the process is complete."
-msgstr ""
-
-#: includes/pro/admin/admin-ajax-handlers.php:53
+#: includes/pro/admin/admin-ajax-handlers.php:56
 msgid "Please enter a license key."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:289
-#: includes/pro/admin/admin-ajax-handlers.php:340
-#: includes/pro/admin/admin-ajax-handlers.php:410
-#: includes/pro/admin/admin-ajax-handlers.php:1127
-#: includes/pro/admin/admin-ajax-handlers.php:1209
-#: includes/pro/admin/admin-ajax-handlers.php:1246
+#: includes/pro/admin/admin-ajax-handlers.php:292
+#: includes/pro/admin/admin-ajax-handlers.php:343
+#: includes/pro/admin/admin-ajax-handlers.php:413
+#: includes/pro/admin/admin-ajax-handlers.php:1130
+#: includes/pro/admin/admin-ajax-handlers.php:1212
+#: includes/pro/admin/admin-ajax-handlers.php:1249
 msgid "You do not have permission to perform this action."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:299
+#: includes/pro/admin/admin-ajax-handlers.php:302
 msgid "No language specified."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:314
+#: includes/pro/admin/admin-ajax-handlers.php:317
 msgid "This language is not enabled."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:324
+#: includes/pro/admin/admin-ajax-handlers.php:327
 msgid "Language switched successfully."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:351
+#: includes/pro/admin/admin-ajax-handlers.php:354
 msgid "No services found in the library."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:419
+#: includes/pro/admin/admin-ajax-handlers.php:422
 msgid "Missing service or category."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:426
+#: includes/pro/admin/admin-ajax-handlers.php:429
 msgid "Service not found in API."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:439
+#: includes/pro/admin/admin-ajax-handlers.php:442
 msgid "Failed to import service."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:493
+#: includes/pro/admin/admin-ajax-handlers.php:496
 msgid "You do not have permission to install addons."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:503
+#: includes/pro/admin/admin-ajax-handlers.php:506
 msgid "No addon slug provided."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:515
+#: includes/pro/admin/admin-ajax-handlers.php:518
 msgid "Could not install addon."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:522
+#: includes/pro/admin/admin-ajax-handlers.php:525
 msgid "Addon installed successfully."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:539
+#: includes/pro/admin/admin-ajax-handlers.php:542
 msgid "You do not have permission to add scripts."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:560
+#: includes/pro/admin/admin-ajax-handlers.php:563
 msgid "Script category, service, type, and tag are required."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:570
+#: includes/pro/admin/admin-ajax-handlers.php:573
 msgid "Script added successfully."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:582
+#: includes/pro/admin/admin-ajax-handlers.php:585
 msgid "Failed to add script."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:599
+#: includes/pro/admin/admin-ajax-handlers.php:602
 msgid "You do not have permission to edit scripts."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:621
+#: includes/pro/admin/admin-ajax-handlers.php:624
 msgid "Script ID, category, service, type, and tag are required."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:631
+#: includes/pro/admin/admin-ajax-handlers.php:634
 msgid "Script updated successfully."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:643
+#: includes/pro/admin/admin-ajax-handlers.php:646
 msgid "Failed to update script."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:660
+#: includes/pro/admin/admin-ajax-handlers.php:663
 msgid "You do not have permission to delete scripts."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:670
+#: includes/pro/admin/admin-ajax-handlers.php:673
 msgid "Script ID is required."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:680
+#: includes/pro/admin/admin-ajax-handlers.php:683
 msgid "Script deleted successfully."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:687
+#: includes/pro/admin/admin-ajax-handlers.php:690
 msgid "Failed to delete script."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:703
-#: includes/pro/admin/admin-ajax-handlers.php:750
-#: includes/pro/admin/admin-ajax-handlers.php:781
-#: includes/pro/admin/admin-ajax-handlers.php:814
+#: includes/pro/admin/admin-ajax-handlers.php:706
+#: includes/pro/admin/admin-ajax-handlers.php:753
+#: includes/pro/admin/admin-ajax-handlers.php:784
+#: includes/pro/admin/admin-ajax-handlers.php:817
 msgid "Permission denied."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:710
+#: includes/pro/admin/admin-ajax-handlers.php:713
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:50
 msgid "Group name is required."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:714
+#: includes/pro/admin/admin-ajax-handlers.php:717
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:51
 msgid "At least one location must be selected."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:723
+#: includes/pro/admin/admin-ajax-handlers.php:726
 msgid "Some selected locations are already used in other groups."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:734
+#: includes/pro/admin/admin-ajax-handlers.php:737
 msgid "Location group saved successfully."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:756
+#: includes/pro/admin/admin-ajax-handlers.php:759
 msgid "Group ID is required."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:762
+#: includes/pro/admin/admin-ajax-handlers.php:765
 msgid "Location group not found."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:768
+#: includes/pro/admin/admin-ajax-handlers.php:771
 msgid "Location group deleted successfully."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:820
+#: includes/pro/admin/admin-ajax-handlers.php:823
 msgid "Rule type is required."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:826
+#: includes/pro/admin/admin-ajax-handlers.php:829
 msgid "Invalid rule type."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:849
+#: includes/pro/admin/admin-ajax-handlers.php:852
 msgid "This location is already used in another group."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:865
+#: includes/pro/admin/admin-ajax-handlers.php:868
 msgid "Predefined rule created successfully."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:926
+#: includes/pro/admin/admin-ajax-handlers.php:929
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:607
 msgid "Alabama"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:927
+#: includes/pro/admin/admin-ajax-handlers.php:930
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:608
 msgid "Alaska"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:928
+#: includes/pro/admin/admin-ajax-handlers.php:931
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:609
 msgid "Arizona"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:929
+#: includes/pro/admin/admin-ajax-handlers.php:932
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:610
 msgid "Arkansas"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:930
+#: includes/pro/admin/admin-ajax-handlers.php:933
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:611
 msgid "California"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:931
+#: includes/pro/admin/admin-ajax-handlers.php:934
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:612
 msgid "Colorado"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:932
+#: includes/pro/admin/admin-ajax-handlers.php:935
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:613
 msgid "Connecticut"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:933
+#: includes/pro/admin/admin-ajax-handlers.php:936
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:614
 msgid "Delaware"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:934
+#: includes/pro/admin/admin-ajax-handlers.php:937
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:615
 msgid "Florida"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:935
+#: includes/pro/admin/admin-ajax-handlers.php:938
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:616
 #: includes/pro/class-wpconsent-geolocation.php:459
 msgid "Georgia"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:936
+#: includes/pro/admin/admin-ajax-handlers.php:939
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:617
 msgid "Hawaii"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:937
+#: includes/pro/admin/admin-ajax-handlers.php:940
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:618
 msgid "Idaho"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:938
+#: includes/pro/admin/admin-ajax-handlers.php:941
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:619
 msgid "Illinois"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:939
+#: includes/pro/admin/admin-ajax-handlers.php:942
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:620
 msgid "Indiana"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:940
+#: includes/pro/admin/admin-ajax-handlers.php:943
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:621
 msgid "Iowa"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:941
+#: includes/pro/admin/admin-ajax-handlers.php:944
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:622
 msgid "Kansas"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:942
+#: includes/pro/admin/admin-ajax-handlers.php:945
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:623
 msgid "Kentucky"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:943
+#: includes/pro/admin/admin-ajax-handlers.php:946
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:624
 msgid "Louisiana"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:944
+#: includes/pro/admin/admin-ajax-handlers.php:947
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:625
 msgid "Maine"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:945
+#: includes/pro/admin/admin-ajax-handlers.php:948
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:626
 msgid "Maryland"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:946
+#: includes/pro/admin/admin-ajax-handlers.php:949
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:627
 msgid "Massachusetts"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:947
+#: includes/pro/admin/admin-ajax-handlers.php:950
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:628
 msgid "Michigan"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:948
+#: includes/pro/admin/admin-ajax-handlers.php:951
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:629
 msgid "Minnesota"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:949
+#: includes/pro/admin/admin-ajax-handlers.php:952
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:630
 msgid "Mississippi"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:950
+#: includes/pro/admin/admin-ajax-handlers.php:953
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:631
 msgid "Missouri"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:951
+#: includes/pro/admin/admin-ajax-handlers.php:954
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:632
 msgid "Montana"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:952
+#: includes/pro/admin/admin-ajax-handlers.php:955
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:633
 msgid "Nebraska"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:953
+#: includes/pro/admin/admin-ajax-handlers.php:956
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:634
 msgid "Nevada"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:954
+#: includes/pro/admin/admin-ajax-handlers.php:957
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:635
 msgid "New Hampshire"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:955
+#: includes/pro/admin/admin-ajax-handlers.php:958
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:636
 msgid "New Jersey"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:956
+#: includes/pro/admin/admin-ajax-handlers.php:959
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:637
 msgid "New Mexico"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:957
+#: includes/pro/admin/admin-ajax-handlers.php:960
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:638
 msgid "New York"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:958
+#: includes/pro/admin/admin-ajax-handlers.php:961
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:639
 msgid "North Carolina"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:959
+#: includes/pro/admin/admin-ajax-handlers.php:962
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:640
 msgid "North Dakota"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:960
+#: includes/pro/admin/admin-ajax-handlers.php:963
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:641
 msgid "Ohio"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:961
+#: includes/pro/admin/admin-ajax-handlers.php:964
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:642
 msgid "Oklahoma"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:962
+#: includes/pro/admin/admin-ajax-handlers.php:965
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:643
 msgid "Oregon"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:963
+#: includes/pro/admin/admin-ajax-handlers.php:966
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:644
 msgid "Pennsylvania"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:964
+#: includes/pro/admin/admin-ajax-handlers.php:967
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:645
 msgid "Rhode Island"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:965
+#: includes/pro/admin/admin-ajax-handlers.php:968
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:646
 msgid "South Carolina"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:966
+#: includes/pro/admin/admin-ajax-handlers.php:969
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:647
 msgid "South Dakota"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:967
+#: includes/pro/admin/admin-ajax-handlers.php:970
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:648
 msgid "Tennessee"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:968
+#: includes/pro/admin/admin-ajax-handlers.php:971
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:649
 msgid "Texas"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:969
+#: includes/pro/admin/admin-ajax-handlers.php:972
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:650
 msgid "Utah"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:970
+#: includes/pro/admin/admin-ajax-handlers.php:973
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:651
 msgid "Vermont"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:971
+#: includes/pro/admin/admin-ajax-handlers.php:974
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:652
 msgid "Virginia"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:972
+#: includes/pro/admin/admin-ajax-handlers.php:975
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:653
 msgid "Washington"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:973
+#: includes/pro/admin/admin-ajax-handlers.php:976
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:654
 msgid "West Virginia"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:974
+#: includes/pro/admin/admin-ajax-handlers.php:977
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:655
 msgid "Wisconsin"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:975
+#: includes/pro/admin/admin-ajax-handlers.php:978
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:656
 msgid "Wyoming"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:976
+#: includes/pro/admin/admin-ajax-handlers.php:979
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:657
 msgid "District of Columbia"
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:1138
+#: includes/pro/admin/admin-ajax-handlers.php:1141
 msgid "Target language is required."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:1151
-#: includes/pro/admin/admin-ajax-handlers.php:1254
+#: includes/pro/admin/admin-ajax-handlers.php:1154
+#: includes/pro/admin/admin-ajax-handlers.php:1257
 msgid "Translation service is not available."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:1159
+#: includes/pro/admin/admin-ajax-handlers.php:1162
 msgid "This language is not supported for translation."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:1168
+#: includes/pro/admin/admin-ajax-handlers.php:1171
 msgid "Another translation is already in progress. Please wait for it to complete."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:1182
+#: includes/pro/admin/admin-ajax-handlers.php:1185
 msgid "Failed to schedule translation job."
 msgstr ""
 
 #. translators: %s is the target language locale
-#: includes/pro/admin/admin-ajax-handlers.php:1191
+#: includes/pro/admin/admin-ajax-handlers.php:1194
 msgid "Translation process started for %s. You will be notified when complete."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:1265
+#: includes/pro/admin/admin-ajax-handlers.php:1268
 msgid "Translation has been reset. You can now start a new translation."
 msgstr ""
 
-#: includes/pro/admin/admin-ajax-handlers.php:1271
+#: includes/pro/admin/admin-ajax-handlers.php:1274
 msgid "Failed to reset translation."
+msgstr ""
+
+#: includes/pro/admin/admin-ajax-handlers.php:1305
+msgid "No records found for the selected period."
 msgstr ""
 
 #: includes/pro/admin/admin-scripts.php:49
@@ -507,16 +506,58 @@ msgstr ""
 msgid "Failed to reset translation: "
 msgstr ""
 
+#: includes/pro/admin/admin-scripts.php:55
+msgid "Delete Consent Logs?"
+msgstr ""
+
+#. Translators: %1$s is the period.
+#: includes/pro/admin/admin-scripts.php:58
+msgid "This will permanently delete all logs older than %1$s. This action cannot be undone. We recommend exporting your logs before deletion."
+msgstr ""
+
+#: includes/pro/admin/admin-scripts.php:61
+msgid "Delete Consent Logs"
+msgstr ""
+
+#: includes/pro/admin/admin-scripts.php:62
+msgid "Deleting consent logs..."
+msgstr ""
+
+#: includes/pro/admin/admin-scripts.php:63
+msgid "Consent logs have been deleted."
+msgstr ""
+
+#: includes/pro/admin/admin-scripts.php:64
+msgid "Failed to delete consent logs."
+msgstr ""
+
+#: includes/pro/admin/admin-scripts.php:65
+msgid "Please select a time period"
+msgstr ""
+
+#: includes/pro/admin/admin-scripts.php:66
+msgid "Deletion Complete"
+msgstr ""
+
+#. Translators: %1$s is the number of records deleted.
+#: includes/pro/admin/admin-scripts.php:69
+msgid "Successfully deleted %1$s consent log records."
+msgstr ""
+
+#: includes/pro/admin/admin-scripts.php:72
+msgid "Error"
+msgstr ""
+
 #. Translators: 1 - Opening HTML strong tag, 2 - The short plugin name ("WPConsent"), 3 - "Pro", 4 - Closing HTML strong tag.
 #: includes/pro/admin/class-wpconsent-addons.php:112
 msgid "The following addons cannot be used, because they require %1$s%2$s %3$s%4$s to work:"
 msgstr ""
 
-#: includes/pro/admin/class-wpconsent-admin-page-loader-pro.php:85
+#: includes/pro/admin/class-wpconsent-admin-page-loader-pro.php:87
 msgid "Go to WPConsent.com Support page"
 msgstr ""
 
-#: includes/pro/admin/class-wpconsent-admin-page-loader-pro.php:86
+#: includes/pro/admin/class-wpconsent-admin-page-loader-pro.php:88
 msgid "Support"
 msgstr ""
 
@@ -630,8 +671,8 @@ msgid "Translation in progress - this may take several minutes."
 msgstr ""
 
 #: includes/pro/admin/class-wpconsent-translation-services.php:199
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1244
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1370
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:537
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:663
 #: includes/pro/admin/pages/class-wpconsent-admin-page-geolocation-pro.php:232
 msgid "Cancel"
 msgstr ""
@@ -647,7 +688,8 @@ msgid "<strong>Translation Failed</strong> - The translation to <strong>%1$s</st
 msgstr ""
 
 #: includes/pro/admin/pages/class-wpconsent-admin-page-consent-logs.php:21
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:126
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:132
+#: includes/pro/admin/pages/class-wpconsent-admin-page-tools-pro.php:51
 msgid "Consent Logs"
 msgstr ""
 
@@ -665,6 +707,7 @@ msgid "settings page"
 msgstr ""
 
 #: includes/pro/admin/pages/class-wpconsent-admin-page-consent-logs.php:129
+#: includes/pro/admin/pages/class-wpconsent-admin-page-tools-pro.php:99
 msgid "Export Consent Logs"
 msgstr ""
 
@@ -686,241 +729,242 @@ msgstr ""
 msgid "Upgrade Now"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:130
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:136
 msgid "Enable keeping records of consent for all visitors that give consent."
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:146
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:152
 msgid "Auto Scanning"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:150
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:156
 msgid "Enable automatic scanning of consent compliance in the background."
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:155
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:161
 msgid "Scan Interval"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:159
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:165
 msgid "Daily"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:160
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:166
 msgid "Weekly"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:161
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:167
 msgid "Monthly"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:168
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:174
 msgid "Choose how often to automatically scan your website for compliance."
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:182
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:188
 msgid "Language Settings"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:193
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1407
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:199
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:700
 msgid "Save Changes"
 msgstr ""
 
 #. Translators: %s is the current WordPress language name.
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:281
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:287
 msgid "Select the languages you want to make available for your content. The default language (%s) will be used for the current settings until you configure translations."
 msgstr ""
 
 #. Translators: %s is the icon for the language switcher.
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:290
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:296
 msgid "Easily switch between languages using the globe icon (%s) in the header of any WPConsent admin page."
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:312
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:309
+msgid "The \"Translate\" button appears for languages that are supported by our translation service. Click the button to start the automatic translation process for your consent banner content. Translation happens asynchronously in the background, and you will be notified when the process is complete."
+msgstr ""
+
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:318
 msgid "Search languages..."
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:322
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:328
 msgid "Selected Languages"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:339
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:345
 msgid "Available Languages"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:356
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:362
 msgid "Language Picker"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:360
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:366
 msgid "Show a language picker in the consent banner"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:365
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:371
 msgid "This will show a globe icon in the header of the consent banner, allowing users to switch between languages just for the banner/preferences panel even if you do not use a translation plugin. If you are using a translation plugin the banner should automatically display the content in the selected language, if available."
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:412
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:418
 msgid "Default"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:424
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:430
 msgid "Review Banner Content"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:431
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:437
 msgid "Review Cookie Content"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:442
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:448
 msgid "Auto-Translate"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:485
-msgid "Custom Scripts"
-msgstr ""
-
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:489
-msgid "Export custom scripts and iframes."
-msgstr ""
-
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1203
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1221
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:496
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:514
 msgid "Add Service From Library"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1231
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:524
 msgid "Search services..."
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1236
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:529
 msgid "Loading services..."
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1267
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:560
 msgid "Add New Script or iFrame"
 msgstr ""
 
 #. Translators: %1$s is a link to the documentation, %2$s is the closing tag for the link.
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1277
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:570
 msgid "For instructions on how to add custom scripts, please refer to our %1$sdocumentation%2$s."
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1297
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:590
 msgid "Category"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1303
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1466
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:596
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:768
 msgid "Service"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1309
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1467
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:602
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:769
 msgid "Type"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1310
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1468
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:603
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:770
 msgid "Script"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1311
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:604
 msgid "iFrame"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1317
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:610
 msgid "Script Tag"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1321
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:614
 msgid "Enter a unique string that identifies the script to block. Example: \"connect.facebook.net/en_US/fbevents.js\""
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1329
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:622
 msgid "Script Keywords"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1333
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:626
 msgid "JavaScript function names to block that depend on the main script (comma separated). Example: \"fbq, fbq.push\""
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1342
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:635
 msgid "iFrame Tag"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1346
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:639
 msgid "Enter a unique string that identifies the iframe to block. Example: \"youtube.com/embed\""
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1354
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1469
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:647
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:771
 msgid "Blocked Elements"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1358
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:651
 msgid "CSS selectors for elements to block and add a placeholder for until consent is given (comma separated). Example: \"#my-chat-widget, #my-chat-widget-2\""
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1367
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:660
 msgid "Save"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1395
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:688
 msgid "Custom Iframes/Scripts"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1400
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:693
 msgid "Advanced Settings"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1423
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:725
 msgid "Add custom iframes or scripts that should be blocked until consent is given."
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1425
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:727
 msgid "Learn more"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1440
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1446
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:742
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:748
 msgid "Scripts"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1441
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:743
 msgid "Add scripts for analytics and statistics tracking."
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1447
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:749
 msgid "Add scripts for marketing and advertising purposes."
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1470
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:772
 msgid "Actions"
 msgstr ""
 
-#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:1529
+#: includes/pro/admin/pages/class-wpconsent-admin-page-cookies-pro.php:831
 msgid "Add Custom iFrame/Script"
 msgstr ""
 
 #: includes/pro/admin/pages/class-wpconsent-admin-page-do-not-track-pro.php:46
+#: includes/pro/admin/pages/class-wpconsent-admin-page-tools-pro.php:922
 msgid "Activate Do Not Track Addon"
 msgstr ""
 
 #: includes/pro/admin/pages/class-wpconsent-admin-page-do-not-track-pro.php:47
+#: includes/pro/admin/pages/class-wpconsent-admin-page-tools-pro.php:923
 msgid "The Do Not Track Addon is not active"
 msgstr ""
 
 #: includes/pro/admin/pages/class-wpconsent-admin-page-do-not-track-pro.php:49
+#: includes/pro/admin/pages/class-wpconsent-admin-page-tools-pro.php:925
 msgid "Install Do Not Track Addon"
 msgstr ""
 
 #: includes/pro/admin/pages/class-wpconsent-admin-page-do-not-track-pro.php:50
+#: includes/pro/admin/pages/class-wpconsent-admin-page-tools-pro.php:926
 msgid "The Do Not Track Addon is not installed"
 msgstr ""
 
 #: includes/pro/admin/pages/class-wpconsent-admin-page-do-not-track-pro.php:55
+#: includes/pro/admin/pages/class-wpconsent-admin-page-tools-pro.php:931
 msgid "Install the addon now to allow your users to submit Do Not Track requests directly from your website."
 msgstr ""
 
@@ -1160,6 +1204,31 @@ msgstr ""
 
 #: includes/pro/admin/pages/class-wpconsent-admin-page-onboarding-pro.php:57
 msgid "License Key"
+msgstr ""
+
+#: includes/pro/admin/pages/class-wpconsent-admin-page-tools-pro.php:34
+msgid "Do Not Track Export not available on your plan"
+msgstr ""
+
+#: includes/pro/admin/pages/class-wpconsent-admin-page-tools-pro.php:35
+msgid "The Do Not Track Export feature is only available on the Plus plan or higher. Upgrade your license today and easily export your do not track logs."
+msgstr ""
+
+#: includes/pro/admin/pages/class-wpconsent-admin-page-tools-pro.php:70
+msgid "Do Not Track Logs"
+msgstr ""
+
+#: includes/pro/admin/pages/class-wpconsent-admin-page-tools-pro.php:122
+#: includes/pro/admin/pages/class-wpconsent-admin-page-tools-pro.php:128
+msgid "Export Do Not Track Logs"
+msgstr ""
+
+#: includes/pro/admin/pages/class-wpconsent-admin-page-tools-pro.php:142
+msgid "Custom Scripts"
+msgstr ""
+
+#: includes/pro/admin/pages/class-wpconsent-admin-page-tools-pro.php:146
+msgid "Export custom scripts and iframes."
 msgstr ""
 
 #: includes/pro/admin/pages/class-wpconsent-consent-logs-list-table.php:37
@@ -2264,6 +2333,10 @@ msgstr ""
 
 #: includes/pro/class-wpconsent-geolocation.php:1012
 msgid "This cookie is used to store the consent settings based on the visitor's location."
+msgstr ""
+
+#: includes/pro/compatibility/pixelyoursite.php:142
+msgid "Detected via the PixelYourSite integration."
 msgstr ""
 
 #. translators: %1$s and %2$s are opening and closing anchor tags respectively

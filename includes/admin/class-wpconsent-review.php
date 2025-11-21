@@ -123,7 +123,7 @@ class WPConsent_Review {
 		<div class="wpconsent-review-step wpconsent-review-step-3" style="display: none">
 			<p><?php esc_html_e( 'That\'s awesome! Could you please do us a BIG favor and give it a 5-star rating on WordPress to help us spread the word and boost our motivation?', 'wpconsent-cookies-banner-privacy-suite' ); ?></p>
 			<p>
-				<a href="https://wordpress.org/support/plugin/wpconsent-cookies-banner-privacy-suite/reviews/?filter=5#new-post" class="wpconsent-notice-dismiss wpconsent-review-out" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Give Feedback', 'wpconsent-cookies-banner-privacy-suite' ); ?></a>&nbsp;&bull;&nbsp;<a href="#" class="wpconsent-notice-dismiss" rel="noopener noreferrer"><?php esc_html_e( 'No thanks', 'wpconsent-cookies-banner-privacy-suite' ); ?></a><br>
+				<a href="https://wordpress.org/support/plugin/wpconsent-cookies-banner-privacy-suite/reviews/#new-post" class="wpconsent-notice-dismiss wpconsent-review-out" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Give Feedback', 'wpconsent-cookies-banner-privacy-suite' ); ?></a>&nbsp;&bull;&nbsp;<a href="#" class="wpconsent-notice-dismiss" rel="noopener noreferrer"><?php esc_html_e( 'No thanks', 'wpconsent-cookies-banner-privacy-suite' ); ?></a><br>
 			</p>
 		</div>
 		<script type="text/javascript">
@@ -171,7 +171,7 @@ class WPConsent_Review {
 		global $current_screen;
 
 		if ( ! empty( $current_screen->id ) && strpos( $current_screen->id, 'wpconsent' ) !== false ) {
-			$url  = 'https://wordpress.org/support/plugin/wpconsent-cookies-banner-privacy-suite/reviews/?filter=5#new-post';
+			$url  = 'https://wordpress.org/support/plugin/wpconsent-cookies-banner-privacy-suite/reviews/#new-post';
 			$text = sprintf(
 				wp_kses( /* translators: $1$s - WPConsent plugin name; $2$s - WP.org review link; $3$s - WP.org review link. */
 					__( 'Please rate %1$s <a href="%2$s" target="_blank" rel="noopener noreferrer">&#9733;&#9733;&#9733;&#9733;&#9733;</a> on <a href="%3$s" target="_blank" rel="noopener">WordPress.org</a> to help us spread the word. Thank you from the WPConsent team!', 'wpconsent-cookies-banner-privacy-suite' ),

@@ -10,3 +10,5 @@ import './admin-pro/addons.js';
 import './admin-pro/script-management.js';
 import './admin-pro/geolocation-groups.js';
 import './admin-pro/translation.js';
+import './admin-pro/upsells-pro.js';
+import './admin-pro/database.js';

@@ -225,12 +225,31 @@
 			// Update settings based on geolocation data.
 			if ( data.show_banner === false ) {
 				// If the user is in a country where we don't need to show the banner.
-				const preferences = {essential: true, statistics: true, marketing: true};
-				// Save preferences to a cookie for this session.
-				WPConsent.setCookie( 'wpconsent_preferences', JSON.stringify( preferences ), 0 );
-				// Unlock scripts based on these preferences
-				WPConsent.unlockScripts( preferences );
-				WPConsent.unlockIframes( preferences );
+				// Disable the consent banner.
+				settings.enable_consent_banner = false;
+
+				// Only set preferences cookie if it doesn't already exist.
+				if ( !WPConsent.getCookie( 'wpconsent_preferences' ) ) {
+					const preferences = {essential: true, statistics: true, marketing: true};
+					// Save preferences to a cookie with the same duration as the geolocation cookie (30 days).
+					WPConsent.setCookie( 'wpconsent_preferences', JSON.stringify( preferences ), 30 );
+					// Unlock scripts based on these preferences.
+					WPConsent.unlockScripts( preferences );
+					WPConsent.unlockIframes( preferences );
+
+					// Update consent mode for Google services.
+					WPConsent.localGtag( 'consent', 'update', {
+						'ad_storage': 'granted',
+						'analytics_storage': 'granted',
+						'ad_user_data': 'granted',
+						'ad_personalization': 'granted',
+						'security_storage': 'granted',
+						'functionality_storage': 'granted'
+					} );
+				}
+
+				// Return early since we don't need to process additional banner settings.
+				return;
 			}
 
 			// Store country information if available.

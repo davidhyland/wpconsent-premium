@@ -48,16 +48,15 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 	 * @return void
 	 */
 	public function page_hooks() {
-		$this->process_message();
 		add_action( 'admin_init', array( $this, 'handle_submit' ) );
 		add_filter( 'wpconsent_admin_js_data', array( $this, 'add_connect_strings' ) );
 
 		$this->views = array(
-			'settings'      => __( 'Settings', 'wpconsent-cookies-banner-privacy-suite' ),
-			'cookies'       => __( 'Cookies', 'wpconsent-cookies-banner-privacy-suite' ),
-			'languages'     => __( 'Languages', 'wpconsent-cookies-banner-privacy-suite' ),
-			'import_export' => __( 'Import/Export', 'wpconsent-cookies-banner-privacy-suite' ),
-			'advanced'      => __( 'Advanced', 'wpconsent-cookies-banner-privacy-suite' ),
+				'settings'  => __( 'Settings', 'wpconsent-cookies-banner-privacy-suite' ),
+				'cookies'   => __( 'Cookies', 'wpconsent-cookies-banner-privacy-suite' ),
+				'languages' => __( 'Languages', 'wpconsent-cookies-banner-privacy-suite' ),
+				'advanced'  => __( 'Advanced', 'wpconsent-cookies-banner-privacy-suite' ),
+				'iabtcf'    => __( 'IAB TCF', 'wpconsent-cookies-banner-privacy-suite' ),
 		);
 	}
 
@@ -69,28 +68,23 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 	 * @return array
 	 */
 	public function add_connect_strings( $data ) {
-		$data['oops']                  = esc_html__( 'Oops!', 'wpconsent-cookies-banner-privacy-suite' );
-		$data['ok']                    = esc_html__( 'OK', 'wpconsent-cookies-banner-privacy-suite' );
-		$data['almost_done']           = esc_html__( 'Almost Done', 'wpconsent-cookies-banner-privacy-suite' );
-		$data['plugin_activate_btn']   = esc_html__( 'Activate', 'wpconsent-cookies-banner-privacy-suite' );
-		$data['server_error']          = esc_html__( 'Unfortunately there was a server connection error.', 'wpconsent-cookies-banner-privacy-suite' );
-		$data['icons']                 = array(
-			'checkmark' => wpconsent_get_icon( 'checkmark', 88, 88, '0 0 130.2 130.2' ),
+		$data['oops']                = esc_html__( 'Oops!', 'wpconsent-cookies-banner-privacy-suite' );
+		$data['ok']                  = esc_html__( 'OK', 'wpconsent-cookies-banner-privacy-suite' );
+		$data['almost_done']         = esc_html__( 'Almost Done', 'wpconsent-cookies-banner-privacy-suite' );
+		$data['plugin_activate_btn'] = esc_html__( 'Activate', 'wpconsent-cookies-banner-privacy-suite' );
+		$data['server_error']        = esc_html__( 'Unfortunately there was a server connection error.', 'wpconsent-cookies-banner-privacy-suite' );
+		$data['icons']               = array(
+				'checkmark' => wpconsent_get_icon( 'checkmark', 88, 88, '0 0 130.2 130.2' ),
 		);
-		$data['records_of_consent']    = array(
-			'title' => esc_html__( 'Records of Consent is a PRO feature', 'wpconsent-cookies-banner-privacy-suite' ),
-			'text'  => esc_html__( 'Upgrade to PRO today and start keeping logs for all visitors that give consent. 100% self-hosted on your WordPress site.', 'wpconsent-cookies-banner-privacy-suite' ),
-			'url'   => wpconsent_utm_url( 'https://wpconsent.com/lite', 'settings', 'consent-logs' ),
+		$data['records_of_consent']  = array(
+				'title' => esc_html__( 'Records of Consent is a PRO feature', 'wpconsent-cookies-banner-privacy-suite' ),
+				'text'  => esc_html__( 'Upgrade to PRO today and start keeping logs for all visitors that give consent. 100% self-hosted on your WordPress site.', 'wpconsent-cookies-banner-privacy-suite' ),
+				'url'   => wpconsent_utm_url( 'https://wpconsent.com/lite', 'settings', 'consent-logs' ),
 		);
-		$data['scanner']               = array(
-			'title' => esc_html__( 'Automatic Scanning is a PRO feature', 'wpconsent-cookies-banner-privacy-suite' ),
-			'text'  => esc_html__( 'Upgrade to PRO today and schedule automatic website scanning to stay up to date with your website\'s consent needs.', 'wpconsent-cookies-banner-privacy-suite' ),
-			'url'   => wpconsent_utm_url( 'https://wpconsent.com/lite', 'settings', 'consent-logs' ),
-		);
-		$data['custom_scripts_export'] = array(
-			'title' => esc_html__( 'Custom Scripts Export is a PRO feature', 'wpconsent-cookies-banner-privacy-suite' ),
-			'text'  => esc_html__( 'Upgrade to WPConsent PRO today and easily manage custom scripts and iframes. Take full control and block any scripts and iframes from loading until users give consent.', 'wpconsent-cookies-banner-privacy-suite' ),
-			'url'   => wpconsent_utm_url( 'https://wpconsent.com/lite', 'import-export', 'custom-scripts-export' ),
+		$data['scanner']             = array(
+				'title' => esc_html__( 'Automatic Scanning is a PRO feature', 'wpconsent-cookies-banner-privacy-suite' ),
+				'text'  => esc_html__( 'Upgrade to PRO today and schedule automatic website scanning to stay up to date with your website\'s consent needs.', 'wpconsent-cookies-banner-privacy-suite' ),
+				'url'   => wpconsent_utm_url( 'https://wpconsent.com/lite', 'settings', 'consent-logs' ),
 		);
 
 		return $data;
@@ -138,40 +132,56 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 			return;
 		}
 
-		// Handle import.
-		if ( isset( $_POST['wpconsent_import'] ) ) {
-			$this->handle_import();
-			return;
-		}
-
-		// Handle export.
-		if ( isset( $_POST['wpconsent_export'] ) ) {
-			$this->handle_export();
-			return;
-		}
-
 		// Save the settings based on current view.
 		if ( 'advanced' === $this->view ) {
+			$enable_shared_consent = isset( $_POST['enable_shared_consent'] ) ? 1 : 0;
+
+			// Calculate cookie domain if shared consent is enabled.
+			$cookie_domain = '';
+			$hostname      = '';
+			if ( $enable_shared_consent ) {
+				$hostname = wp_parse_url( home_url(), PHP_URL_HOST );
+				if ( $hostname ) {
+					$cookie_domain = wpconsent_get_registrable_domain( $hostname );
+				}
+			}
+
+			/**
+			 * Filter the calculated cookie domain before saving.
+			 *
+			 * Allows developers to modify the cookie domain for edge cases or custom requirements.
+			 *
+			 * @param string $cookie_domain The calculated registrable domain (e.g., 'example.com').
+			 * @param string $hostname The original hostname from home_url().
+			 * @param int    $enable_shared_consent Whether shared consent is enabled (1 or 0).
+			 *
+			 * @since 1.1.0
+			 *
+			 */
+			$cookie_domain = apply_filters( 'wpconsent_cookie_domain', $cookie_domain, $hostname, $enable_shared_consent );
+
 			$settings = array(
-				'clarity_consent_mode'  => isset( $_POST['clarity_consent_mode'] ) ? 1 : 0,
-				'uninstall_data'        => isset( $_POST['uninstall_data'] ) ? 1 : 0,
-				'enable_shared_consent' => isset( $_POST['enable_shared_consent'] ) ? 1 : 0,
-				'respect_gpc'           => isset( $_POST['respect_gpc'] ) ? 1 : 0,
+					'clarity_consent_mode'  => isset( $_POST['clarity_consent_mode'] ) ? 1 : 0,
+					'uninstall_data'        => isset( $_POST['uninstall_data'] ) ? 1 : 0,
+					'enable_shared_consent' => $enable_shared_consent,
+					'cookie_domain'         => $cookie_domain,
+					'respect_gpc'           => isset( $_POST['respect_gpc'] ) ? 1 : 0,
+					'usage_tracking'        => isset( $_POST['usage_tracking'] ) ? 1 : 0,
 			);
 		} else {
 			// Update main settings (for settings view).
 			$settings = array(
-				'enable_consent_banner'             => isset( $_POST['enable_consent_banner'] ) ? 1 : 0,
-				'cookie_policy_page'                => isset( $_POST['cookie_policy_page'] ) ? intval( $_POST['cookie_policy_page'] ) : 0,
-				'enable_script_blocking'            => ( isset( $_POST['enable_script_blocking'] ) && isset( $_POST['enable_consent_banner'] ) ) ? 1 : 0,
-				'google_consent_mode'               => ( isset( $_POST['google_consent_mode'] ) && isset( $_POST['google_consent_mode'] ) ) ? 1 : 0,
-				'enable_consent_floating'           => isset( $_POST['enable_consent_floating'] ) ? 1 : 0,
-				'default_allow'                     => isset( $_POST['default_allow'] ) ? 1 : 0,
-				'manual_toggle_services'            => isset( $_POST['manual_toggle_services'] ) ? 1 : 0,
-				'consent_duration'                  => isset( $_POST['consent_duration'] ) ? intval( $_POST['consent_duration'] ) : 30,
-				'enable_content_blocking'           => isset( $_POST['enable_content_blocking'] ) ? 1 : 0,
-				'content_blocking_services'         => isset( $_POST['content_blocking_services'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['content_blocking_services'] ) ) : array(),
-				'content_blocking_placeholder_text' => isset( $_POST['content_blocking_placeholder_text'] ) ? sanitize_text_field( wp_unslash( $_POST['content_blocking_placeholder_text'] ) ) : 'Click here to accept {category} cookies and load this content',
+					'enable_consent_banner'             => isset( $_POST['enable_consent_banner'] ) ? 1 : 0,
+					'cookie_policy_page'                => isset( $_POST['cookie_policy_page'] ) ? intval( $_POST['cookie_policy_page'] ) : 0,
+					'enable_script_blocking'            => ( isset( $_POST['enable_script_blocking'] ) && isset( $_POST['enable_consent_banner'] ) ) ? 1 : 0,
+					'google_consent_mode'               => ( isset( $_POST['google_consent_mode'] ) && isset( $_POST['google_consent_mode'] ) ) ? 1 : 0,
+					'enable_consent_floating'           => isset( $_POST['enable_consent_floating'] ) ? 1 : 0,
+					'default_allow'                     => isset( $_POST['default_allow'] ) ? 1 : 0,
+					'manual_toggle_services'            => isset( $_POST['manual_toggle_services'] ) ? 1 : 0,
+					'consent_duration'                  => isset( $_POST['consent_duration'] ) ? intval( $_POST['consent_duration'] ) : 30,
+					'enable_content_blocking'           => isset( $_POST['enable_content_blocking'] ) ? 1 : 0,
+					'content_blocking_services'         => isset( $_POST['content_blocking_services'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['content_blocking_services'] ) ) : array(),
+					'content_blocking_placeholder_text' => isset( $_POST['content_blocking_placeholder_text'] ) ? sanitize_text_field( wp_unslash( $_POST['content_blocking_placeholder_text'] ) ) : 'Click here to accept {category} cookies and load this content',
 			);
 		}
 
@@ -179,624 +189,6 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 
 		wp_safe_redirect( $this->get_page_action_url() );
 		exit;
-	}
-
-	/**
-	 * Handle the export of settings.
-	 *
-	 * @return void
-	 */
-	protected function handle_export() {
-		$export_all_settings   = isset( $_POST['export_all_settings'] ) ? true : false;  // phpcs:ignore WordPress.Security.NonceVerification
-		$export_banner_design  = isset( $_POST['export_banner_design'] ) ? true : false;  // phpcs:ignore WordPress.Security.NonceVerification
-		$export_cookie_data    = isset( $_POST['export_cookie_data'] ) ? true : false;  // phpcs:ignore WordPress.Security.NonceVerification
-		$export_custom_scripts = isset( $_POST['export_custom_scripts'] ) ? true : false;  // phpcs:ignore WordPress.Security.NonceVerification
-
-		$export_data = array();
-
-		if ( $export_all_settings || $export_banner_design ) {
-			$all_options = wpconsent()->settings->get_options();
-		}
-
-		if ( $export_all_settings ) {
-			$export_data['settings'] = $this->get_settings_for_export( $all_options );
-			// Export geolocation groups separately with proper structure.
-			$export_data['geolocation_groups'] = $this->get_geolocation_groups_for_export( $all_options );
-		}
-
-		if ( $export_banner_design ) {
-			$export_data['banner_design'] = $this->get_banner_design_for_export( $all_options );
-		}
-
-		if ( $export_cookie_data ) {
-			$export_data['cookies'] = $this->get_cookie_data_for_export();
-		}
-
-		if ( $export_custom_scripts ) {
-			$export_data['custom_scripts'] = $this->get_custom_scripts_for_export();
-		}
-
-		$this->output_export_file( $export_data );
-	}
-
-	/**
-	 * Get settings for export.
-	 *
-	 * @param array $all_options All plugin options.
-	 * @return array
-	 */
-	protected function get_settings_for_export( $all_options ) {
-		$settings = $all_options;
-
-		unset( $settings['manual_scan_pages'] );
-		unset( $settings['onboarding_completed'] );
-		unset( $settings['has_auto_populated_pages'] );
-		unset( $settings['banner_logo'] );
-
-		// Remove banner settings as they are handled separately.
-		foreach ( $this->get_banner_settings_keys() as $setting ) {
-			unset( $settings[ $setting ] );
-		}
-
-		// Ensure enabled_languages is always an empty array if not set or null.
-		if ( ! isset( $settings['enabled_languages'] ) || null === $settings['enabled_languages'] ) {
-			$settings['enabled_languages'] = array();
-		}
-
-		return $settings;
-	}
-
-	/**
-	 * Get banner design settings for export.
-	 *
-	 * @param array $all_options All plugin options.
-	 * @return array
-	 */
-	protected function get_banner_design_for_export( $all_options ) {
-		$banner_data = array();
-
-		foreach ( $this->get_banner_settings_keys() as $setting ) {
-			if ( isset( $all_options[ $setting ] ) ) {
-				// If this is the consent_floating_icon setting and it's a URL (custom image).
-				if ( 'consent_floating_icon' === $setting && filter_var( $all_options[ $setting ], FILTER_VALIDATE_URL ) ) {
-					$banner_data[ $setting ] = 'preferences';
-				} else {
-					$banner_data[ $setting ] = $all_options[ $setting ];
-				}
-			}
-		}
-
-		return $banner_data;
-	}
-
-	/**
-	 * Get cookie data for export.
-	 *
-	 * @return array
-	 */
-	protected function get_cookie_data_for_export() {
-		$export_data = array();
-
-		$categories = wpconsent()->cookies->get_categories();
-		foreach ( $categories as $category_slug => $category ) {
-			$category_id = $category['id'];
-
-			$cookies  = wpconsent()->cookies->get_cookies_by_category( $category_id );
-			$services = wpconsent()->cookies->get_services_by_category( $category_id );
-
-			$category_data = array(
-				'name'        => $category['name'],
-				'description' => $category['description'],
-				'required'    => $category['required'],
-				'cookies'     => array(),
-				'services'    => array(),
-			);
-
-			foreach ( $cookies as $cookie ) {
-				if ( count( $cookie['categories'] ) === 1 && $cookie['categories'][0] === $category_id ) {
-					$category_data['cookies'][] = $this->get_cookie_export_data( $cookie );
-				}
-			}
-
-			foreach ( $services as $service ) {
-				$service_data = array(
-					'id'          => $service['id'],
-					'name'        => $service['name'],
-					'description' => $service['description'],
-					'service_url' => $service['service_url'],
-					'cookies'     => array(),
-				);
-
-				foreach ( $cookies as $cookie ) {
-					if ( in_array( $service['id'], $cookie['categories'] ) ) {
-						$service_data['cookies'][] = $this->get_cookie_export_data( $cookie );
-					}
-				}
-
-				$category_data['services'][] = $service_data;
-			}
-			$export_data[ $category_slug ] = $category_data;
-		}
-
-		return $export_data;
-	}
-
-	/**
-	 * Get custom scripts for export.
-	 *
-	 * @return void
-	 */
-	protected function get_custom_scripts_for_export() {
-		// This method is meant to be overridden by child classes.
-	}
-
-	/**
-	 * Get geolocation groups for export.
-	 *
-	 * @param array $all_options All plugin options.
-	 *
-	 * @return array
-	 */
-	protected function get_geolocation_groups_for_export( $all_options ) {
-		return array();
-	}
-
-	/**
-	 * Get cookie export data.
-	 *
-	 * @param array $cookie Cookie data.
-	 * @return array
-	 */
-	protected function get_cookie_export_data( $cookie ) {
-		return array(
-			'id'          => $cookie['id'],
-			'name'        => $cookie['name'],
-			'cookie_id'   => $cookie['cookie_id'],
-			'description' => $cookie['description'],
-			'duration'    => $cookie['duration'],
-			'auto_added'  => $cookie['auto_added'],
-		);
-	}
-
-	/**
-	 * Get banner settings keys.
-	 *
-	 * @return array
-	 */
-	protected function get_banner_settings_keys() {
-		return array(
-			'banner_layout',
-			'banner_position',
-			'banner_background_color',
-			'banner_text_color',
-			'banner_font_size',
-			'banner_button_size',
-			'banner_button_corner',
-			'banner_button_type',
-			'banner_accept_bg',
-			'banner_accept_color',
-			'banner_cancel_bg',
-			'banner_cancel_color',
-			'banner_preferences_bg',
-			'banner_preferences_color',
-			'hide_powered_by',
-			'banner_message',
-			'accept_button_text',
-			'accept_button_enabled',
-			'button_order',
-			'preferences_button_text',
-			'cancel_button_text',
-			'cancel_button_enabled',
-			'preferences_button_enabled',
-			'preferences_panel_title',
-			'preferences_panel_description',
-			'cookie_policy_title',
-			'cookie_policy_text',
-			'save_preferences_button_text',
-			'close_button_text',
-			'disable_close_button',
-			'cookie_table_header_name',
-			'cookie_table_header_description',
-			'cookie_table_header_duration',
-			'cookie_table_header_category',
-			'consent_floating_icon',
-		);
-	}
-
-	/**
-	 * Output export file.
-	 *
-	 * @param array $export_data Data to export.
-	 *
-	 * @return void
-	 */
-	protected function output_export_file( $export_data ) {
-		$filename = 'wpconsent-export-' . gmdate( 'Y-m-d-H-i' ) . '.json';
-
-		header( 'Content-Type: application/json; charset=utf-8' );
-		header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
-		header( 'Expires: 0' );
-
-		echo wp_json_encode( $export_data, JSON_PRETTY_PRINT );
-		exit;
-	}
-
-	/**
-	 * Handle the import of settings.
-	 *
-	 * @return void
-	 */
-	protected function handle_import() {
-		// Check if file was uploaded.
-		if ( ! isset( $_FILES['import_file'] ) || ! isset( $_FILES['import_file']['tmp_name'] ) ) {  // phpcs:ignore WordPress.Security.NonceVerification
-			wp_die(
-				esc_html__( 'No file was uploaded.', 'wpconsent-cookies-banner-privacy-suite' ),
-				esc_html__( 'Error', 'wpconsent-cookies-banner-privacy-suite' ),
-				array(
-					'response' => 400,
-				)
-			);
-		}
-
-		// Validate file extension.
-		$ext = '';
-		if ( isset( $_FILES['import_file']['name'] ) ) {  // phpcs:ignore WordPress.Security.NonceVerification
-			$ext = strtolower( pathinfo( sanitize_text_field( $_FILES['import_file']['name'] ), PATHINFO_EXTENSION ) );  // phpcs:ignore WordPress.Security.NonceVerification
-		}
-
-		if ( 'json' !== $ext ) {
-			wp_die(
-				esc_html__( 'Please upload a valid .json export file.', 'wpconsent-cookies-banner-privacy-suite' ),
-				esc_html__( 'Error', 'wpconsent-cookies-banner-privacy-suite' ),
-				array(
-					'response' => 400,
-				)
-			);
-		}
-
-		// Validate MIME type.
-		$tmp_name  = isset( $_FILES['import_file']['tmp_name'] ) ? sanitize_text_field( $_FILES['import_file']['tmp_name'] ) : ''; //phpcs:ignore WordPress.Security.NonceVerification, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- wp_unslash() breaks upload on Windows.
-		$file_name = isset( $_FILES['import_file']['name'] ) ? sanitize_text_field( $_FILES['import_file']['name'] ) : ''; //phpcs:ignore WordPress.Security.NonceVerification
-
-		// Define valid MIME types for JSON files.
-		$valid_mime_types = array(
-			'application/json',
-			'text/plain', // Some servers may identify JSON files as text/plain.
-			'text/json',
-		);
-
-		// Check MIME type using WordPress functions first.
-		$wp_filetype = wp_check_filetype(
-			$file_name,
-			array(
-				'json' => 'application/json',
-				'txt'  => 'text/plain',
-			)
-		);
-
-		if ( empty( $wp_filetype['type'] ) || ! in_array( $wp_filetype['type'], $valid_mime_types, true ) ) {
-			wp_die(
-				esc_html__( 'The uploaded file is not a valid JSON file.', 'wpconsent-cookies-banner-privacy-suite' ),
-				esc_html__( 'Error', 'wpconsent-cookies-banner-privacy-suite' ),
-				array(
-					'response' => 400,
-				)
-			);
-		}
-
-		// Additional check using finfo if available for more security.
-		if ( function_exists( 'finfo_open' ) ) {
-			$finfo = finfo_open( FILEINFO_MIME_TYPE );
-			$mime  = finfo_file( $finfo, $tmp_name );
-			finfo_close( $finfo );
-
-			if ( ! in_array( $mime, $valid_mime_types, true ) ) {
-				wp_die(
-					esc_html__( 'The uploaded file is not a valid JSON file.', 'wpconsent-cookies-banner-privacy-suite' ),
-					esc_html__( 'Error', 'wpconsent-cookies-banner-privacy-suite' ),
-					array(
-						'response' => 400,
-					)
-				);
-			}
-		}
-
-		// Initialize WordPress Filesystem.
-		global $wp_filesystem;
-		if ( ! function_exists( 'WP_Filesystem' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/file.php';
-		}
-		WP_Filesystem();
-
-		// Get file contents.
-		$file_contents = $wp_filesystem->get_contents( $tmp_name );
-
-		// Validate JSON syntax.
-		$import_data = json_decode( $file_contents, true );
-		$json_error  = json_last_error();
-
-		if ( JSON_ERROR_NONE !== $json_error ) {
-			wp_die(
-				sprintf(
-				/* translators: %s: JSON error message */
-					esc_html__( 'Invalid JSON syntax: %s', 'wpconsent-cookies-banner-privacy-suite' ),
-					esc_html( json_last_error_msg() )
-				),
-				esc_html__( 'Error', 'wpconsent-cookies-banner-privacy-suite' ),
-				array(
-					'response' => 400,
-				)
-			);
-		}
-
-		// Validate expected data structure.
-		if ( empty( $import_data ) || ! is_array( $import_data ) ) {
-			wp_die(
-				esc_html__( 'Import data cannot be processed.', 'wpconsent-cookies-banner-privacy-suite' ),
-				esc_html__( 'Error', 'wpconsent-cookies-banner-privacy-suite' ),
-				array(
-					'response' => 400,
-				)
-			);
-		}
-
-		$this->import_settings( $import_data );
-		$this->import_geolocation_groups( $import_data );
-		$this->import_banner_design( $import_data );
-		$this->import_cookies( $import_data );
-		$this->import_custom_scripts( $import_data );
-
-		wp_safe_redirect( add_query_arg( 'message', 'import_success', $this->get_page_action_url() ) );
-		exit;
-	}
-
-	/**
-	 * Import settings from import data.
-	 *
-	 * @param array $import_data The import data.
-	 *
-	 * @return void
-	 */
-	protected function import_settings( $import_data ) {
-		if ( isset( $import_data['settings'] ) ) {
-			$settings = $import_data['settings'];
-			// Let's go through the settings and sanitize all the values.
-			foreach ( $settings as $key => $value ) {
-				if ( is_array( $value ) ) {
-					$settings[ $key ] = array_map( 'sanitize_text_field', $value );
-				} else {
-					$settings[ $key ] = sanitize_text_field( $value );
-				}
-			}
-
-			// Ensure enabled_languages is always an array if not set or null.
-			if ( ! isset( $settings['enabled_languages'] ) || null === $settings['enabled_languages'] || '' === $settings['enabled_languages'] ) {
-				$settings['enabled_languages'] = array();
-			}
-
-			wpconsent()->settings->bulk_update_options( $settings );
-
-			// Handle cookie policy page after settings are updated.
-			if ( isset( $import_data['settings']['cookie_policy_page'] ) && 0 !== $import_data['settings']['cookie_policy_page'] ) {
-				// Translators: This is a default text for the cookie policy generated by WPConsent. %1$s is the opening anchor tag, %2$s is the closing anchor tag.
-				$default_cookie_policy_text = esc_html__( 'This page provides comprehensive information about how we use cookies on our website to enhance your browsing experience, improve website performance, and deliver personalized content. Cookies are small text files that are stored on your device when you visit our site. They help us understand how visitors interact with our website, allowing us to offer a smoother and more efficient user experience. In the table below, you will find detailed information about each type of cookie we use, their purpose, and how long they remain on your device. We are committed to respecting your privacy and providing transparency about the data we collect through cookies. For more information on how we handle your personal data, please see our %1$sPrivacy Policy.%2$s', 'wpconsent-cookies-banner-privacy-suite' );
-				$privacy_policy             = get_privacy_policy_url();
-				$default_cookie_policy_text = sprintf( $default_cookie_policy_text, '<a href="' . esc_url( $privacy_policy ) . '">', '</a>' );
-
-				// Add shortcode.
-				$shortcode    = '<br>[wpconsent_cookie_policy]';
-				$page_content = '<p>' . $default_cookie_policy_text . '</p>';
-
-				// Let's check if the site is using the block editor for pages.
-				if ( function_exists( 'use_block_editor_for_post_type' ) && use_block_editor_for_post_type( 'page' ) ) {
-					// Let's wrap the page content in a paragraph block.
-					$page_content = '<!-- wp:paragraph -->' . $page_content . '<!-- /wp:paragraph -->';
-					// Let's add the shortcode block.
-					$page_content .= '<!-- wp:shortcode -->' . $shortcode . '<!-- /wp:shortcode -->';
-				} else {
-					// Let's add the shortcode.
-					$page_content .= $shortcode;
-				}
-
-				// Create new cookie policy page.
-				$page_id = wp_insert_post(
-					array(
-						'post_title'   => esc_html__( 'Cookie Policy', 'wpconsent-cookies-banner-privacy-suite' ),
-						'post_content' => $page_content,
-						'post_status'  => 'publish',
-						'post_type'    => 'page',
-					)
-				);
-
-				if ( $page_id ) {
-					// Update the cookie policy page ID in settings.
-					wpconsent()->settings->bulk_update_options(
-						array(
-							'cookie_policy_page' => $page_id,
-						)
-					);
-				} else {
-					wpconsent()->settings->bulk_update_options(
-						array(
-							'cookie_policy_page' => 0,
-						)
-					);
-				}
-			}
-		}
-	}
-
-	/**
-	 * Import banner design from import data.
-	 *
-	 * @param array $import_data The import data.
-	 *
-	 * @return void
-	 */
-	protected function import_banner_design( $import_data ) {
-		if ( isset( $import_data['banner_design'] ) ) {
-			// Let's go through the banner design settings and sanitize all the values.
-			$banner_design = $import_data['banner_design'];
-			foreach ( $banner_design as $key => $value ) {
-				if ( is_array( $value ) ) {
-					$banner_design[ $key ] = array_map( 'wp_kses_post', $value );
-				} else {
-					$banner_design[ $key ] = wp_kses_post( $value );
-				}
-			}
-
-			wpconsent()->settings->bulk_update_options( $banner_design );
-		}
-	}
-
-	/**
-	 * Import cookies from import data.
-	 *
-	 * @param array $import_data The import data.
-	 *
-	 * @return void
-	 */
-	protected function import_cookies( $import_data ) {
-		if ( isset( $import_data['cookies'] ) ) {
-			foreach ( $import_data['cookies'] as $category_slug => $category_data ) {
-				// Check if category exists, if not create it.
-				$category = get_term_by( 'slug', $category_slug, wpconsent()->cookies->taxonomy );
-				if ( ! $category ) {
-					$category_id = wpconsent()->cookies->add_category(
-						sanitize_text_field( $category_data['name'] ),
-						wp_kses_post( $category_data['description'] )
-					);
-					if ( is_wp_error( $category_id ) ) {
-						continue;
-					}
-				} else {
-					$category_id = $category->term_id;
-
-					// Update category name and description if it already exists.
-					wpconsent()->cookies->update_category(
-						$category_id,
-						sanitize_text_field( $category_data['name'] ),
-						wp_kses_post( $category_data['description'] )
-					);
-				}
-
-				// Update category meta.
-				update_term_meta( $category_id, 'wpconsent_required', intval( $category_data['required'] ) );
-
-				// Allow child classes to import additional category data.
-				$this->import_category_data( $category_id, $category_data );
-
-				// Import cookies directly attached to category.
-				if ( isset( $category_data['cookies'] ) && is_array( $category_data['cookies'] ) ) {
-					foreach ( $category_data['cookies'] as $cookie_data ) {
-						$post_id = wpconsent()->cookies->add_cookie(
-							sanitize_text_field( $cookie_data['cookie_id'] ),
-							sanitize_text_field( $cookie_data['name'] ),
-							wp_kses_post( $cookie_data['description'] ),
-							absint( $category_id ),
-							isset( $cookie_data['duration'] ) ? sanitize_text_field( $cookie_data['duration'] ) : ''
-						);
-
-						// Allow child classes to import additional cookie data.
-						$this->import_cookie_data( $post_id, $cookie_data );
-					}
-				}
-
-				// Import services and their cookies.
-				if ( isset( $category_data['services'] ) && is_array( $category_data['services'] ) ) {
-					foreach ( $category_data['services'] as $service_data ) {
-						// Add new service under the category.
-						$service_id = wpconsent()->cookies->add_service(
-							sanitize_text_field( $service_data['name'] ),
-							absint( $category_id ),
-							isset( $service_data['description'] ) ? wp_kses_post( $service_data['description'] ) : '',
-							isset( $service_data['service_url'] ) ? esc_url( $service_data['service_url'] ) : ''
-						);
-
-						if ( ! $service_id ) {
-							continue;
-						}
-
-						// Allow child classes to import additional service data.
-						$this->import_service_data( $service_id, $service_data );
-
-						// Import cookies for this service.
-						if ( isset( $service_data['cookies'] ) && is_array( $service_data['cookies'] ) ) {
-							foreach ( $service_data['cookies'] as $cookie_data ) {
-								$post_id = wpconsent()->cookies->add_cookie(
-									sanitize_text_field( $cookie_data['cookie_id'] ),
-									sanitize_text_field( $cookie_data['name'] ),
-									wp_kses_post( $cookie_data['description'] ),
-									absint( $service_id ),
-									isset( $cookie_data['duration'] ) ? sanitize_text_field( $cookie_data['duration'] ) : ''
-								);
-
-								// Allow child classes to import additional cookie data.
-								$this->import_cookie_data( $post_id, $cookie_data );
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	/**
-	 * Import additional category data. This is a hook for child classes to extend.
-	 *
-	 * @param int   $category_id The category ID.
-	 * @param array $category_data The category data.
-	 *
-	 * @return void
-	 */
-	protected function import_category_data( $category_id, $category_data ) {
-		// This method is meant to be overridden by child classes.
-	}
-
-	/**
-	 * Import additional cookie data. This is a hook for child classes to extend.
-	 *
-	 * @param int   $post_id The cookie post ID.
-	 * @param array $cookie_data The cookie data.
-	 *
-	 * @return void
-	 */
-	protected function import_cookie_data( $post_id, $cookie_data ) {
-		// This method is meant to be overridden by child classes.
-	}
-
-	/**
-	 * Import additional service data. This is a hook for child classes to extend.
-	 *
-	 * @param int   $service_id The service ID.
-	 * @param array $service_data The service data.
-	 *
-	 * @return void
-	 */
-	protected function import_service_data( $service_id, $service_data ) {
-		// This method is meant to be overridden by child classes.
-	}
-
-	/**
-	 * Import geolocation groups from import data.
-	 *
-	 * @param array $import_data The import data.
-	 *
-	 * @return void
-	 */
-	protected function import_geolocation_groups( $import_data ) {
-		// This method is meant to be overridden by Pro class.
-	}
-
-	/**
-	 * Import custom scripts from import data.
-	 *
-	 * @param array $import_data The import data.
-	 *
-	 * @return void
-	 */
-	protected function import_custom_scripts( $import_data ) {
-		// This method is meant to be overridden by child classes.
 	}
 
 	/**
@@ -809,16 +201,16 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 		<form action="<?php echo esc_url( $this->get_page_action_url() ); ?>" method="post">
 			<?php
 			$this->metabox(
-				esc_html__( 'License', 'wpconsent-cookies-banner-privacy-suite' ),
-				$this->get_license_key_content()
+					esc_html__( 'License', 'wpconsent-cookies-banner-privacy-suite' ),
+					$this->get_license_key_content()
 			);
 			$this->metabox(
-				__( 'Cookies Configuration', 'wpconsent-cookies-banner-privacy-suite' ),
-				$this->get_settings_metabox()
+					__( 'Cookies Configuration', 'wpconsent-cookies-banner-privacy-suite' ),
+					$this->get_settings_metabox()
 			);
 			wp_nonce_field(
-				'wpconsent_save_settings',
-				'wpconsent_save_settings_nonce'
+					'wpconsent_save_settings',
+					'wpconsent_save_settings_nonce'
 			);
 			?>
 			<div class="wpconsent-submit">
@@ -847,9 +239,9 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 				<?php
 				printf(
 				// Translators: %1$s - Opening anchor tag, do not translate. %2$s - Closing anchor tag, do not translate.
-					esc_html__( 'To unlock more features consider %1$supgrading to PRO%2$s.', 'wpconsent-cookies-banner-privacy-suite' ),
-					'<strong><a href="' . esc_url( wpconsent_utm_url( 'https://wpconsent.com/lite/', 'settings-license', 'upgrading-to-pro' ) ) . '" target="_blank" rel="noopener noreferrer">',
-					'</a></strong>'
+						esc_html__( 'To unlock more features consider %1$supgrading to PRO%2$s.', 'wpconsent-cookies-banner-privacy-suite' ),
+						'<strong><a href="' . esc_url( wpconsent_utm_url( 'https://wpconsent.com/lite/', 'settings-license', 'upgrading-to-pro' ) ) . '" target="_blank" rel="noopener noreferrer">',
+						'</a></strong>'
 				)
 				?>
 			</p>
@@ -876,9 +268,9 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 		ob_start();
 
 		$this->metabox_row(
-			esc_html__( 'License Key', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_license_key_field(),
-			'wpconsent-setting-license-key'
+				esc_html__( 'License Key', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_license_key_field(),
+				'wpconsent-setting-license-key'
 		);
 
 		return ob_get_clean();
@@ -894,139 +286,139 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 		ob_start();
 
 		$this->metabox_row(
-			esc_html__( 'Consent Banner', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_checkbox_toggle(
-				wpconsent()->settings->get_option( 'enable_consent_banner' ),
-				'enable_consent_banner',
-				esc_html__( 'Enable displaying the consent banner on your website.', 'wpconsent-cookies-banner-privacy-suite' )
-			),
-			'enable_consent_banner'
+				esc_html__( 'Consent Banner', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_checkbox_toggle(
+						wpconsent()->settings->get_option( 'enable_consent_banner' ),
+						'enable_consent_banner',
+						esc_html__( 'Enable displaying the consent banner on your website.', 'wpconsent-cookies-banner-privacy-suite' )
+				),
+				'enable_consent_banner'
 		);
 
 		$this->metabox_row(
-			esc_html__( 'Script Blocking', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_checkbox_toggle(
-				wpconsent()->settings->get_option( 'enable_script_blocking' ),
-				'enable_script_blocking',
-				sprintf(
-				// translators: %1$s is an opening link tag, %2$s is a closing link tag.
-					esc_html__( 'Prevent known scripts from adding cookies before consent is given. %1$sLearn More%2$s', 'wpconsent-cookies-banner-privacy-suite' ),
-					'<a target="_blank" rel="noopener noreferrer" href="' . esc_url( wpconsent_utm_url( 'https://wpconsent.com/docs/automatic-script-blocking', 'settings', 'script-blocking' ) ) . '">',
-					'</a>'
-				)
-			) . $this->help_icon( __( 'Script blocking is not available without displaying the banner', 'wpconsent-cookies-banner-privacy-suite' ), false ),
-			'enable_script_blocking'
+				esc_html__( 'Script Blocking', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_checkbox_toggle(
+						wpconsent()->settings->get_option( 'enable_script_blocking' ),
+						'enable_script_blocking',
+						sprintf(
+						// translators: %1$s is an opening link tag, %2$s is a closing link tag.
+								esc_html__( 'Prevent known scripts from adding cookies before consent is given. %1$sLearn More%2$s', 'wpconsent-cookies-banner-privacy-suite' ),
+								'<a target="_blank" rel="noopener noreferrer" href="' . esc_url( wpconsent_utm_url( 'https://wpconsent.com/docs/automatic-script-blocking', 'settings', 'script-blocking' ) ) . '">',
+								'</a>'
+						)
+				) . $this->help_icon( __( 'Script blocking is not available without displaying the banner', 'wpconsent-cookies-banner-privacy-suite' ), false ),
+				'enable_script_blocking'
 		);
 
 		$this->metabox_row(
-			esc_html__( 'Google Consent Mode', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_checkbox_toggle(
-				wpconsent()->settings->get_option( 'google_consent_mode', true ),
-				'google_consent_mode',
-				sprintf(
-				// translators: %1$s is an opening link tag, %2$s is a closing link tag.
-					esc_html__( 'Use services like Google Analytics and Google ads without cookies until consent is given. %1$sLearn More%2$s', 'wpconsent-cookies-banner-privacy-suite' ),
-					'<a target="_blank" rel="noopener noreferrer" href="' . esc_url( wpconsent_utm_url( 'https://wpconsent.com/docs/google-consent-mode', 'settings', 'google-consent-mode' ) ) . '">',
-					'</a>'
-				)
-			) . $this->help_icon( __( 'Google Consent Mode will not be loaded if the banner is disabled.', 'wpconsent-cookies-banner-privacy-suite' ), false ),
-			'google_consent_mode'
+				esc_html__( 'Google Consent Mode', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_checkbox_toggle(
+						wpconsent()->settings->get_option( 'google_consent_mode', true ),
+						'google_consent_mode',
+						sprintf(
+						// translators: %1$s is an opening link tag, %2$s is a closing link tag.
+								esc_html__( 'Use services like Google Analytics and Google ads without cookies until consent is given. %1$sLearn More%2$s', 'wpconsent-cookies-banner-privacy-suite' ),
+								'<a target="_blank" rel="noopener noreferrer" href="' . esc_url( wpconsent_utm_url( 'https://wpconsent.com/docs/google-consent-mode', 'settings', 'google-consent-mode' ) ) . '">',
+								'</a>'
+						)
+				) . $this->help_icon( __( 'Google Consent Mode will not be loaded if the banner is disabled.', 'wpconsent-cookies-banner-privacy-suite' ), false ),
+				'google_consent_mode'
 		);
 
 		$this->metabox_row(
-			esc_html__( 'Settings Button', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_checkbox_toggle(
-				wpconsent()->settings->get_option( 'enable_consent_floating' ),
-				'enable_consent_floating',
-				esc_html__( 'Show a floating button to manage consent after the banner is dismissed.', 'wpconsent-cookies-banner-privacy-suite' )
-			),
-			'enable_consent_floating'
+				esc_html__( 'Settings Button', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_checkbox_toggle(
+						wpconsent()->settings->get_option( 'enable_consent_floating' ),
+						'enable_consent_floating',
+						esc_html__( 'Show a floating button to manage consent after the banner is dismissed.', 'wpconsent-cookies-banner-privacy-suite' )
+				),
+				'enable_consent_floating'
 		);
 
 		$this->metabox_row(
-			esc_html__( 'Default Allow', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_checkbox_toggle(
-				wpconsent()->settings->get_option( 'default_allow' ),
-				'default_allow',
-				sprintf(
-				// translators: %1$s is an opening link tag, %2$s is a closing link tag.
-					esc_html__( 'Enable this to only block scripts/cookies if the user rejects them. %1$sLearn More%2$s', 'wpconsent-cookies-banner-privacy-suite' ),
-					'<a target="_blank" rel="noopener noreferrer" href="' . esc_url( wpconsent_utm_url( 'https://wpconsent.com/docs/default-allow', 'settings', 'default-allow' ) ) . '">',
-					'</a>'
-				)
-			),
-			'default_allow'
+				esc_html__( 'Default Allow', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_checkbox_toggle(
+						wpconsent()->settings->get_option( 'default_allow' ),
+						'default_allow',
+						sprintf(
+						// translators: %1$s is an opening link tag, %2$s is a closing link tag.
+								esc_html__( 'Enable this to only block scripts/cookies if the user rejects them. %1$sLearn More%2$s', 'wpconsent-cookies-banner-privacy-suite' ),
+								'<a target="_blank" rel="noopener noreferrer" href="' . esc_url( wpconsent_utm_url( 'https://wpconsent.com/docs/default-allow', 'settings', 'default-allow' ) ) . '">',
+								'</a>'
+						)
+				),
+				'default_allow'
 		);
 
 		$this->metabox_row(
-			esc_html__( 'Toggle Services', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_checkbox_toggle(
-				wpconsent()->settings->get_option( 'manual_toggle_services' ),
-				'manual_toggle_services',
-				esc_html__( 'Allow site visitors to toggle individual services from the preferences panel.', 'wpconsent-cookies-banner-privacy-suite' )
-			),
-			'manual_toggle_services'
+				esc_html__( 'Toggle Services', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_checkbox_toggle(
+						wpconsent()->settings->get_option( 'manual_toggle_services' ),
+						'manual_toggle_services',
+						esc_html__( 'Allow site visitors to toggle individual services from the preferences panel.', 'wpconsent-cookies-banner-privacy-suite' )
+				),
+				'manual_toggle_services'
 		);
 
 		$this->metabox_row_separator();
 		$this->metabox_row(
-			esc_html__( 'Cookie Categories', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_cookie_categories_input()
+				esc_html__( 'Cookie Categories', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_cookie_categories_input()
 		);
 		$this->metabox_row_separator();
 		$this->metabox_row(
-			esc_html__( 'Cookie Policy', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_cookie_policy_input(),
-			'',
-			'',
-			'',
-			'',
-			false,
-			'cookie-policy-input'
+				esc_html__( 'Cookie Policy', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_cookie_policy_input(),
+				'',
+				'',
+				'',
+				'',
+				false,
+				'cookie-policy-input'
 		);
 		$this->metabox_row_separator();
 		$this->metabox_row(
-			esc_html__( 'Content Blocking', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_checkbox_toggle(
-				wpconsent()->settings->get_option( 'enable_content_blocking' ),
-				'enable_content_blocking',
-				esc_html__( 'Block 3rd party services that use iframes from being loaded before consent is given.', 'wpconsent-cookies-banner-privacy-suite' )
-			),
-			'enable_content_blocking'
+				esc_html__( 'Content Blocking', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_checkbox_toggle(
+						wpconsent()->settings->get_option( 'enable_content_blocking' ),
+						'enable_content_blocking',
+						esc_html__( 'Block 3rd party services that use iframes from being loaded before consent is given.', 'wpconsent-cookies-banner-privacy-suite' )
+				),
+				'enable_content_blocking'
 		);
 		$this->metabox_row(
-			esc_html__( 'Content to Block', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_content_blocking_input(),
-			'',
-			'#enable_content_blocking',
-			'1',
-			esc_html__( 'Choose which content providers to automatically block.', 'wpconsent-cookies-banner-privacy-suite' ),
-			false,
-			'content_blocking'
+				esc_html__( 'Content to Block', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_content_blocking_input(),
+				'',
+				'#enable_content_blocking',
+				'1',
+				esc_html__( 'Choose which content providers to automatically block.', 'wpconsent-cookies-banner-privacy-suite' ),
+				false,
+				'content_blocking'
 		);
 		$this->metabox_row(
-			esc_html__( 'Placeholder Button', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_input_text(
+				esc_html__( 'Placeholder Button', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_input_text(
+						'content_blocking_placeholder_text',
+						wpconsent()->settings->get_option( 'content_blocking_placeholder_text', wpconsent()->strings->get_string( 'content_blocking_placeholder_text' ) )
+				),
 				'content_blocking_placeholder_text',
-				wpconsent()->settings->get_option( 'content_blocking_placeholder_text', wpconsent()->strings->get_string( 'content_blocking_placeholder_text' ) )
-			),
-			'content_blocking_placeholder_text',
-			'#enable_content_blocking',
-			'1',
-			sprintf(
+				'#enable_content_blocking',
+				'1',
+				sprintf(
 				// Translators: %s is the {category} tag wrapped in a code tag.
-				esc_html__( 'Customize the text shown on the placeholder button. Use %s to insert the cookie category name.', 'wpconsent-cookies-banner-privacy-suite' ),
-				'<code>{category}</code>'
-			)
+						esc_html__( 'Customize the text shown on the placeholder button. Use %s to insert the cookie category name.', 'wpconsent-cookies-banner-privacy-suite' ),
+						'<code>{category}</code>'
+				)
 		);
 		$this->metabox_row_separator();
 		$this->metabox_row(
-			esc_html__( 'Consent Duration', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_input_number( 'consent_duration', wpconsent()->settings->get_option( 'consent_duration', 30 ) ),
-			'consent_duration',
-			'',
-			'',
-			esc_html__( 'The duration of the consent given by the user (in days).', 'wpconsent-cookies-banner-privacy-suite' )
+				esc_html__( 'Consent Duration', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_input_number( 'consent_duration', wpconsent()->settings->get_option( 'consent_duration', 30 ) ),
+				'consent_duration',
+				'',
+				'',
+				esc_html__( 'The duration of the consent given by the user (in days).', 'wpconsent-cookies-banner-privacy-suite' )
 		);
 		$this->metabox_row_separator();
 		$this->records_of_consent_input();
@@ -1043,17 +435,17 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 	 */
 	public function records_of_consent_input() {
 		$this->metabox_row(
-			esc_html__( 'Consent Logs', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_checkbox_toggle(
-				false,
+				esc_html__( 'Consent Logs', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_checkbox_toggle(
+						false,
+						'wpconsent-records-of-consent-lite',
+						esc_html__( 'Enable keeping records of consent for all visitors that give consent.', 'wpconsent-cookies-banner-privacy-suite' )
+				),
 				'wpconsent-records-of-consent-lite',
-				esc_html__( 'Enable keeping records of consent for all visitors that give consent.', 'wpconsent-cookies-banner-privacy-suite' )
-			),
-			'wpconsent-records-of-consent-lite',
-			'',
-			'',
-			'',
-			true
+				'',
+				'',
+				'',
+				true
 		);
 	}
 
@@ -1064,33 +456,33 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 	 */
 	public function automatic_scanning_input() {
 		$this->metabox_row(
-			esc_html__( 'Auto Scanning', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_checkbox_toggle(
-				false,
+				esc_html__( 'Auto Scanning', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_checkbox_toggle(
+						false,
+						'wpconsent-auto-scanner-lite',
+						esc_html__( 'Enable automatic scanning of consent compliance in the background.', 'wpconsent-cookies-banner-privacy-suite' )
+				),
 				'wpconsent-auto-scanner-lite',
-				esc_html__( 'Enable automatic scanning of consent compliance in the background.', 'wpconsent-cookies-banner-privacy-suite' )
-			),
-			'wpconsent-auto-scanner-lite',
-			'',
-			'',
-			'',
-			true
+				'',
+				'',
+				'',
+				true
 		);
 		$this->metabox_row(
-			esc_html__( 'Scan Interval', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->select(
+				esc_html__( 'Scan Interval', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->select(
+						'wpconsent-auto-scanner-interval-lite',
+						array(
+								'1'  => esc_html__( 'Daily', 'wpconsent-cookies-banner-privacy-suite' ),
+								'7'  => esc_html__( 'Weekly', 'wpconsent-cookies-banner-privacy-suite' ),
+								'30' => esc_html__( 'Monthly', 'wpconsent-cookies-banner-privacy-suite' ),
+						)
+				),
 				'wpconsent-auto-scanner-interval-lite',
-				array(
-					'1'  => esc_html__( 'Daily', 'wpconsent-cookies-banner-privacy-suite' ),
-					'7'  => esc_html__( 'Weekly', 'wpconsent-cookies-banner-privacy-suite' ),
-					'30' => esc_html__( 'Monthly', 'wpconsent-cookies-banner-privacy-suite' ),
-				)
-			),
-			'wpconsent-auto-scanner-interval-lite',
-			'',
-			'',
-			esc_html__( 'Choose how often to automatically scan your website for compliance.', 'wpconsent-cookies-banner-privacy-suite' ),
-			true
+				'',
+				'',
+				esc_html__( 'Choose how often to automatically scan your website for compliance.', 'wpconsent-cookies-banner-privacy-suite' ),
+				true
 		);
 	}
 
@@ -1365,6 +757,7 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 	 * Get the service library button HTML.
 	 *
 	 * @param array $category The category data.
+	 *
 	 * @return string The button HTML.
 	 */
 	public function get_service_library_button( $category ) {
@@ -1385,8 +778,8 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 	 */
 	public function output_view_cookies() {
 		$this->metabox(
-			__( 'Cookies Configuration', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_cookies_input()
+				__( 'Cookies Configuration', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_cookies_input()
 		);
 	}
 
@@ -1422,12 +815,12 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 					<div class="wpconsent-modal-content">
 						<?php
 						$this->metabox_row(
-							esc_html__( 'Category Name', 'wpconsent-cookies-banner-privacy-suite' ),
-							$this->get_input_text( 'category_name' )
+								esc_html__( 'Category Name', 'wpconsent-cookies-banner-privacy-suite' ),
+								$this->get_input_text( 'category_name' )
 						);
 						$this->metabox_row(
-							esc_html__( 'Description', 'wpconsent-cookies-banner-privacy-suite' ),
-							$this->get_input_textarea( 'category_description' )
+								esc_html__( 'Description', 'wpconsent-cookies-banner-privacy-suite' ),
+								$this->get_input_textarea( 'category_description' )
 						);
 						?>
 						<div class="wpconsent-modal-buttons">
@@ -1467,24 +860,24 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 					<div class="wpconsent-modal-content">
 						<?php
 						$this->metabox_row(
-							esc_html__( 'Service', 'wpconsent-cookies-banner-privacy-suite' ),
-							$this->select( 'cookie_service', $this->get_services_options() )
+								esc_html__( 'Service', 'wpconsent-cookies-banner-privacy-suite' ),
+								$this->select( 'cookie_service', $this->get_services_options() )
 						);
 						$this->metabox_row(
-							esc_html__( 'Cookie Name', 'wpconsent-cookies-banner-privacy-suite' ),
-							$this->get_input_text( 'cookie_name' )
+								esc_html__( 'Cookie Name', 'wpconsent-cookies-banner-privacy-suite' ),
+								$this->get_input_text( 'cookie_name' )
 						);
 						$this->metabox_row(
-							esc_html__( 'Cookie ID', 'wpconsent-cookies-banner-privacy-suite' ),
-							$this->get_input_text( 'cookie_id' )
+								esc_html__( 'Cookie ID', 'wpconsent-cookies-banner-privacy-suite' ),
+								$this->get_input_text( 'cookie_id' )
 						);
 						$this->metabox_row(
-							esc_html__( 'Description', 'wpconsent-cookies-banner-privacy-suite' ),
-							$this->get_input_textarea( 'cookie_description' )
+								esc_html__( 'Description', 'wpconsent-cookies-banner-privacy-suite' ),
+								$this->get_input_textarea( 'cookie_description' )
 						);
 						$this->metabox_row(
-							esc_html__( 'Duration', 'wpconsent-cookies-banner-privacy-suite' ),
-							$this->get_input_text( 'cookie_duration' )
+								esc_html__( 'Duration', 'wpconsent-cookies-banner-privacy-suite' ),
+								$this->get_input_text( 'cookie_duration' )
 						);
 						?>
 						<div class="wpconsent-modal-buttons">
@@ -1521,20 +914,20 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 						}
 
 						$this->metabox_row(
-							esc_html__( 'Category', 'wpconsent-cookies-banner-privacy-suite' ),
-							$this->select( 'service_category', $select_options )
+								esc_html__( 'Category', 'wpconsent-cookies-banner-privacy-suite' ),
+								$this->select( 'service_category', $select_options )
 						);
 						$this->metabox_row(
-							esc_html__( 'Service Name', 'wpconsent-cookies-banner-privacy-suite' ),
-							$this->get_input_text( 'service_name' )
+								esc_html__( 'Service Name', 'wpconsent-cookies-banner-privacy-suite' ),
+								$this->get_input_text( 'service_name' )
 						);
 						$this->metabox_row(
-							esc_html__( 'Description', 'wpconsent-cookies-banner-privacy-suite' ),
-							$this->get_input_textarea( 'service_description' )
+								esc_html__( 'Description', 'wpconsent-cookies-banner-privacy-suite' ),
+								$this->get_input_textarea( 'service_description' )
 						);
 						$this->metabox_row(
-							esc_html__( 'Privacy Policy URL', 'wpconsent-cookies-banner-privacy-suite' ),
-							$this->get_input_text( 'service_url' )
+								esc_html__( 'Privacy Policy URL', 'wpconsent-cookies-banner-privacy-suite' ),
+								$this->get_input_text( 'service_url' )
 						);
 						?>
 						<div class="wpconsent-modal-buttons">
@@ -1562,7 +955,7 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 	 */
 	public function get_services_options() {
 		return array(
-			'0' => esc_html__( 'No service', 'wpconsent-cookies-banner-privacy-suite' ),
+				'0' => esc_html__( 'No service', 'wpconsent-cookies-banner-privacy-suite' ),
 		);
 	}
 
@@ -1576,9 +969,9 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 		$selected_page_id = wpconsent()->settings->get_option( 'cookie_policy_page' );
 		$selected_page    = $selected_page_id ? get_post( $selected_page_id ) : null;
 		$pages_args       = array(
-			'number'  => 20,
-			'orderby' => 'title',
-			'order'   => 'ASC',
+				'number'  => 20,
+				'orderby' => 'title',
+				'order'   => 'ASC',
 		);
 		if ( ! empty( $selected_page_id ) ) {
 			$pages_args['exclude'] = array( $selected_page_id );
@@ -1625,8 +1018,8 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 			<?php
 			printf(
 			// Translators: %s is the wpconsent_cookie_policy shortcode wrapped in code tags.
-				esc_html__( 'Please select the page that serves as your cookie policy. Ensure that this page includes the %s shortcode. This shortcode is essential for automatically listing all the cookies configured in WPConsent.', 'wpconsent-cookies-banner-privacy-suite' ),
-				'<code>[wpconsent_cookie_policy]</code>'
+					esc_html__( 'Please select the page that serves as your cookie policy. Ensure that this page includes the %s shortcode. This shortcode is essential for automatically listing all the cookies configured in WPConsent.', 'wpconsent-cookies-banner-privacy-suite' ),
+					'<code>[wpconsent_cookie_policy]</code>'
 			);
 			?>
 		</div>
@@ -1645,27 +1038,27 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 		<div class="wpconsent-blur-area">
 			<?php
 			$this->metabox(
-				esc_html__( 'Language Settings', 'wpconsent-cookies-banner-privacy-suite' ),
-				$this->get_language_settings_content()
+					esc_html__( 'Language Settings', 'wpconsent-cookies-banner-privacy-suite' ),
+					$this->get_language_settings_content()
 			);
 			wp_nonce_field(
-				'wpconsent_save_language_settings',
-				'wpconsent_save_language_settings_nonce'
+					'wpconsent_save_language_settings',
+					'wpconsent_save_language_settings_nonce'
 			);
 			?>
 		</div>
 		<?php
 		echo WPConsent_Admin_page::get_upsell_box( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			esc_html__( 'Multilanguage + Automatic Translations', 'wpconsent-cookies-banner-privacy-suite' ),
-			'<p>' . esc_html__( 'Upgrade to WPConsent PRO today and easily manage content in multiple languages. Automatic AI-powered translations get you set up with a new language in minutes.', 'wpconsent-cookies-banner-privacy-suite' ) . '</p>',
-			array(
-				'text' => esc_html__( 'Upgrade to PRO and Unlock Languages', 'wpconsent-cookies-banner-privacy-suite' ),
-				'url'  => esc_url( wpconsent_utm_url( 'https://wpconsent.com/lite/', 'languages-page', 'main' ) ),
-			),
-			array(
-				'text' => esc_html__( 'Learn more about all the features', 'wpconsent-cookies-banner-privacy-suite' ),
-				'url'  => esc_url( wpconsent_utm_url( 'https://wpconsent.com/lite/', 'languages-page', 'features' ) ),
-			)
+				esc_html__( 'Multilanguage + Automatic Translations', 'wpconsent-cookies-banner-privacy-suite' ),
+				'<p>' . esc_html__( 'Upgrade to WPConsent PRO today and easily manage content in multiple languages. Automatic AI-powered translations get you set up with a new language in minutes.', 'wpconsent-cookies-banner-privacy-suite' ) . '</p>',
+				array(
+						'text' => esc_html__( 'Upgrade to PRO and Unlock Languages', 'wpconsent-cookies-banner-privacy-suite' ),
+						'url'  => esc_url( wpconsent_utm_url( 'https://wpconsent.com/lite/', 'languages-page', 'main' ) ),
+				),
+				array(
+						'text' => esc_html__( 'Learn more about all the features', 'wpconsent-cookies-banner-privacy-suite' ),
+						'url'  => esc_url( wpconsent_utm_url( 'https://wpconsent.com/lite/', 'languages-page', 'features' ) ),
+				)
 		);
 		?>
 		<?php
@@ -1693,8 +1086,8 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 		<div class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>" data-locale="<?php echo esc_attr( $locale ); ?>" data-search="<?php echo esc_attr( strtolower( $language['english_name'] . ' ' . $language['native_name'] . ' ' . $locale ) ); ?>">
 			<label class="wpconsent-checkbox-label">
 				<input type="checkbox" name="enabled_languages[]" value="<?php echo esc_attr( $locale ); ?>"
-					<?php checked( $is_enabled ); ?>
-					<?php disabled( $is_default ); ?>>
+						<?php checked( $is_enabled ); ?>
+						<?php disabled( $is_default ); ?>>
 				<span class="wpconsent-checkbox-text">
 					<?php echo esc_html( $language['english_name'] ); ?>
 					<span class="wpconsent-language-locale">(<?php echo esc_html( $locale ); ?>)</span>
@@ -1731,9 +1124,9 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 
 		// Add English as it's not in the translations list.
 		$available_languages['en_US'] = array(
-			'language'     => 'en_US',
-			'english_name' => 'English (United States)',
-			'native_name'  => 'English (United States)',
+				'language'     => 'en_US',
+				'english_name' => 'English (United States)',
+				'native_name'  => 'English (United States)',
 		);
 
 		// Get WordPress default language.
@@ -1766,8 +1159,8 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 					<?php
 					printf(
 					// Translators: %s is the current WordPress language name.
-						esc_html__( 'Select the languages you want to make available for your content. The default language (%s) will be used for the current settings until you configure translations.', 'wpconsent-cookies-banner-privacy-suite' ),
-						esc_html( isset( $available_languages[ $default_language ]['english_name'] ) ? $available_languages[ $default_language ]['english_name'] : 'English (United States)' )
+							esc_html__( 'Select the languages you want to make available for your content. The default language (%s) will be used for the current settings until you configure translations.', 'wpconsent-cookies-banner-privacy-suite' ),
+							esc_html( isset( $available_languages[ $default_language ]['english_name'] ) ? $available_languages[ $default_language ]['english_name'] : 'English (United States)' )
 					);
 					?>
 				</p>
@@ -1775,20 +1168,20 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 					<?php
 					printf(
 					// Translators: %s is the icon for the language switcher.
-						esc_html__(
-							'Easily switch between languages using the globe icon (%s) in the header of any WPConsent admin page.',
-							'wpconsent-cookies-banner-privacy-suite'
-						),
-						wp_kses(
-							wpconsent_get_icon( 'globe', 16, 16, '0 -960 960 960' ),
-							wpconsent_get_icon_allowed_tags()
-						)
+							esc_html__(
+									'Easily switch between languages using the globe icon (%s) in the header of any WPConsent admin page.',
+									'wpconsent-cookies-banner-privacy-suite'
+							),
+							wp_kses(
+									wpconsent_get_icon( 'globe', 16, 16, '0 -960 960 960' ),
+									wpconsent_get_icon_allowed_tags()
+							)
 					);
 					?>
 				</p>
 				<p>
 					<?php
-					esc_html_e( 'The "Translate" button appears for languages that are supported by our translation service. Click the button to start the automatic translation process for your consent banner content. Translation happens asynchronously in the background, and you will be notified when the process is complete.', 'wpconsent-premium' );
+					esc_html_e( 'The "Translate" button appears for languages that are supported by our translation service. Click the button to start the automatic translation process for your consent banner content. Translation happens asynchronously in the background, and you will be notified when the process is complete.', 'wpconsent-cookies-banner-privacy-suite' );
 					?>
 				</p>
 			</div>
@@ -1816,7 +1209,7 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 							endforeach;
 							?>
 						</div>
-						<?php
+					<?php
 					endif;
 
 					// Output unselected languages.
@@ -1839,16 +1232,16 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 		</div>
 		<?php
 		$this->metabox_row(
-			esc_html__( 'Language Picker', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_checkbox_toggle(
-				true,
+				esc_html__( 'Language Picker', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_checkbox_toggle(
+						true,
+						'show_language_picker',
+						esc_html__( 'Show a language picker in the consent banner', 'wpconsent-cookies-banner-privacy-suite' )
+				),
 				'show_language_picker',
-				esc_html__( 'Show a language picker in the consent banner', 'wpconsent-cookies-banner-privacy-suite' )
-			),
-			'show_language_picker',
-			'',
-			'',
-			esc_html__( 'This will show a globe icon in the header of the consent banner, allowing users to switch between languages just for the banner/preferences panel even if you do not use a translation plugin. If you are using a translation plugin the banner should automatically display the content in the selected language, if available.', 'wpconsent-cookies-banner-privacy-suite' )
+				'',
+				'',
+				esc_html__( 'This will show a globe icon in the header of the consent banner, allowing users to switch between languages just for the banner/preferences panel even if you do not use a translation plugin. If you are using a translation plugin the banner should automatically display the content in the selected language, if available.', 'wpconsent-cookies-banner-privacy-suite' )
 		);
 
 		return ob_get_clean();
@@ -1870,14 +1263,14 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 			foreach ( $content_blocking_services as $service_id => $service ) {
 				$is_enabled = empty( $currently_blocking ) || in_array( $service_id, $currently_blocking, true );
 				$this->metabox_row(
-					esc_html( $service ),
-					$this->get_checkbox_toggle(
-						$is_enabled,
-						'content_blocking_services[]',
-						'',
-						$service_id
-					),
-					'content_blocking_services_' . $service_id
+						esc_html( $service ),
+						$this->get_checkbox_toggle(
+								$is_enabled,
+								'content_blocking_services[]',
+								'',
+								$service_id
+						),
+						'content_blocking_services_' . $service_id
 				);
 			}
 			?>
@@ -1885,150 +1278,6 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 		<?php
 
 		return ob_get_clean();
-	}
-
-	/**
-	 * Output the import/export view.
-	 *
-	 * @return void
-	 */
-	public function output_view_import_export() {
-		?>
-		<form action="<?php echo esc_url( $this->get_page_action_url() ); ?>" method="post" enctype="multipart/form-data">
-			<?php
-			wp_nonce_field( 'wpconsent_save_settings', 'wpconsent_save_settings_nonce' );
-			$this->metabox(
-				__( 'Import Settings', 'wpconsent-cookies-banner-privacy-suite' ),
-				$this->get_import_settings_content()
-			);
-
-			$this->metabox(
-				__( 'Export Settings', 'wpconsent-cookies-banner-privacy-suite' ),
-				$this->get_export_settings_content()
-			);
-			?>
-		</form>
-		<?php
-	}
-
-	/**
-	 * Get the import settings content.
-	 *
-	 * @return string
-	 */
-	public function get_import_settings_content() {
-		ob_start();
-		?>
-		<div class="wpconsent-input-area-description">
-			<p><?php esc_html_e( 'Import your WPConsent settings from a JSON file. This will overwrite your current settings.', 'wpconsent-cookies-banner-privacy-suite' ); ?></p>
-		</div>
-
-		<div class="wpconsent-metabox-form-row">
-			<div class="wpconsent-file-upload">
-				<input type="file" name="import_file" id="wpconsent-import-file" class="inputfile" data-multiple-caption="{count} files selected" accept=".json">
-				<label for="wpconsent-import-file">
-					<span class="wpconsent-file-field"><span class="placeholder"><?php esc_html_e( 'No file chosen', 'wpconsent-cookies-banner-privacy-suite' ); ?></span></span>
-					<strong class="wpconsent-button wpconsent-button-secondary wpconsent-button-icon">
-						<?php esc_html_e( 'Choose a file&hellip;', 'wpconsent-cookies-banner-privacy-suite' ); ?>
-					</strong>
-				</label>
-			</div>
-		</div>
-
-		<div class="wpconsent-metabox-form-row">
-			<button type="submit" name="wpconsent_import" class="wpconsent-button wpconsent-button-primary">
-				<?php esc_html_e( 'Import Settings', 'wpconsent-cookies-banner-privacy-suite' ); ?>
-			</button>
-		</div>
-		<?php
-		return ob_get_clean();
-	}
-
-	/**
-	 * Get the export settings content.
-	 *
-	 * @return string
-	 */
-	public function get_export_settings_content() {
-		ob_start();
-		?>
-		<div class="wpconsent-input-area-description">
-			<p><?php esc_html_e( 'Export your WPConsent settings to a JSON file. You can use this file to import your settings on another site.', 'wpconsent-cookies-banner-privacy-suite' ); ?></p>
-		</div>
-
-		<div class="wpconsent-export-options">
-			<?php
-			$this->metabox_row(
-				esc_html__( 'All Settings', 'wpconsent-cookies-banner-privacy-suite' ),
-				$this->get_checkbox_toggle(
-					false,
-					'export_all_settings',
-					esc_html__( 'Export WPConsent settings including geolocation, multilanguage, and general settings.', 'wpconsent-cookies-banner-privacy-suite' )
-				)
-			);
-
-			$this->metabox_row(
-				esc_html__( 'Banner Design', 'wpconsent-cookies-banner-privacy-suite' ),
-				$this->get_checkbox_toggle(
-					false,
-					'export_banner_design',
-					esc_html__( 'Export only the banner design settings including layout, colors, and text.', 'wpconsent-cookies-banner-privacy-suite' )
-				)
-			);
-
-			$this->metabox_row(
-				esc_html__( 'Cookie Data', 'wpconsent-cookies-banner-privacy-suite' ),
-				$this->get_checkbox_toggle(
-					false,
-					'export_cookie_data',
-					esc_html__( 'Export cookie categories, services, and individual cookie information.', 'wpconsent-cookies-banner-privacy-suite' )
-				)
-			);
-
-			$this->export_custom_scripts_input();
-			?>
-		</div>
-
-		<div class="wpconsent-metabox-form-row">
-			<button type="submit" name="wpconsent_export" class="wpconsent-button wpconsent-button-primary">
-				<?php esc_html_e( 'Export Settings', 'wpconsent-cookies-banner-privacy-suite' ); ?>
-			</button>
-		</div>
-		<?php
-		return ob_get_clean();
-	}
-
-	/**
-	 * Get the input for enabling records of consent.
-	 *
-	 * @return void
-	 */
-	public function export_custom_scripts_input() {
-		$this->metabox_row(
-			esc_html__( 'Custom Scripts', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_checkbox_toggle(
-				false,
-				'wpconsent-export-custom-scripts-lite',
-				esc_html__( 'Export custom scripts and iframes.', 'wpconsent-cookies-banner-privacy-suite' )
-			),
-			'wpconsent-export-custom-scripts-lite',
-			'',
-			'',
-			'',
-			true
-		);
-	}
-
-	/**
-	 * Process messages for this page (e.g., after import).
-	 */
-	public function process_message() {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( isset( $_GET['message'] ) && 'import_success' === $_GET['message'] ) {
-			$this->set_success_message(
-				__( 'Settings imported successfully.', 'wpconsent-cookies-banner-privacy-suite' )
-			);
-		}
 	}
 
 	/**
@@ -2044,32 +1293,27 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 			?>
 			<div style="position: relative">
 				<div class="wpconsent-blur-area">
-					<?php
-					$this->metabox(
-						__( 'Custom Iframe/Scripts', 'wpconsent-cookies-banner-privacy-suite' ),
-						$this->get_custom_scripts_content()
-					);
-					?>
+					<?php $this->metabox( __( 'Custom Iframe/Scripts', 'wpconsent-cookies-banner-privacy-suite' ), $this->get_custom_scripts_content() ); ?>
 				</div>
 				<?php
 				echo self::get_upsell_box( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					esc_html__( 'Custom Scripts/iFrames is a PRO feature', 'wpconsent-cookies-banner-privacy-suite' ),
-					'<p>' . esc_html__( 'Upgrade to WPConsent PRO today and easily manage custom scripts and iframes. Take full control and block any scripts and iframes from loading until users give consent.', 'wpconsent-cookies-banner-privacy-suite' ) . '</p>',
-					array(
-						'text' => esc_html__( 'Upgrade to PRO and Unlock Custom Scripts', 'wpconsent-cookies-banner-privacy-suite' ),
-						'url'  => esc_url( wpconsent_utm_url( 'https://wpconsent.com/lite/', 'advanced-page', 'main' ) ),
-					),
-					array(
-						'text' => esc_html__( 'Learn more about all the features', 'wpconsent-cookies-banner-privacy-suite' ),
-						'url'  => esc_url( wpconsent_utm_url( 'https://wpconsent.com/lite/', 'advanced-page', 'features' ) ),
-					)
+						esc_html__( 'Custom Scripts/iFrames is a PRO feature', 'wpconsent-cookies-banner-privacy-suite' ),
+						'<p>' . esc_html__( 'Upgrade to WPConsent PRO today and easily manage custom scripts and iframes. Take full control and block any scripts and iframes from loading until users give consent.', 'wpconsent-cookies-banner-privacy-suite' ) . '</p>',
+						array(
+								'text' => esc_html__( 'Upgrade to PRO and Unlock Custom Scripts', 'wpconsent-cookies-banner-privacy-suite' ),
+								'url'  => esc_url( wpconsent_utm_url( 'https://wpconsent.com/lite/', 'advanced-page', 'main' ) ),
+						),
+						array(
+								'text' => esc_html__( 'Learn more about all the features', 'wpconsent-cookies-banner-privacy-suite' ),
+								'url'  => esc_url( wpconsent_utm_url( 'https://wpconsent.com/lite/', 'advanced-page', 'features' ) ),
+						)
 				);
 				?>
 			</div>
 			<?php
 			$this->metabox(
-				__( 'Advanced Settings', 'wpconsent-cookies-banner-privacy-suite' ),
-				$this->get_advanced_settings_content()
+					__( 'Advanced Settings', 'wpconsent-cookies-banner-privacy-suite' ),
+					$this->get_advanced_settings_content()
 			);
 			?>
 			<div class="wpconsent-submit">
@@ -2100,22 +1344,22 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 		<div class="wpconsent-custom-scripts-manager wpconsent-cookies-manager wpconsent-accordion">
 			<?php
 			$display_scripts = array(
-				array(
-					'id'               => 'custom_1',
-					'service'          => 'Some Service',
-					'type'             => 'script',
-					'tag'              => '1234',
-					'blocked_elements' => 'script[src*="yourservice.com"]',
-					'category'         => 'statistics',
-				),
-				array(
-					'id'               => 'custom_2',
-					'service'          => 'Other Pixel',
-					'type'             => 'script',
-					'tag'              => 'abc',
-					'blocked_elements' => 'script[src*="otherservice.com"]',
-					'category'         => 'statistics',
-				),
+					array(
+							'id'               => 'custom_1',
+							'service'          => 'Some Service',
+							'type'             => 'script',
+							'tag'              => '1234',
+							'blocked_elements' => 'script[src*="yourservice.com"]',
+							'category'         => 'statistics',
+					),
+					array(
+							'id'               => 'custom_2',
+							'service'          => 'Other Pixel',
+							'type'             => 'script',
+							'tag'              => 'abc',
+							'blocked_elements' => 'script[src*="otherservice.com"]',
+							'category'         => 'statistics',
+					),
 			);
 
 			// Fetch categories from the database.
@@ -2123,14 +1367,14 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 			$categories     = array();
 			if ( isset( $all_categories['statistics'] ) ) {
 				$categories[ $all_categories['statistics']['id'] ] = array(
-					'name'        => esc_html( $all_categories['statistics']['name'] ) . ' ' . esc_html__( 'Scripts', 'wpconsent-cookies-banner-privacy-suite' ),
-					'description' => esc_html__( 'Add scripts for analytics and statistics tracking.', 'wpconsent-cookies-banner-privacy-suite' ),
+						'name'        => esc_html( $all_categories['statistics']['name'] ) . ' ' . esc_html__( 'Scripts', 'wpconsent-cookies-banner-privacy-suite' ),
+						'description' => esc_html__( 'Add scripts for analytics and statistics tracking.', 'wpconsent-cookies-banner-privacy-suite' ),
 				);
 			}
 			if ( isset( $all_categories['marketing'] ) ) {
 				$categories[ $all_categories['marketing']['id'] ] = array(
-					'name'        => esc_html( $all_categories['marketing']['name'] ) . ' ' . esc_html__( 'Scripts', 'wpconsent-cookies-banner-privacy-suite' ),
-					'description' => esc_html__( 'Add scripts for marketing and advertising purposes.', 'wpconsent-cookies-banner-privacy-suite' ),
+						'name'        => esc_html( $all_categories['marketing']['name'] ) . ' ' . esc_html__( 'Scripts', 'wpconsent-cookies-banner-privacy-suite' ),
+						'description' => esc_html__( 'Add scripts for marketing and advertising purposes.', 'wpconsent-cookies-banner-privacy-suite' ),
 				);
 			}
 
@@ -2157,7 +1401,7 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 							</div>
 							<?php
 							$category_scripts = array();
-							if ( isset( $all_categories['statistics'] ) && $category_id == $all_categories['statistics']['id'] ) {
+							if ( isset( $all_categories['statistics'] ) && $category_id == $all_categories['statistics']['id'] ) { // phpcs:ignore WordPress.PHP.StrictComparisons.LooseComparison
 								$category_scripts = $display_scripts;
 							}
 
@@ -2207,59 +1451,61 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 		ob_start();
 
 		$this->metabox_row(
-			esc_html__( 'Clarity Consent Mode', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_checkbox_toggle(
-				wpconsent()->settings->get_option( 'clarity_consent_mode', true ),
-				'clarity_consent_mode',
-				sprintf(
-				// translators: %1$s is an opening link tag, %2$s is a closing link tag.
-					esc_html__( 'Use Microsoft Clarity without cookies until consent is given. %1$sLearn More%2$s', 'wpconsent-cookies-banner-privacy-suite' ),
-					'<a target="_blank" rel="noopener noreferrer" href="' . esc_url( wpconsent_utm_url( 'https://wpconsent.com/docs/clarity-consent-mode', 'advanced', 'clarity-consent-mode' ) ) . '">',
-					'</a>'
-				)
-			) . $this->help_icon( __( 'Clarity Consent Mode will not be loaded if the banner is disabled.', 'wpconsent-cookies-banner-privacy-suite' ), false ),
-			'clarity_consent_mode'
+				esc_html__( 'Clarity Consent Mode', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_checkbox_toggle(
+						wpconsent()->settings->get_option( 'clarity_consent_mode', true ),
+						'clarity_consent_mode',
+						sprintf(
+						// translators: %1$s is an opening link tag, %2$s is a closing link tag.
+								esc_html__( 'Use Microsoft Clarity without cookies until consent is given. %1$sLearn More%2$s', 'wpconsent-cookies-banner-privacy-suite' ),
+								'<a target="_blank" rel="noopener noreferrer" href="' . esc_url( wpconsent_utm_url( 'https://wpconsent.com/docs/clarity-consent-mode', 'advanced', 'clarity-consent-mode' ) ) . '">',
+								'</a>'
+						)
+				) . $this->help_icon( __( 'Clarity Consent Mode will not be loaded if the banner is disabled.', 'wpconsent-cookies-banner-privacy-suite' ), false ),
+				'clarity_consent_mode'
 		);
 
 		$this->metabox_row(
-			esc_html__( 'Shared Consent', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_checkbox_toggle(
-				wpconsent()->settings->get_option( 'enable_shared_consent' ),
-				'enable_shared_consent',
-				esc_html__( 'Share cookie preferences across all subdomains. MUST be enabled on all subdomain sites using WPConsent.', 'wpconsent-cookies-banner-privacy-suite' )
-			) . $this->help_icon( __( 'Preferences set on example.com will automatically apply to blog.example.com, shop.example.com, and any other subdomain. All subdomain sites must have this setting enabled.', 'wpconsent-cookies-banner-privacy-suite' ), false ),
-			'enable_shared_consent'
+				esc_html__( 'Shared Consent', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_checkbox_toggle(
+						wpconsent()->settings->get_option( 'enable_shared_consent' ),
+						'enable_shared_consent',
+						esc_html__( 'Share cookie preferences across all subdomains. MUST be enabled on all subdomain sites using WPConsent.', 'wpconsent-cookies-banner-privacy-suite' )
+				) . $this->help_icon( __( 'Preferences set on example.com will automatically apply to blog.example.com, shop.example.com, and any other subdomain. All subdomain sites must have this setting enabled.', 'wpconsent-cookies-banner-privacy-suite' ), false ),
+				'enable_shared_consent'
 		);
 
 		$this->metabox_row(
-			esc_html__( 'Respect Global Privacy Controls', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_checkbox_toggle(
-				wpconsent()->settings->get_option( 'respect_gpc', false ),
-				'respect_gpc',
-				esc_html__( 'Automatically respect Global Privacy Control (GPC) signals from user browsers.', 'wpconsent-cookies-banner-privacy-suite' )
-			) . $this->help_icon( __( 'When enabled, users with GPC enabled in their browser will automatically have non-essential cookies declined and will not see the consent banner. This helps comply with privacy regulations by respecting user-set privacy preferences.', 'wpconsent-cookies-banner-privacy-suite' ), false ),
-			'respect_gpc'
+				esc_html__( 'Respect Global Privacy Controls', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_checkbox_toggle(
+						wpconsent()->settings->get_option( 'respect_gpc', false ),
+						'respect_gpc',
+						esc_html__( 'Automatically respect Global Privacy Control (GPC) signals from user browsers.', 'wpconsent-cookies-banner-privacy-suite' )
+				) . $this->help_icon( __( 'When enabled, users with GPC enabled in their browser will automatically have non-essential cookies declined and will not see the consent banner. This helps comply with privacy regulations by respecting user-set privacy preferences.', 'wpconsent-cookies-banner-privacy-suite' ), false ),
+				'respect_gpc'
+		);
+
+		$this->usage_tracking_input();
+
+		$this->metabox_row(
+				esc_html__( 'Reset to Defaults', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_reset_banner_content_button(),
+				'',
+				'',
+				'',
+				'',
+				false,
+				'reset-banner-content'
 		);
 
 		$this->metabox_row(
-			esc_html__( 'Reset to Defaults', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_reset_banner_content_button(),
-			'',
-			'',
-			'',
-			'',
-			false,
-			'reset-banner-content'
-		);
-
-		$this->metabox_row(
-			esc_html__( 'Remove all data', 'wpconsent-cookies-banner-privacy-suite' ),
-			$this->get_checkbox_toggle(
-				wpconsent()->settings->get_option( 'uninstall_data', false ),
-				'uninstall_data',
-				esc_html__( 'Remove all data when uninstalling the plugin.', 'wpconsent-cookies-banner-privacy-suite' )
-			) . $this->help_icon( __( 'All cookie data and configuration will be unrecoverable.', 'wpconsent-cookies-banner-privacy-suite' ), false ),
-			'uninstall_data'
+				esc_html__( 'Remove all data', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_checkbox_toggle(
+						wpconsent()->settings->get_option( 'uninstall_data', false ),
+						'uninstall_data',
+						esc_html__( 'Remove all data when uninstalling the plugin.', 'wpconsent-cookies-banner-privacy-suite' )
+				) . $this->help_icon( __( 'All cookie data and configuration will be unrecoverable.', 'wpconsent-cookies-banner-privacy-suite' ), false ),
+				'uninstall_data'
 		);
 
 		return ob_get_clean();
@@ -2283,5 +1529,565 @@ class WPConsent_Admin_Page_Cookies extends WPConsent_Admin_Page {
 		</div>
 		<?php
 		return ob_get_clean();
+	}
+
+	/**
+	 * Get the content for the usage tracking input.
+	 *
+	 * @return void
+	 */
+	public function usage_tracking_input() {
+		$this->metabox_row(
+				esc_html__( 'Allow Usage Tracking', 'wpconsent-cookies-banner-privacy-suite' ),
+				$this->get_checkbox_toggle(
+						wpconsent()->settings->get_option( 'usage_tracking' ),
+						'usage_tracking',
+						esc_html__( 'By allowing us to track usage data, we can better help you, as we will know which WordPress configurations, themes, and plugins we should test.', 'wpconsent-cookies-banner-privacy-suite' )
+				),
+				'usage_tracking'
+		);
+	}
+
+	/**
+	 * Output the IAB TCF view.
+	 *
+	 * @return void
+	 */
+	public function output_view_iabtcf() {
+		// Get dummy data for preview.
+		$dummy_data = $this->get_iab_tcf_dummy_data();
+
+		?>
+		<div class="wpconsent-blur-area">
+			<?php $this->output_iab_tcf_preview( $dummy_data ); ?>
+		</div>
+		<?php
+		echo WPConsent_Admin_Page::get_upsell_box( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				esc_html__( 'IAB TCF is a PRO feature', 'wpconsent-cookies-banner-privacy-suite' ),
+				'<p>' . esc_html__( 'Upgrade to WPConsent PRO today to enable IAB Transparency & Consent Framework v2.2 support. Manage vendor consents, publisher restrictions, and ensure compliance with the TCF specification.', 'wpconsent-cookies-banner-privacy-suite' ) . '</p>',
+				array(
+						'text' => esc_html__( 'Upgrade to PRO and Unlock IAB TCF', 'wpconsent-cookies-banner-privacy-suite' ),
+						'url'  => esc_url( wpconsent_utm_url( 'https://wpconsent.com/lite/', 'iab-tcf-page', 'main' ) ),
+				),
+				array(
+						'text' => esc_html__( 'Learn more about all the features', 'wpconsent-cookies-banner-privacy-suite' ),
+						'url'  => esc_url( wpconsent_utm_url( 'https://wpconsent.com/lite/', 'iab-tcf-page', 'features' ) ),
+				)
+		);
+	}
+
+	/**
+	 * Get dummy IAB TCF data for lite version preview.
+	 *
+	 * @return array Dummy data for preview.
+	 */
+	protected function get_iab_tcf_dummy_data() {
+		return array(
+				'purposes'         => array(
+						1  => array( 'name' => 'Store and/or access information on a device' ),
+						2  => array( 'name' => 'Select basic ads' ),
+						3  => array( 'name' => 'Create a personalised ads profile' ),
+						4  => array( 'name' => 'Select personalised ads' ),
+						5  => array( 'name' => 'Create a personalised content profile' ),
+						6  => array( 'name' => 'Select personalised content' ),
+						7  => array( 'name' => 'Measure ad performance' ),
+						8  => array( 'name' => 'Measure content performance' ),
+						9  => array( 'name' => 'Apply market research to generate audience insights' ),
+						10 => array( 'name' => 'Develop and improve products' ),
+				),
+				'special_purposes' => array(
+						1 => array( 'name' => 'Ensure security, prevent fraud, and debug' ),
+						2 => array( 'name' => 'Technically deliver ads or content' ),
+				),
+		);
+	}
+
+	/**
+	 * Output IAB TCF preview with dummy data for lite version.
+	 *
+	 * @param array $dummy_data Dummy data for preview.
+	 *
+	 * @return void
+	 */
+	protected function output_iab_tcf_preview( $dummy_data ) {
+		$purposes = $dummy_data['purposes'];
+		?>
+		<form action="<?php echo esc_url( $this->get_page_action_url() ); ?>" method="post">
+			<?php wp_nonce_field( 'save_iab_tcf_vendors', 'iab_tcf_vendors_nonce' ); ?>
+			<input type="hidden" name="action" value="save_iab_tcf_vendors">
+
+			<?php
+			// TCF Activation metabox.
+			ob_start();
+			$toggle_html = '<label class="wpconsent-toggle">';
+
+			$toggle_html .= '<input type="checkbox" disabled="disabled">';
+			$toggle_html .= '<span class="wpconsent-toggle-slider"></span>';
+			$toggle_html .= '</label>';
+
+			$this->metabox_row(
+				__( 'Enable TCF on Frontend', 'wpconsent-cookies-banner-privacy-suite' ),
+				$toggle_html,
+				'iab_tcf_frontend_enabled',
+				'',
+				'',
+				__( 'Enable this setting to load the IAB TCF (Transparency and Consent Framework) on the frontend of your website.', 'wpconsent-cookies-banner-privacy-suite' )
+			);
+			$frontend_content = ob_get_clean();
+
+			$this->metabox( __( 'TCF Activation', 'wpconsent-cookies-banner-privacy-suite' ), $frontend_content );
+			?>
+
+			<?php $this->output_global_vendor_restrictions_preview( $purposes ); ?>
+
+			<?php $this->output_publisher_declarations_preview( $purposes ); ?>
+		</form>
+		<?php
+	}
+
+	/**
+	 * Output global vendor restrictions section for preview.
+	 *
+	 * @param array $purposes The purposes array.
+	 *
+	 * @return void
+	 */
+	protected function output_global_vendor_restrictions_preview( $purposes ) {
+		// Buffer the metabox content.
+		ob_start();
+		?>
+		<?php
+		// Legitimate Interest dropdown.
+		$li_select = '<select id="global_disallow_li" name="global_disallow_li" class="wpconsent-select" disabled="disabled">';
+
+		$li_select .= '<option value="allow" selected>' . esc_html__( 'Allow Legitimate Interest (Default)', 'wpconsent-cookies-banner-privacy-suite' ) . '</option>';
+		$li_select .= '<option value="disallow_all">' . esc_html__( 'Disallow Legitimate Interest for All Purposes', 'wpconsent-cookies-banner-privacy-suite' ) . '</option>';
+		$li_select .= '<option value="disallow_specific">' . esc_html__( 'Disallow Legitimate Interest for Specific Purposes', 'wpconsent-cookies-banner-privacy-suite' ) . '</option>';
+		$li_select .= '</select>';
+
+		$this->metabox_row(
+				__( 'Legitimate Interest', 'wpconsent-cookies-banner-privacy-suite' ),
+				$li_select,
+				'global_disallow_li',
+				'',
+				'',
+				__( 'Control whether vendors can use legitimate interest as a legal basis for data processing.', 'wpconsent-cookies-banner-privacy-suite' )
+		);
+		?>
+		<div class="wpconsent-metabox-form-row wpconsent-global-li-purposes" style="display: none;">
+			<div class="wpconsent-metabox-form-row-label">
+				<label for="global_disallow_li_purposes">
+					<?php esc_html_e( 'Select Purposes', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+				</label>
+			</div>
+			<div class="wpconsent-metabox-form-row-input">
+				<div class="wpconsent-checkbox-group">
+					<?php foreach ( $purposes as $purpose_id => $purpose ) : ?>
+						<label class="wpconsent-checkbox-label">
+							<input type="checkbox" name="global_disallow_li_purposes[]" value="<?php echo esc_attr( $purpose_id ); ?>" disabled="disabled">
+							<span>
+								<?php
+								// Translators: 1: Purpose ID, 2: Purpose Name.
+								echo esc_html( sprintf( __( 'Purpose %1$d: %2$s', 'wpconsent-cookies-banner-privacy-suite' ), $purpose_id, $purpose['name'] ) );
+								?>
+							</span>
+						</label>
+					<?php endforeach; ?>
+				</div>
+				<div class="wpconsent-metabox-form-row-description">
+					<?php esc_html_e( 'Select specific purposes for which legitimate interest should be disallowed globally.', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+				</div>
+			</div>
+		</div>
+		<?php
+		$content = ob_get_clean();
+
+		// Output the metabox.
+		$this->metabox(
+				__( 'Global Vendor Restrictions', 'wpconsent-cookies-banner-privacy-suite' ),
+				$content,
+				__( 'Apply restrictions to all vendors at once. These settings allow you to enforce stricter data policies across all selected vendors.', 'wpconsent-cookies-banner-privacy-suite' )
+		);
+	}
+
+	/**
+	 * Output publisher data processing declarations section for preview.
+	 *
+	 * @param array $purposes The purposes array.
+	 *
+	 * @return void
+	 */
+	protected function output_publisher_declarations_preview( $purposes ) {
+		// Default all purposes to enabled for preview.
+		$purposes_consent = array_keys( $purposes );
+
+		// Default legitimate interest purposes to enabled (only 2, 7, 9, 10 are allowed per TCF policy).
+		$li_allowed_purposes = array( 2, 7, 9, 10 );
+		$purposes_li         = $li_allowed_purposes;
+
+		// Buffer the metabox content.
+		ob_start();
+		?>
+
+		<p class="wpconsent-field-description">
+			<?php esc_html_e( 'Declare which TCF purposes this website (as a first party) uses for its own data processing. These declarations are separate from vendor consents and communicate your website\'s data processing activities to vendors via the TC String.', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+		</p>
+
+		<!-- Publisher Purposes (Consent) -->
+		<div class="wpconsent-publisher-declarations-section">
+			<div class="wpconsent-section-header">
+				<button type="button" class="wpconsent-section-toggle" aria-expanded="false" disabled="disabled">
+					<span class="dashicons dashicons-arrow-right"></span>
+					<strong><?php esc_html_e( 'Purposes (Consent)', 'wpconsent-cookies-banner-privacy-suite' ); ?></strong>
+					<span class="wpconsent-section-count">(<?php echo count( $purposes_consent ); ?>/<?php echo count( $purposes ); ?> <?php esc_html_e( 'selected', 'wpconsent-cookies-banner-privacy-suite' ); ?>)</span>
+				</button>
+			</div>
+			<div class="wpconsent-section-content" style="display: none;">
+				<p class="wpconsent-field-description">
+					<?php esc_html_e( 'Select each purpose this website requests consent for.', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+				</p>
+				<div class="wpconsent-checkbox-group">
+					<?php
+					foreach ( $purposes as $purpose_id => $purpose ) {
+						$checked = in_array( $purpose_id, $purposes_consent, true );
+						?>
+						<label class="wpconsent-checkbox-label">
+							<input type="checkbox" name="publisher_purposes_consent[]" value="<?php echo esc_attr( $purpose_id ); ?>" <?php checked( $checked ); ?> disabled="disabled">
+							<span>
+								<?php
+								printf(
+										'<strong>%s:</strong> %s',
+										// Translators: Purpose ID.
+										esc_html( sprintf( __( 'Purpose %d', 'wpconsent-cookies-banner-privacy-suite' ), $purpose_id ) ),
+										esc_html( $purpose['name'] )
+								);
+								?>
+							</span>
+						</label>
+						<?php
+					}
+					?>
+				</div>
+			</div>
+		</div>
+
+		<!-- Publisher Purposes (Legitimate Interest) -->
+		<div class="wpconsent-publisher-declarations-section">
+			<div class="wpconsent-section-header">
+				<button type="button" class="wpconsent-section-toggle" aria-expanded="false" disabled="disabled">
+					<span class="dashicons dashicons-arrow-right"></span>
+					<strong><?php esc_html_e( 'Purposes (Legitimate Interest)', 'wpconsent-cookies-banner-privacy-suite' ); ?></strong>
+					<?php
+					$li_total = count( $li_allowed_purposes );
+					?>
+					<span class="wpconsent-section-count">
+						<?php
+						printf(
+							// Translators: 1: number of selected purposes, 2: total number of available purposes.
+							esc_html__( '(%1$d/%2$d selected)', 'wpconsent-cookies-banner-privacy-suite' ),
+							count( $purposes_li ),
+							absint( $li_total )
+						);
+						?>
+					</span>
+				</button>
+			</div>
+			<div class="wpconsent-section-content" style="display: none;">
+				<p class="wpconsent-field-description">
+					<?php esc_html_e( 'Select each purpose this website claims legitimate interest for. Only certain purposes allow legitimate interest under TCF policy.', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+				</p>
+				<div class="wpconsent-checkbox-group">
+					<?php
+					// Only purposes 2, 7, 9, 10 allow legitimate interest per TCF policy.
+					foreach ( $purposes as $purpose_id => $purpose ) {
+						if ( ! in_array( $purpose_id, $li_allowed_purposes, true ) ) {
+							continue;
+						}
+						$checked = in_array( $purpose_id, $purposes_li, true );
+						printf(
+							'<label class="wpconsent-checkbox-label">
+								<input type="checkbox" name="publisher_purposes_li[]" value="%1$s" %2$s disabled="disabled">
+								<span><strong>%3$s:</strong> %4$s</span>
+							</label>',
+							esc_attr( $purpose_id ),
+							checked( $checked, true, false ),
+							// Translators: Purpose ID.
+							esc_html( sprintf( __( 'Purpose %d', 'wpconsent-cookies-banner-privacy-suite' ), $purpose_id ) ),
+							esc_html( $purpose['name'] )
+						);
+					}
+					?>
+				</div>
+			</div>
+		</div>
+
+		<?php
+		$content = ob_get_clean();
+
+		$this->metabox(
+				__( 'Publisher Data Processing Declarations', 'wpconsent-cookies-banner-privacy-suite' ),
+				$content,
+				__( 'Declare which TCF purposes your website uses for its own data processing. These declarations are encoded in the TC String and communicated to vendors.', 'wpconsent-cookies-banner-privacy-suite' )
+		);
+	}
+
+	/**
+	 * Output vendor controls (search, filters, sorting) for preview.
+	 *
+	 * @param int $total_vendors Total number of vendors.
+	 *
+	 * @return void
+	 */
+	protected function output_vendor_controls_preview( $total_vendors ) {
+		?>
+		<div class="wpconsent-vendor-controls">
+			<div class="wpconsent-vendor-controls-row">
+				<div class="wpconsent-vendor-search">
+					<input type="text"
+					       id="vendor-search"
+					       placeholder="<?php esc_attr_e( 'Search vendors by name or ID...', 'wpconsent-cookies-banner-privacy-suite' ); ?>"
+					       class="wpconsent-input-text"
+					       disabled="disabled">
+					<button type="button" class="wpconsent-button wpconsent-button-secondary" id="vendor-search-btn" disabled="disabled">
+						<?php esc_html_e( 'Search', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+					</button>
+					<button type="button" class="wpconsent-button wpconsent-button-secondary" id="vendor-clear-search" style="display: none;" disabled="disabled">
+						<?php esc_html_e( 'Clear', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+					</button>
+				</div>
+				<div class="wpconsent-vendor-filters">
+					<select id="vendor-status-filter" class="wpconsent-select" disabled="disabled">
+						<option value=""><?php esc_html_e( 'All Vendors', 'wpconsent-cookies-banner-privacy-suite' ); ?></option>
+						<option value="selected"><?php esc_html_e( 'Selected', 'wpconsent-cookies-banner-privacy-suite' ); ?></option>
+						<option value="not_selected"><?php esc_html_e( 'Not Selected', 'wpconsent-cookies-banner-privacy-suite' ); ?></option>
+					</select>
+					<select id="vendor-sort-order" class="wpconsent-select" disabled="disabled">
+						<option value="name_asc"><?php esc_html_e( 'Name A-Z', 'wpconsent-cookies-banner-privacy-suite' ); ?></option>
+						<option value="name_desc"><?php esc_html_e( 'Name Z-A', 'wpconsent-cookies-banner-privacy-suite' ); ?></option>
+						<option value="id_asc"><?php esc_html_e( 'ID Low-High', 'wpconsent-cookies-banner-privacy-suite' ); ?></option>
+						<option value="id_desc"><?php esc_html_e( 'ID High-Low', 'wpconsent-cookies-banner-privacy-suite' ); ?></option>
+					</select>
+				</div>
+			</div>
+			<div class="wpconsent-vendor-results-info">
+				<span>
+					<?php
+						printf(
+							// Translators: %d is the total number of vendors.
+							esc_html__( 'Showing %d vendors', 'wpconsent-cookies-banner-privacy-suite' ),
+							absint( $total_vendors )
+						);
+					?>
+				</span>
+			</div>
+			<div class="wpconsent-vendor-save-section">
+				<button type="submit" class="wpconsent-button wpconsent-button-primary" id="wpconsent-save-vendors" disabled="disabled">
+					<?php esc_html_e( 'Save Changes', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+				</button>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Output global vendor restrictions section.
+	 *
+	 * @param array $purposes The purposes array.
+	 * @param array $publisher_restrictions The publisher restrictions array.
+	 *
+	 * @return void
+	 */
+	protected function output_global_vendor_restrictions( $purposes, $publisher_restrictions ) {
+		// Get global restrictions.
+		$global_restrictions  = isset( $publisher_restrictions['global'] ) ? $publisher_restrictions['global'] : array();
+		$disallow_li_purposes = isset( $global_restrictions['disallow_li_purposes'] ) ? $global_restrictions['disallow_li_purposes'] : array();
+
+		// Buffer the metabox content.
+		ob_start();
+		?>
+		<?php
+		// Legitimate Interest dropdown.
+		$li_select = '<select id="global_disallow_li" name="global_disallow_li" class="wpconsent-select">';
+		$li_select .= '<option value="allow"' . selected( empty( $disallow_li_purposes ), true, false ) . '>' . esc_html__( 'Allow Legitimate Interest (Default)', 'wpconsent-cookies-banner-privacy-suite' ) . '</option>';
+		$li_select .= '<option value="disallow_all"' . selected( in_array( 'all', $disallow_li_purposes, true ), true, false ) . '>' . esc_html__( 'Disallow Legitimate Interest for All Purposes', 'wpconsent-cookies-banner-privacy-suite' ) . '</option>';
+		$li_select .= '<option value="disallow_specific"' . selected( ! empty( $disallow_li_purposes ) && ! in_array( 'all', $disallow_li_purposes, true ), true, false ) . '>' . esc_html__( 'Disallow Legitimate Interest for Specific Purposes', 'wpconsent-cookies-banner-privacy-suite' ) . '</option>';
+		$li_select .= '</select>';
+
+		$this->metabox_row(
+				__( 'Legitimate Interest', 'wpconsent-cookies-banner-privacy-suite' ),
+				$li_select,
+				'global_disallow_li',
+				'',
+				'',
+				__( 'Control whether vendors can use legitimate interest as a legal basis for data processing.', 'wpconsent-cookies-banner-privacy-suite' )
+		);
+
+		// Purpose checkboxes (conditional).
+		$show_if_style = ( ! empty( $disallow_li_purposes ) && ! in_array( 'all', $disallow_li_purposes, true ) ) ? '' : 'display: none;';
+		?>
+		<div class="wpconsent-metabox-form-row wpconsent-global-li-purposes" data-show-if-id="#global_disallow_li" data-show-if-value="disallow_specific" style="<?php echo esc_attr( $show_if_style ); ?>">
+			<div class="wpconsent-metabox-form-row-label">
+				<label for="global_disallow_li_purposes">
+					<?php esc_html_e( 'Select Purposes', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+				</label>
+			</div>
+			<div class="wpconsent-metabox-form-row-input">
+				<div class="wpconsent-checkbox-group">
+					<?php foreach ( $purposes as $purpose_id => $purpose ) : ?>
+						<label class="wpconsent-checkbox-label">
+							<input type="checkbox" name="global_disallow_li_purposes[]" value="<?php echo esc_attr( $purpose_id ); ?>" <?php checked( in_array( $purpose_id, $disallow_li_purposes, true ), true ); ?>>
+							<span>
+								<?php
+								// Translators: 1: Purpose ID, 2: Purpose Name.
+								echo esc_html( sprintf( __( 'Purpose %1$d: %2$s', 'wpconsent-cookies-banner-privacy-suite' ), $purpose_id, $purpose['name'] ) );
+								?>
+							</span>
+						</label>
+					<?php endforeach; ?>
+				</div>
+				<div class="wpconsent-metabox-form-row-description">
+					<?php esc_html_e( 'Select specific purposes for which legitimate interest should be disallowed globally.', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+				</div>
+			</div>
+		</div>
+		<?php
+		$content = ob_get_clean();
+
+		// Output the metabox.
+		$this->metabox(
+				__( 'Global Vendor Restrictions', 'wpconsent-cookies-banner-privacy-suite' ),
+				$content,
+				__( 'Apply restrictions to all vendors at once. These settings allow you to enforce stricter data policies across all selected vendors.', 'wpconsent-cookies-banner-privacy-suite' )
+		);
+	}
+
+	/**
+	 * Output publisher data processing declarations section.
+	 *
+	 * @param array $purposes The purposes array.
+	 *
+	 * @return void
+	 */
+	protected function output_publisher_declarations( $purposes ) {
+		// Get saved publisher declarations.
+		$declarations = wpconsent()->settings->get_option( 'iab_tcf_publisher_declarations', array() );
+
+		// Check if this is the first time (no saved declarations). If so, enable all by default.
+		$is_first_time = empty( $declarations );
+
+		if ( $is_first_time ) {
+			// Default all purposes to enabled.
+			$purposes_consent = array_keys( $purposes );
+
+			// Default legitimate interest purposes to enabled (only 2, 7, 9, 10 are allowed per TCF policy).
+			$li_allowed_purposes = array( 2, 7, 9, 10 );
+			$purposes_li         = array_intersect( $li_allowed_purposes, array_keys( $purposes ) );
+		} else {
+			// Load saved values.
+			$purposes_consent = isset( $declarations['purposes_consent'] ) ? $declarations['purposes_consent'] : array();
+			$purposes_li      = isset( $declarations['purposes_li_transparency'] ) ? $declarations['purposes_li_transparency'] : array();
+		}
+
+		// Buffer the metabox content.
+		ob_start();
+		?>
+
+		<p class="wpconsent-field-description">
+			<?php esc_html_e( 'Declare which TCF purposes this website (as a first party) uses for its own data processing. These declarations are separate from vendor consents and communicate your website\'s data processing activities to vendors via the TC String.', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+		</p>
+
+		<!-- Publisher Purposes (Consent) -->
+		<div class="wpconsent-publisher-declarations-section">
+			<div class="wpconsent-section-header">
+				<button type="button" class="wpconsent-section-toggle" aria-expanded="false">
+					<span class="dashicons dashicons-arrow-right"></span>
+					<strong><?php esc_html_e( 'Purposes (Consent)', 'wpconsent-cookies-banner-privacy-suite' ); ?></strong>
+					<span class="wpconsent-section-count">(<?php echo count( $purposes_consent ); ?>/<?php echo count( $purposes ); ?> <?php esc_html_e( 'selected', 'wpconsent-cookies-banner-privacy-suite' ); ?>)</span>
+				</button>
+			</div>
+			<div class="wpconsent-section-content" style="display: none;">
+				<p class="wpconsent-field-description">
+					<?php esc_html_e( 'Select each purpose this website requests consent for.', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+				</p>
+				<div class="wpconsent-checkbox-group">
+					<?php
+					foreach ( $purposes as $purpose_id => $purpose ) {
+						$checked = in_array( $purpose_id, $purposes_consent, true );
+						printf(
+							'<label class="wpconsent-checkbox-label">
+								<input type="checkbox" name="publisher_purposes_consent[]" value="%1$s" %2$s>
+								<span><strong>%3$s:</strong> %4$s</span>
+							</label>',
+							esc_attr( $purpose_id ),
+							checked( $checked, true, false ),
+							// Translators: Purpose ID.
+							esc_html( sprintf( __( 'Purpose %d', 'wpconsent-cookies-banner-privacy-suite' ), $purpose_id ) ),
+							esc_html( $purpose['name'] )
+						);
+					}
+					?>
+				</div>
+			</div>
+		</div>
+
+		<!-- Publisher Purposes (Legitimate Interest) -->
+		<div class="wpconsent-publisher-declarations-section">
+			<div class="wpconsent-section-header">
+				<button type="button" class="wpconsent-section-toggle" aria-expanded="false">
+					<span class="dashicons dashicons-arrow-right"></span>
+					<strong><?php esc_html_e( 'Purposes (Legitimate Interest)', 'wpconsent-cookies-banner-privacy-suite' ); ?></strong>
+					<?php
+					$li_allowed_purposes = array( 2, 7, 9, 10 );
+					$li_total            = count( $li_allowed_purposes );
+					?>
+					<span class="wpconsent-section-count">
+						<?php
+						printf(
+							/* translators: 1: number of selected purposes, 2: total number of available purposes */
+							esc_html__( '(%1$d/%2$d selected)', 'wpconsent-cookies-banner-privacy-suite' ),
+							count( $purposes_li ),
+							absint( $li_total )
+						);
+						?>
+					</span>
+				</button>
+			</div>
+			<div class="wpconsent-section-content" style="display: none;">
+				<p class="wpconsent-field-description">
+					<?php esc_html_e( 'Select each purpose this website claims legitimate interest for. Only certain purposes allow legitimate interest under TCF policy.', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+				</p>
+				<div class="wpconsent-checkbox-group">
+					<?php
+					// Only purposes 2, 7, 9, 10 allow legitimate interest per TCF policy.
+					foreach ( $purposes as $purpose_id => $purpose ) {
+						if ( ! in_array( $purpose_id, $li_allowed_purposes, true ) ) {
+							continue;
+						}
+						$checked = in_array( $purpose_id, $purposes_li, true );
+						printf(
+							'<label class="wpconsent-checkbox-label">
+								<input type="checkbox" name="publisher_purposes_li[]" value="%1$s" %2$s>
+								<span><strong>%3$s:</strong> %4$s</span>
+							</label>',
+							esc_attr( $purpose_id ),
+							checked( $checked, true, false ),
+							// Translators: Purpose ID.
+							esc_html( sprintf( __( 'Purpose %d', 'wpconsent-cookies-banner-privacy-suite' ), $purpose_id ) ),
+							esc_html( $purpose['name'] )
+						);
+					}
+					?>
+				</div>
+			</div>
+		</div>
+
+		<?php
+		$content = ob_get_clean();
+
+		$this->metabox(
+				__( 'Publisher Data Processing Declarations', 'wpconsent-cookies-banner-privacy-suite' ),
+				$content,
+				__( 'Declare which TCF purposes your website uses for its own data processing. These declarations are encoded in the TC String and communicated to vendors.', 'wpconsent-cookies-banner-privacy-suite' )
+		);
 	}
 }

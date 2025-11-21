@@ -14,12 +14,14 @@
 @import './admin/pro-indicators.css';
 @import './admin/upsells.css';
 @import './admin/notifications.css';
+@import './admin/notices.css';
 @import './admin/export.css';
 @import './admin/script-blocking.css';
 @import './admin/tooltips.css';
 @import './admin/languages.css';
 @import './admin/language-picker.css';
 @import './admin/geolocation-groups.css';
+@import './admin/tools.css';
 
 /** Import for preview **/
 @import './frontend/banner.css';

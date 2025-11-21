@@ -428,6 +428,9 @@ class WPConsent_Multilanguage {
 			if ( 'cookie_policy_text' === $option && isset( $texts[ $option ] ) ) {
 				$texts[ $option ] = wpconsent()->banner->maybe_replace_smart_tags( $texts[ $option ], $request_locale );
 			}
+			if ( 'preferences_panel_description' === $option && isset( $texts[ $option ] ) ) {
+				$texts[ $option ] = wpautop( wp_kses_post( $texts[ $option ] ) );
+			}
 			// Translate the text with other plugins.
 			$texts[ $option ] = $this->maybe_translate( $texts[ $option ], $request_locale );
 		}

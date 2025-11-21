@@ -64,7 +64,7 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 		$data['license_error_title'] = __( 'We encountered an error activating your license key', 'wpconsent-premium' );
 		$data['multisite']           = is_network_admin();
 		// Translation is available for Plus, Pro, and Elite licenses.
-		$data['license_can']         = wpconsent()->license->license_can( 'plus', is_multisite() && is_network_admin() );
+		$data['license_can'] = wpconsent()->license->license_can( 'plus', is_multisite() && is_network_admin() );
 
 		// Add translation status to initial page load.
 		$data['translation_active'] = false;
@@ -91,6 +91,12 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 	 * @return void
 	 */
 	public function handle_submit() {
+		// Handle IAB TCF vendor selection (AJAX or regular form submission).
+		if ( isset( $_POST['action'] ) && $_POST['action'] === 'save_iab_tcf_vendors' ) {
+			$this->handle_iab_tcf_vendor_selection();
+
+			return;
+		}
 		// Check the nonce for settings view.
 		if ( ! isset( $_POST['wpconsent_save_settings_nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['wpconsent_save_settings_nonce'] ), 'wpconsent_save_settings' ) ) {
 			return;
@@ -476,719 +482,6 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 	}
 
 	/**
-	 * Get the input for enabling records of consent.
-	 *
-	 * @return void
-	 */
-	public function export_custom_scripts_input() {
-		$this->metabox_row(
-				esc_html__( 'Custom Scripts', 'wpconsent-premium' ),
-				$this->get_checkbox_toggle(
-						false,
-						'export_custom_scripts',
-						esc_html__( 'Export custom scripts and iframes.', 'wpconsent-premium' )
-				),
-				'export_custom_scripts',
-				'',
-				'',
-				''
-		);
-	}
-
-	/**
-	 * Get custom scripts for export.
-	 *
-	 * @return array
-	 */
-	protected function get_custom_scripts_for_export() {
-		$custom_scripts = get_option( 'wpconsent_custom_scripts', array() );
-
-		if ( ! is_array( $custom_scripts ) || empty( $custom_scripts ) ) {
-			return array();
-		}
-
-		$sanitized_scripts = array();
-
-		// Convert IDs to slugs in the custom scripts data.
-		foreach ( $custom_scripts as $script_id => $script_data ) {
-			if ( ! is_array( $script_data ) ) {
-				continue;
-			}
-
-			$required_keys = array( 'category', 'service', 'type', 'tag' );
-			foreach ( $required_keys as $key ) {
-				if ( ! isset( $script_data[ $key ] ) ) {
-					continue 2;
-				}
-			}
-
-			$sanitized_script_id = sanitize_key( $script_id );
-			if ( empty( $sanitized_script_id ) ) {
-				continue;
-			}
-
-			$category_id = absint( $script_data['category'] );
-			if ( 0 === $category_id ) {
-				continue;
-			}
-
-			$category_data = wpconsent()->cookies->get_category_by_id( $category_id );
-			if ( ! $category_data || ! isset( $category_data['slug'] ) ) {
-				continue;
-			}
-
-			$service_id = absint( $script_data['service'] );
-			if ( 0 === $service_id ) {
-				continue;
-			}
-
-			$service_data = wpconsent()->cookies->get_service_by_id( $service_id );
-			if ( ! $service_data || ! isset( $service_data['slug'] ) ) {
-				continue;
-			}
-
-			// Sanitize and build the script data for export.
-			$sanitized_scripts[ $sanitized_script_id ] = array(
-					'category'         => sanitize_key( $category_data['slug'] ),
-					'service'          => sanitize_key( $service_data['slug'] ),
-					'type'             => in_array(
-							$script_data['type'],
-							array(
-									'script',
-									'iframe',
-							),
-							true
-					) ? $script_data['type'] : 'script',
-					'tag'              => wp_kses_post( $script_data['tag'] ),
-					'blocked_elements' => isset( $script_data['blocked_elements'] ) && is_array( $script_data['blocked_elements'] ) ?
-							wpconsent()->cookies->blocked_elements_to_string( $script_data['blocked_elements'] ) : '',
-			);
-		}
-
-		return $sanitized_scripts;
-	}
-
-	/**
-	 * Import custom scripts from import data.
-	 *
-	 * @param array $import_data The import data.
-	 *
-	 * @return void
-	 */
-	protected function import_custom_scripts( $import_data ) {
-		if ( ! isset( $import_data['custom_scripts'] ) || ! is_array( $import_data['custom_scripts'] ) ) {
-			return;
-		}
-
-		$custom_scripts = $import_data['custom_scripts'];
-
-		if ( empty( $custom_scripts ) ) {
-			return;
-		}
-
-		foreach ( $custom_scripts as $script_id => $script_data ) {
-			if ( ! is_array( $script_data ) ) {
-				continue;
-			}
-
-			$required_keys = array( 'category', 'service', 'type', 'tag' );
-			foreach ( $required_keys as $key ) {
-				if ( ! isset( $script_data[ $key ] ) ) {
-					continue 2;
-				}
-			}
-
-			$sanitized_script_id = sanitize_key( $script_id );
-			if ( empty( $sanitized_script_id ) ) {
-				continue;
-			}
-
-			$category_slug = sanitize_key( $script_data['category'] );
-			if ( empty( $category_slug ) ) {
-				continue;
-			}
-
-			$category_data = wpconsent()->cookies->get_service_by_slug( $category_slug );
-			if ( ! $category_data || ! isset( $category_data['id'] ) ) {
-				continue;
-			}
-			$category_id = absint( $category_data['id'] );
-			if ( 0 === $category_id ) {
-				continue;
-			}
-
-			$service_slug = sanitize_key( $script_data['service'] );
-			if ( empty( $service_slug ) ) {
-				continue;
-			}
-
-			$service_data = wpconsent()->cookies->get_service_by_slug( $service_slug );
-			if ( ! $service_data || ! isset( $service_data['id'] ) ) {
-				continue;
-			}
-			$service_id = absint( $service_data['id'] );
-			if ( 0 === $service_id ) {
-				continue;
-			}
-
-			$script_type = sanitize_key( $script_data['type'] );
-			if ( ! in_array( $script_type, array( 'script', 'iframe' ), true ) ) {
-				$script_type = 'script';
-			}
-
-			$script_tag = wp_kses_post( $script_data['tag'] );
-			if ( empty( $script_tag ) ) {
-				continue;
-			}
-
-			$blocked_elements = isset( $script_data['blocked_elements'] ) ? sanitize_text_field( $script_data['blocked_elements'] ) : '';
-
-			wpconsent()->cookies->add_script(
-					$category_id,
-					$service_id,
-					$script_type,
-					$script_tag,
-					$blocked_elements
-			);
-		}
-	}
-
-	/**
-	 * Get banner design settings for export.
-	 *
-	 * @param array $all_options All plugin options.
-	 *
-	 * @return array
-	 */
-	protected function get_banner_design_for_export( $all_options ) {
-		$banner_data = parent::get_banner_design_for_export( $all_options );
-
-		$banner_data['enabled_languages'] = $all_options['enabled_languages'];
-		$enabled_languages                = $all_options['enabled_languages'];
-		foreach ( $enabled_languages as $locale ) {
-			if ( isset( $all_options[ $locale ] ) && is_array( $all_options[ $locale ] ) ) {
-				$banner_data[ $locale ] = $all_options[ $locale ];
-
-				if ( isset( $banner_data[ $locale ]['content_blocking_placeholder_text'] ) ) {
-					unset( $banner_data[ $locale ]['content_blocking_placeholder_text'] );
-				}
-			}
-		}
-
-		if ( isset( $all_options[''] ) && is_array( $all_options[''] ) ) {
-			$banner_data[''] = $all_options[''];
-
-			if ( isset( $banner_data['']['content_blocking_placeholder_text'] ) ) {
-				unset( $banner_data['']['content_blocking_placeholder_text'] );
-			}
-		}
-
-		return $banner_data;
-	}
-
-	/**
-	 * Import banner design from import data.
-	 *
-	 * @param array $import_data The import data.
-	 *
-	 * @return void
-	 */
-	protected function import_banner_design( $import_data ) {
-		// First, let the parent class import the main banner design settings.
-		parent::import_banner_design( $import_data );
-
-		// Now import the translations for each language.
-		if ( isset( $import_data['banner_design'] ) ) {
-			$banner_design = $import_data['banner_design'];
-
-			// Check the banner_design enabled languages to see which languages we need to look for.
-			$enabled_languages = isset( $banner_design['enabled_languages'] ) ? $banner_design['enabled_languages'] : array();
-
-			foreach ( $enabled_languages as $enabled_language ) {
-				if ( empty( $banner_design[ $enabled_language ] ) ) {
-					continue;
-				}
-				$language_texts = $banner_design[ $enabled_language ];
-
-				// Let's go through each option and sanitize it.
-				foreach ( $language_texts as $option => $value ) {
-					if ( is_array( $value ) ) {
-						// If it's an array, we need to sanitize each value.
-						foreach ( $value as $key => $val ) {
-							$language_texts[ $option ][ $key ] = wp_kses_post( $val );
-						}
-					} else {
-						// Otherwise, just sanitize the value.
-						$language_texts[ $option ] = wp_kses_post( $value );
-					}
-				}
-
-				// Now we can update the option.
-				wpconsent()->settings->bulk_update_options( array( $enabled_language => $language_texts ) );
-			}
-		}
-
-		// Clear translation strings cache when settings change.
-		delete_transient( 'wpconsent_translation_strings' );
-	}
-
-	/**
-	 * Get cookie data for export.
-	 *
-	 * @return array
-	 */
-	protected function get_cookie_data_for_export() {
-		$export_data = parent::get_cookie_data_for_export();
-
-		// Add translations for each category and its contents.
-		$enabled_languages = (array) wpconsent()->settings->get_option( 'enabled_languages', array() );
-		foreach ( $export_data as $category_slug => &$category_data ) {
-			$category = get_term_by( 'slug', $category_slug, wpconsent()->cookies->taxonomy );
-			if ( ! $category ) {
-				continue;
-			}
-
-			// Add category translations.
-			foreach ( $enabled_languages as $locale ) {
-				$translated_name = get_term_meta( $category->term_id, 'wpconsent_category_name_' . $locale, true );
-				$translated_desc = get_term_meta( $category->term_id, 'wpconsent_category_description_' . $locale, true );
-				if ( $translated_name || $translated_desc ) {
-					$category_data['translations'][ $locale ] = array(
-							'name'        => $translated_name,
-							'description' => $translated_desc,
-					);
-				}
-			}
-
-			// Add cookie translations.
-			foreach ( $category_data['cookies'] as &$cookie_data ) {
-				foreach ( $enabled_languages as $locale ) {
-					$translated_name = get_post_meta( $cookie_data['id'], 'wpconsent_cookie_name_' . $locale, true );
-					$translated_desc = get_post_meta( $cookie_data['id'], 'wpconsent_cookie_description_' . $locale, true );
-					if ( $translated_name || $translated_desc ) {
-						$cookie_data['translations'][ $locale ] = array(
-								'name'        => $translated_name,
-								'description' => $translated_desc,
-						);
-					}
-				}
-			}
-
-			// Add service translations.
-			foreach ( $category_data['services'] as &$service_data ) {
-				foreach ( $enabled_languages as $locale ) {
-					$translated_name = get_post_meta( $service_data['id'], 'wpconsent_service_name_' . $locale, true );
-					$translated_desc = get_post_meta( $service_data['id'], 'wpconsent_service_description_' . $locale, true );
-					$translated_url  = get_post_meta( $service_data['id'], 'wpconsent_service_url_' . $locale, true );
-					if ( $translated_name || $translated_desc || $translated_url ) {
-						$service_data['translations'][ $locale ] = array(
-								'name'        => $translated_name,
-								'description' => $translated_desc,
-								'service_url' => $translated_url,
-						);
-					}
-				}
-
-				// Add cookie translations for service cookies.
-				foreach ( $service_data['cookies'] as &$cookie_data ) {
-					foreach ( $enabled_languages as $locale ) {
-						$translated_name = get_post_meta( $cookie_data['id'], 'wpconsent_cookie_name_' . $locale, true );
-						$translated_desc = get_post_meta( $cookie_data['id'], 'wpconsent_cookie_description_' . $locale, true );
-						if ( $translated_name || $translated_desc ) {
-							$cookie_data['translations'][ $locale ] = array(
-									'name'        => $translated_name,
-									'description' => $translated_desc,
-							);
-						}
-					}
-				}
-			}
-		}
-
-		return $export_data;
-	}
-
-	/**
-	 * Import additional category data.
-	 *
-	 * @param int   $category_id The category ID.
-	 * @param array $category_data The category data.
-	 *
-	 * @return void
-	 */
-	protected function import_category_data( $category_id, $category_data ) {
-		// Import category translations.
-		if ( isset( $category_data['translations'] ) ) {
-			foreach ( $category_data['translations'] as $locale => $translation ) {
-				if ( isset( $translation['name'] ) ) {
-					update_term_meta( $category_id, 'wpconsent_category_name_' . $locale, sanitize_text_field( $translation['name'] ) );
-				}
-				if ( isset( $translation['description'] ) ) {
-					update_term_meta( $category_id, 'wpconsent_category_description_' . $locale, wp_kses_post( $translation['description'] ) );
-				}
-			}
-		}
-	}
-
-	/**
-	 * Import additional cookie data.
-	 *
-	 * @param int   $post_id The cookie post ID.
-	 * @param array $cookie_data The cookie data.
-	 *
-	 * @return void
-	 */
-	protected function import_cookie_data( $post_id, $cookie_data ) {
-		// Import cookie translations.
-		if ( ! is_wp_error( $post_id ) && isset( $cookie_data['translations'] ) ) {
-			foreach ( $cookie_data['translations'] as $locale => $translation ) {
-				if ( isset( $translation['name'] ) ) {
-					update_post_meta( $post_id, 'wpconsent_cookie_name_' . $locale, sanitize_text_field( $translation['name'] ) );
-				}
-				if ( isset( $translation['description'] ) ) {
-					update_post_meta( $post_id, 'wpconsent_cookie_description_' . $locale, wp_kses_post( $translation['description'] ) );
-				}
-			}
-		}
-	}
-
-	/**
-	 * Import additional service data.
-	 *
-	 * @param int   $service_id The service ID.
-	 * @param array $service_data The service data.
-	 *
-	 * @return void
-	 */
-	protected function import_service_data( $service_id, $service_data ) {
-		// Import service translations.
-		if ( isset( $service_data['translations'] ) ) {
-			foreach ( $service_data['translations'] as $locale => $translation ) {
-				if ( isset( $translation['name'] ) ) {
-					update_post_meta( $service_id, 'wpconsent_service_name_' . $locale, sanitize_text_field( $translation['name'] ) );
-				}
-				if ( isset( $translation['description'] ) ) {
-					update_post_meta( $service_id, 'wpconsent_service_description_' . $locale, wp_kses_post( $translation['description'] ) );
-				}
-				if ( isset( $translation['service_url'] ) ) {
-					update_post_meta( $service_id, 'wpconsent_service_url_' . $locale, esc_url( $translation['service_url'] ) );
-				}
-			}
-		}
-	}
-
-	/**
-	 * Get settings for export, excluding geolocation_groups.
-	 *
-	 * @param array $all_options All plugin options.
-	 *
-	 * @return array
-	 */
-	protected function get_settings_for_export( $all_options ) {
-		$settings = parent::get_settings_for_export( $all_options );
-
-		// Remove geolocation_groups as it's handled separately in Pro.
-		unset( $settings['geolocation_groups'] );
-
-		return $settings;
-	}
-
-	/**
-	 * Get geolocation groups for export.
-	 *
-	 * @param array $all_options All plugin options.
-	 *
-	 * @return array
-	 */
-	protected function get_geolocation_groups_for_export( $all_options ) {
-		$geolocation_groups = isset( $all_options['geolocation_groups'] ) ? $all_options['geolocation_groups'] : array();
-
-		if ( empty( $geolocation_groups ) || ! is_array( $geolocation_groups ) ) {
-			return array();
-		}
-
-		$export_groups = array();
-
-		foreach ( $geolocation_groups as $group_id => $group_data ) {
-			if ( ! is_array( $group_data ) ) {
-				continue;
-			}
-
-			$sanitized_group = array();
-
-			// Export basic fields.
-			if ( isset( $group_data['name'] ) ) {
-				$sanitized_group['name'] = $group_data['name'];
-			}
-
-			if ( isset( $group_data['enable_script_blocking'] ) ) {
-				$sanitized_group['enable_script_blocking'] = (bool) $group_data['enable_script_blocking'];
-			}
-
-			if ( isset( $group_data['show_banner'] ) ) {
-				$sanitized_group['show_banner'] = (bool) $group_data['show_banner'];
-			}
-
-			if ( isset( $group_data['enable_consent_floating'] ) ) {
-				$sanitized_group['enable_consent_floating'] = (bool) $group_data['enable_consent_floating'];
-			}
-
-			if ( isset( $group_data['manual_toggle_services'] ) ) {
-				$sanitized_group['manual_toggle_services'] = (bool) $group_data['manual_toggle_services'];
-			}
-
-			if ( isset( $group_data['consent_mode'] ) ) {
-				$sanitized_group['consent_mode'] = $group_data['consent_mode'];
-			}
-
-			if ( isset( $group_data['customize_banner_buttons'] ) ) {
-				$sanitized_group['customize_banner_buttons'] = (bool) $group_data['customize_banner_buttons'];
-			}
-
-			if ( isset( $group_data['customize_banner_message'] ) ) {
-				$sanitized_group['customize_banner_message'] = (bool) $group_data['customize_banner_message'];
-			}
-
-			// Export locations array.
-			if ( isset( $group_data['locations'] ) && is_array( $group_data['locations'] ) ) {
-				$sanitized_group['locations'] = array();
-				foreach ( $group_data['locations'] as $location ) {
-					if ( ! is_array( $location ) ) {
-						continue;
-					}
-
-					$sanitized_location = array();
-
-					if ( isset( $location['type'] ) ) {
-						$sanitized_location['type'] = $location['type'];
-					}
-
-					if ( isset( $location['code'] ) ) {
-						$sanitized_location['code'] = $location['code'];
-					}
-
-					if ( isset( $location['name'] ) ) {
-						$sanitized_location['name'] = $location['name'];
-					}
-
-					// Only add location if it has both type and code.
-					if ( ! empty( $sanitized_location['type'] ) && ! empty( $sanitized_location['code'] ) ) {
-						$sanitized_group['locations'][] = $sanitized_location;
-					}
-				}
-			}
-
-			// Export button customization fields.
-			if ( isset( $group_data['accept_button_text'] ) ) {
-				$sanitized_group['accept_button_text'] = $group_data['accept_button_text'];
-			}
-
-			if ( isset( $group_data['cancel_button_text'] ) ) {
-				$sanitized_group['cancel_button_text'] = $group_data['cancel_button_text'];
-			}
-
-			if ( isset( $group_data['preferences_button_text'] ) ) {
-				$sanitized_group['preferences_button_text'] = $group_data['preferences_button_text'];
-			}
-
-			if ( isset( $group_data['accept_button_enabled'] ) ) {
-				$sanitized_group['accept_button_enabled'] = (bool) $group_data['accept_button_enabled'];
-			}
-
-			if ( isset( $group_data['cancel_button_enabled'] ) ) {
-				$sanitized_group['cancel_button_enabled'] = (bool) $group_data['cancel_button_enabled'];
-			}
-
-			if ( isset( $group_data['preferences_button_enabled'] ) ) {
-				$sanitized_group['preferences_button_enabled'] = (bool) $group_data['preferences_button_enabled'];
-			}
-
-			if ( isset( $group_data['button_order'] ) && is_array( $group_data['button_order'] ) ) {
-				$sanitized_group['button_order'] = $group_data['button_order'];
-			}
-
-			// Export banner message.
-			if ( isset( $group_data['banner_message'] ) ) {
-				$sanitized_group['banner_message'] = $group_data['banner_message'];
-			}
-
-			// Only add the group if it has a name and at least one location.
-			if ( ! empty( $sanitized_group['name'] ) && ! empty( $sanitized_group['locations'] ) ) {
-				$export_groups[ $group_id ] = $sanitized_group;
-			}
-		}
-
-		return $export_groups;
-	}
-
-	/**
-	 * Import geolocation groups from import data.
-	 *
-	 * @param array $import_data The import data.
-	 *
-	 * @return void
-	 */
-	protected function import_geolocation_groups( $import_data ) {
-		if ( ! isset( $import_data['geolocation_groups'] ) || ! is_array( $import_data['geolocation_groups'] ) ) {
-			return;
-		}
-
-		$imported_groups = $import_data['geolocation_groups'];
-
-		if ( empty( $imported_groups ) ) {
-			// If the import data has an empty geolocation_groups array, clear the existing groups.
-			wpconsent()->settings->update_option( 'geolocation_groups', array() );
-
-			return;
-		}
-
-		$sanitized_groups = array();
-
-		foreach ( $imported_groups as $group_id => $group_data ) {
-			if ( ! is_array( $group_data ) ) {
-				continue;
-			}
-
-			$sanitized_group = array();
-
-			// Sanitize basic string fields.
-			if ( isset( $group_data['name'] ) ) {
-				$sanitized_group['name'] = sanitize_text_field( $group_data['name'] );
-			}
-
-			if ( isset( $group_data['consent_mode'] ) ) {
-				$consent_mode = sanitize_text_field( $group_data['consent_mode'] );
-				// Validate consent mode is one of the allowed values.
-				if ( in_array( $consent_mode, array( 'optin', 'optout' ), true ) ) {
-					$sanitized_group['consent_mode'] = $consent_mode;
-				} else {
-					$sanitized_group['consent_mode'] = 'optin';
-				}
-			}
-
-			// Sanitize boolean fields.
-			if ( isset( $group_data['enable_script_blocking'] ) ) {
-				$sanitized_group['enable_script_blocking'] = (bool) $group_data['enable_script_blocking'];
-			}
-
-			if ( isset( $group_data['show_banner'] ) ) {
-				$sanitized_group['show_banner'] = (bool) $group_data['show_banner'];
-			}
-
-			if ( isset( $group_data['enable_consent_floating'] ) ) {
-				$sanitized_group['enable_consent_floating'] = (bool) $group_data['enable_consent_floating'];
-			}
-
-			if ( isset( $group_data['manual_toggle_services'] ) ) {
-				$sanitized_group['manual_toggle_services'] = (bool) $group_data['manual_toggle_services'];
-			}
-
-			if ( isset( $group_data['customize_banner_buttons'] ) ) {
-				$sanitized_group['customize_banner_buttons'] = (bool) $group_data['customize_banner_buttons'];
-			}
-
-			if ( isset( $group_data['customize_banner_message'] ) ) {
-				$sanitized_group['customize_banner_message'] = (bool) $group_data['customize_banner_message'];
-			}
-
-			// Sanitize locations array.
-			if ( isset( $group_data['locations'] ) && is_array( $group_data['locations'] ) ) {
-				$sanitized_group['locations'] = array();
-				foreach ( $group_data['locations'] as $location ) {
-					if ( ! is_array( $location ) ) {
-						continue;
-					}
-
-					$sanitized_location = array();
-
-					if ( isset( $location['type'] ) ) {
-						$type = sanitize_text_field( $location['type'] );
-						// Validate type is one of the allowed values.
-						if ( in_array( $type, array( 'continent', 'country', 'us_state' ), true ) ) {
-							$sanitized_location['type'] = $type;
-						}
-					}
-
-					if ( isset( $location['code'] ) ) {
-						$sanitized_location['code'] = sanitize_text_field( $location['code'] );
-					}
-
-					if ( isset( $location['name'] ) ) {
-						$sanitized_location['name'] = sanitize_text_field( $location['name'] );
-					}
-
-					// Only add location if it has both type and code.
-					if ( ! empty( $sanitized_location['type'] ) && ! empty( $sanitized_location['code'] ) ) {
-						$sanitized_group['locations'][] = $sanitized_location;
-					}
-				}
-			}
-
-			// Sanitize button customization fields.
-			if ( isset( $group_data['accept_button_text'] ) ) {
-				$sanitized_group['accept_button_text'] = sanitize_text_field( $group_data['accept_button_text'] );
-			}
-
-			if ( isset( $group_data['cancel_button_text'] ) ) {
-				$sanitized_group['cancel_button_text'] = sanitize_text_field( $group_data['cancel_button_text'] );
-			}
-
-			if ( isset( $group_data['preferences_button_text'] ) ) {
-				$sanitized_group['preferences_button_text'] = sanitize_text_field( $group_data['preferences_button_text'] );
-			}
-
-			if ( isset( $group_data['accept_button_enabled'] ) ) {
-				$sanitized_group['accept_button_enabled'] = (bool) $group_data['accept_button_enabled'];
-			}
-
-			if ( isset( $group_data['cancel_button_enabled'] ) ) {
-				$sanitized_group['cancel_button_enabled'] = (bool) $group_data['cancel_button_enabled'];
-			}
-
-			if ( isset( $group_data['preferences_button_enabled'] ) ) {
-				$sanitized_group['preferences_button_enabled'] = (bool) $group_data['preferences_button_enabled'];
-			}
-
-			// Sanitize button order array.
-			if ( isset( $group_data['button_order'] ) && is_array( $group_data['button_order'] ) ) {
-				$sanitized_group['button_order'] = array();
-				foreach ( $group_data['button_order'] as $button_id ) {
-					$button_id = sanitize_text_field( $button_id );
-					if ( in_array( $button_id, array( 'accept', 'cancel', 'preferences' ), true ) ) {
-						$sanitized_group['button_order'][] = $button_id;
-					}
-				}
-				// Ensure we have a valid button order, otherwise use default.
-				if ( empty( $sanitized_group['button_order'] ) ) {
-					$sanitized_group['button_order'] = array( 'accept', 'cancel', 'preferences' );
-				}
-			}
-
-			// Sanitize banner message.
-			if ( isset( $group_data['banner_message'] ) ) {
-				$sanitized_group['banner_message'] = sanitize_textarea_field( $group_data['banner_message'] );
-			}
-
-			// Only add the group if it has a name and at least one location.
-			if ( ! empty( $sanitized_group['name'] ) && ! empty( $sanitized_group['locations'] ) ) {
-				// Sanitize the group ID.
-				$sanitized_group_id = sanitize_key( $group_id );
-				if ( ! empty( $sanitized_group_id ) ) {
-					$sanitized_groups[ $sanitized_group_id ] = $sanitized_group;
-				}
-			}
-		}
-
-		// Save the imported geolocation groups.
-		wpconsent()->settings->update_option( 'geolocation_groups', $sanitized_groups );
-
-		// Check if we need to add the geolocation cookie after import.
-		if ( ! empty( $sanitized_groups ) && class_exists( 'WPConsent_Geolocation' ) && isset( wpconsent()->geolocation ) ) {
-			wpconsent()->geolocation->maybe_add_geolocation_cookie();
-		}
-	}
-
-	/**
 	 * Get the service library button HTML.
 	 *
 	 * @param array $category The category data.
@@ -1312,7 +605,7 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 								'script_type'
 						);
 
-						// Script-specific fields (shown when script type is selected).
+						// Script-specific fields (shown when script type is selected)
 						$this->metabox_row(
 								esc_html__( 'Script Tag', 'wpconsent-premium' ),
 								$this->get_input_textarea(
@@ -1337,7 +630,7 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 								'script'
 						);
 
-						// iFrame-specific fields (shown when iframe type is selected).
+						// iFrame-specific fields (shown when iframe type is selected)
 						$this->metabox_row(
 								esc_html__( 'iFrame Tag', 'wpconsent-premium' ),
 								$this->get_input_textarea(
@@ -1409,6 +702,15 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 			</div>
 		</form>
 		<?php
+	}
+
+	/**
+	 * Get the content for the usage tracking input.
+	 *
+	 * @return void
+	 */
+	public function usage_tracking_input() {
+		// Do nothing.
 	}
 
 	/**
@@ -1556,5 +858,827 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 
 		<?php
 		return ob_get_clean();
+	}
+
+	/**
+	 * Process publisher restrictions from form data.
+	 *
+	 * @return array The processed publisher restrictions.
+	 */
+	private function process_publisher_restrictions() {
+		$restrictions = array(
+				'global'  => array(),
+				'vendors' => array(),
+		);
+
+		// Process global restrictions.
+		if ( isset( $_POST['global_disallow_li'] ) ) {
+			$global_disallow_li = sanitize_text_field( wp_unslash( $_POST['global_disallow_li'] ) );
+
+			if ( 'disallow_all' === $global_disallow_li ) {
+				$restrictions['global']['disallow_li_purposes'] = array( 'all' );
+			} elseif ( 'disallow_specific' === $global_disallow_li && isset( $_POST['global_disallow_li_purposes'] ) && is_array( $_POST['global_disallow_li_purposes'] ) ) {
+				$disallow_li_purposes = array();
+				foreach ( $_POST['global_disallow_li_purposes'] as $purpose_id ) {
+					$purpose_id = intval( $purpose_id );
+					if ( $purpose_id > 0 ) {
+						$disallow_li_purposes[] = $purpose_id;
+					}
+				}
+				$restrictions['global']['disallow_li_purposes'] = $disallow_li_purposes;
+			}
+		}
+
+		// Process per-vendor restrictions.
+		if ( isset( $_POST['vendor_restrictions'] ) && is_array( $_POST['vendor_restrictions'] ) ) {
+			foreach ( $_POST['vendor_restrictions'] as $vendor_id => $vendor_data ) {
+				$vendor_id = intval( $vendor_id );
+				if ( $vendor_id <= 0 ) {
+					continue;
+				}
+
+				$vendor_restrictions = array();
+
+				// Process disallowed purposes (consent purposes).
+				if ( isset( $vendor_data['disallowed_purposes'] ) && is_array( $vendor_data['disallowed_purposes'] ) ) {
+					$disallowed_purposes = array();
+					foreach ( $vendor_data['disallowed_purposes'] as $purpose_id ) {
+						$purpose_id = intval( $purpose_id );
+						if ( $purpose_id > 0 ) {
+							$disallowed_purposes[] = $purpose_id;
+						}
+					}
+					if ( ! empty( $disallowed_purposes ) ) {
+						$vendor_restrictions['disallowed_purposes'] = $disallowed_purposes;
+					}
+				}
+
+				// Process legitimate interest purposes.
+				if ( isset( $vendor_data['li_purposes'] ) && is_array( $vendor_data['li_purposes'] ) ) {
+					$require_consent_for_li = array();
+					$disallowed_li_purposes = array();
+
+					foreach ( $vendor_data['li_purposes'] as $purpose_id => $action ) {
+						$purpose_id = intval( $purpose_id );
+						$action     = sanitize_text_field( wp_unslash( $action ) );
+
+						if ( $purpose_id <= 0 ) {
+							continue;
+						}
+
+						if ( 'require_consent' === $action ) {
+							$require_consent_for_li[] = $purpose_id;
+						} elseif ( 'disallow' === $action ) {
+							$disallowed_li_purposes[] = $purpose_id;
+						}
+					}
+
+					if ( ! empty( $require_consent_for_li ) ) {
+						$vendor_restrictions['require_consent_for_li'] = $require_consent_for_li;
+					}
+
+					// Merge disallowed LI purposes with general disallowed purposes.
+					if ( ! empty( $disallowed_li_purposes ) ) {
+						if ( isset( $vendor_restrictions['disallowed_purposes'] ) ) {
+							$vendor_restrictions['disallowed_purposes'] = array_unique( array_merge(
+									$vendor_restrictions['disallowed_purposes'],
+									$disallowed_li_purposes
+							) );
+						} else {
+							$vendor_restrictions['disallowed_purposes'] = $disallowed_li_purposes;
+						}
+					}
+				}
+
+				// Process disallowed special purposes.
+				if ( isset( $vendor_data['disallowed_special_purposes'] ) && is_array( $vendor_data['disallowed_special_purposes'] ) ) {
+					$disallowed_special_purposes = array();
+					foreach ( $vendor_data['disallowed_special_purposes'] as $special_purpose_id ) {
+						$special_purpose_id = intval( $special_purpose_id );
+						if ( $special_purpose_id > 0 ) {
+							$disallowed_special_purposes[] = $special_purpose_id;
+						}
+					}
+					if ( ! empty( $disallowed_special_purposes ) ) {
+						$vendor_restrictions['disallowed_special_purposes'] = $disallowed_special_purposes;
+					}
+				}
+
+				// Only add vendor restrictions if there are any.
+				if ( ! empty( $vendor_restrictions ) ) {
+					$restrictions['vendors'][ $vendor_id ] = $vendor_restrictions;
+				}
+			}
+		}
+
+		return $restrictions;
+	}
+
+	/**
+	 * Process publisher declarations from form submission.
+	 *
+	 * Processes the publisher's own TCF purpose and feature declarations.
+	 *
+	 * @return array Structured publisher declarations data.
+	 */
+	private function process_publisher_declarations() {
+		$declarations = array(
+				'purposes_consent'         => array(),
+				'purposes_li_transparency' => array(),
+		);
+
+		// Process publisher purposes (consent).
+		if ( isset( $_POST['publisher_purposes_consent'] ) && is_array( $_POST['publisher_purposes_consent'] ) ) {
+			foreach ( $_POST['publisher_purposes_consent'] as $purpose_id ) {
+				$purpose_id = intval( $purpose_id );
+				if ( $purpose_id > 0 ) {
+					$declarations['purposes_consent'][] = $purpose_id;
+				}
+			}
+		}
+
+		// Process publisher purposes (legitimate interest).
+		if ( isset( $_POST['publisher_purposes_li'] ) && is_array( $_POST['publisher_purposes_li'] ) ) {
+			$li_allowed_purposes = array( 2, 7, 9, 10 ); // Only these purposes allow LI per TCF policy.
+
+			foreach ( $_POST['publisher_purposes_li'] as $purpose_id ) {
+				$purpose_id = intval( $purpose_id );
+				// Validate that purpose is in the allowed list.
+				if ( $purpose_id > 0 && in_array( $purpose_id, $li_allowed_purposes, true ) ) {
+					$declarations['purposes_li_transparency'][] = $purpose_id;
+				}
+			}
+		}
+
+		return $declarations;
+	}
+
+	/**
+	 * Handle IAB TCF vendor selection form submission.
+	 *
+	 * @return void
+	 */
+	private function handle_iab_tcf_vendor_selection() {
+		// Verify nonce for security.
+		if ( ! isset( $_POST['iab_tcf_vendors_nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['iab_tcf_vendors_nonce'] ), 'save_iab_tcf_vendors' ) ) {
+			if ( wp_doing_ajax() ) {
+				wp_die( 'Security check failed', 'Error', array( 'response' => 403 ) );
+			}
+			wp_die( esc_html__( 'Security check failed.', 'wpconsent-cookies-banner-privacy-suite' ) );
+		}
+
+		// Check user capabilities.
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'wpconsent-cookies-banner-privacy-suite' ) );
+		}
+
+		// Get and sanitize selected vendors.
+		$selected_vendors = array();
+		if ( isset( $_POST['selected_vendors'] ) && is_array( $_POST['selected_vendors'] ) ) {
+			foreach ( $_POST['selected_vendors'] as $vendor_id ) {
+				$vendor_id = intval( $vendor_id );
+				if ( $vendor_id > 0 ) {
+					$selected_vendors[] = $vendor_id;
+				}
+			}
+		}
+
+		// Validate vendors exist in the IAB TCF list.
+		if ( class_exists( 'WPConsent_IAB_TCF_Vendors' ) ) {
+			$vendors_instance = WPConsent_IAB_TCF_Vendors::get_instance();
+			if ( $vendors_instance->is_available() ) {
+				$all_vendors      = $vendors_instance->get_vendors();
+				$selected_vendors = array_filter( $selected_vendors, function ( $vendor_id ) use ( $all_vendors ) {
+					return isset( $all_vendors[ $vendor_id ] );
+				} );
+			}
+		}
+
+		// Save selected vendors to options.
+		wpconsent()->settings->update_option( 'iab_tcf_selected_vendors', $selected_vendors );
+
+		// Save TCF frontend enabled setting.
+		$tcf_frontend_enabled = isset( $_POST['iab_tcf_frontend_enabled'] );
+		wpconsent()->settings->update_option( 'iab_tcf_frontend_enabled', $tcf_frontend_enabled );
+
+		// Process and save publisher restrictions.
+		$publisher_restrictions = $this->process_publisher_restrictions();
+		wpconsent()->settings->update_option( 'iab_tcf_publisher_restrictions', $publisher_restrictions );
+
+		// Process and save publisher declarations.
+		$publisher_declarations = $this->process_publisher_declarations();
+		wpconsent()->settings->update_option( 'iab_tcf_publisher_declarations', $publisher_declarations );
+
+		// Clear preference slugs transient when IAB TCF setting is toggled.
+		delete_transient( 'wpconsent_preference_slugs' );
+
+		// Handle AJAX response.
+		if ( wp_doing_ajax() ) {
+			wp_send_json_success( array(
+					'message'        => esc_html__( 'IAB TCF settings saved successfully.', 'wpconsent-cookies-banner-privacy-suite' ),
+					'selected_count' => count( $selected_vendors ),
+			) );
+		}
+
+		// For regular form submission, redirect back.
+		$this->set_success_message( esc_html__( 'IAB TCF settings have been saved.', 'wpconsent-cookies-banner-privacy-suite' ) );
+		wp_safe_redirect( $this->get_page_action_url() . '&view=iabtcf' );
+		exit;
+	}
+
+	/**
+	 * Output the IAB TCF view (Pro version with real functionality).
+	 *
+	 * @return void
+	 */
+	public function output_view_iabtcf() {
+		// Check if IAB TCF vendors class is available.
+		if ( ! class_exists( 'WPConsent_IAB_TCF_Vendors' ) ) {
+			echo '<div class="wpconsent-notice wpconsent-notice-error">';
+			echo '<p>' . esc_html__( 'IAB TCF Vendors functionality is not available. Please ensure the Pro version is active.', 'wpconsent-cookies-banner-privacy-suite' ) . '</p>';
+			echo '</div>';
+
+			return;
+		}
+
+		$vendors_instance = WPConsent_IAB_TCF_Vendors::get_instance();
+
+		if ( ! $vendors_instance->is_available() ) {
+			echo '<div class="wpconsent-notice wpconsent-notice-error">';
+			echo '<p>' . esc_html__( 'IAB TCF Vendors data is not available. Please check your internet connection and try refreshing the data.', 'wpconsent-cookies-banner-privacy-suite' ) . '</p>';
+			echo '<button class="wpconsent-button wpconsent-button-primary" onclick="location.reload();">' . esc_html__( 'Refresh Data', 'wpconsent-cookies-banner-privacy-suite' ) . '</button>';
+			echo '</div>';
+
+			return;
+		}
+
+		$vendors          = $vendors_instance->get_vendors();
+		$purposes         = $vendors_instance->get_purposes();
+		$special_purposes = $vendors_instance->get_special_purposes();
+		$features         = $vendors_instance->get_features();
+		$special_features = $vendors_instance->get_special_features();
+
+		// Get selected vendors from options.
+		$selected_vendors       = wpconsent()->settings->get_option( 'iab_tcf_selected_vendors', array() );
+		$vendors_initialized    = wpconsent()->settings->get_option( 'iab_tcf_vendors_initialized', false );
+		$tcf_frontend_enabled   = wpconsent()->settings->get_option( 'iab_tcf_frontend_enabled', false );
+		$publisher_restrictions = wpconsent()->settings->get_option( 'iab_tcf_publisher_restrictions', array() );
+
+		// If no vendors have been selected yet and this is the first time, select all vendors by default.
+		if ( empty( $selected_vendors ) && ! $vendors_initialized ) {
+			$selected_vendors = array_keys( $vendors );
+			wpconsent()->settings->update_option( 'iab_tcf_selected_vendors', $selected_vendors );
+			wpconsent()->settings->update_option( 'iab_tcf_vendors_initialized', true );
+		}
+
+		// Sort vendors by name (default sorting for initial load).
+		$sorted_vendors = $this->sort_vendors( $vendors, 'name_asc' );
+
+		?>
+		<form action="<?php echo esc_url( $this->get_page_action_url() ); ?>" method="post">
+			<?php wp_nonce_field( 'save_iab_tcf_vendors', 'iab_tcf_vendors_nonce' ); ?>
+			<input type="hidden" name="action" value="save_iab_tcf_vendors">
+
+			<?php
+			// TCF Activation metabox.
+			ob_start();
+			$toggle_html = '<label class="wpconsent-toggle">';
+			$toggle_html .= $this->get_checkbox_toggle( $tcf_frontend_enabled, 'iab_tcf_frontend_enabled' );
+			$toggle_html .= '<span class="wpconsent-toggle-slider"></span>';
+			$toggle_html .= '</label>';
+
+			$this->metabox_row(
+					__( 'Enable TCF', 'wpconsent-cookies-banner-privacy-suite' ),
+					$toggle_html,
+					'iab_tcf_frontend_enabled',
+					'',
+					'',
+					__( 'Enable this setting to load the IAB TCF (Transparency and Consent Framework) on the frontend of your website.', 'wpconsent-cookies-banner-privacy-suite' )
+			);
+			?>
+			<div class="wpconsent-input-area-description" style="margin-top: 10px;">
+				<p><strong><?php esc_html_e( 'Please Note:', 'wpconsent-cookies-banner-privacy-suite' ); ?></strong> <?php esc_html_e( 'Enabling this setting will force certain banner settings, styles, and behavior to comply with IAB TCF v2.2 standards to ensure proper consent management.', 'wpconsent-cookies-banner-privacy-suite' ); ?></p>
+			</div>
+			<?php
+			$frontend_content = ob_get_clean();
+
+			$this->metabox(
+					__( 'TCF Activation', 'wpconsent-cookies-banner-privacy-suite' ),
+					$frontend_content
+			);
+			?>
+
+			<?php $this->output_global_vendor_restrictions( $purposes, $publisher_restrictions ); ?>
+
+			<?php $this->output_publisher_declarations( $purposes ); ?>
+
+			<div class="wpconsent-iab-tcf-vendors" data-per-page="50">
+				<?php $this->output_vendor_controls( count( $sorted_vendors ) ); ?>
+				<?php $this->output_vendor_list( $sorted_vendors, $selected_vendors, $purposes, $special_purposes, $publisher_restrictions ); ?>
+				<?php $this->output_vendor_pagination(); ?>
+			</div>
+		</form>
+		<?php
+	}
+
+	/**
+	 * Output the vendor list.
+	 *
+	 * @param array $vendors The vendors to display.
+	 * @param array $selected_vendors The selected vendors.
+	 * @param array $purposes The purposes data.
+	 * @param array $special_purposes The special purposes data.
+	 * @param array $publisher_restrictions The publisher restrictions data.
+	 *
+	 * @return void
+	 */
+	protected function output_vendor_list( $vendors, $selected_vendors, $purposes, $special_purposes, $publisher_restrictions ) {
+		?>
+		<div class="wpconsent-vendor-list">
+			<?php if ( empty( $vendors ) ) : ?>
+				<div class="wpconsent-no-vendors">
+					<p><?php esc_html_e( 'No vendors found matching your criteria.', 'wpconsent-cookies-banner-privacy-suite' ); ?></p>
+				</div>
+			<?php else : ?>
+				<?php foreach ( $vendors as $vendor_id => $vendor ) : ?>
+					<?php $this->output_vendor_item( $vendor_id, $vendor, $selected_vendors, $purposes, $special_purposes, $publisher_restrictions ); ?>
+				<?php endforeach; ?>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Output vendor pagination placeholder (handled by JavaScript).
+	 *
+	 * @return void
+	 */
+	protected function output_vendor_pagination() {
+		?>
+		<div class="wpconsent-vendor-pagination" style="display: none;">
+			<button type="button" class="wpconsent-button wpconsent-button-secondary" id="vendor-prev-page" disabled>
+				<?php esc_html_e( '← Previous', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+			</button>
+
+			<span class="wpconsent-pagination-info">
+				<?php esc_html_e( 'Page 1 of 1', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+			</span>
+
+			<button type="button" class="wpconsent-button wpconsent-button-secondary" id="vendor-next-page" disabled>
+				<?php esc_html_e( 'Next →', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+			</button>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Output a single vendor item.
+	 *
+	 * @param int   $vendor_id The vendor ID.
+	 * @param array $vendor The vendor data.
+	 * @param array $selected_vendors The selected vendors.
+	 * @param array $purposes The purposes data.
+	 * @param array $special_purposes The special purposes data.
+	 * @param array $publisher_restrictions The publisher restrictions data.
+	 *
+	 * @return void
+	 */
+	protected function output_vendor_item( $vendor_id, $vendor, $selected_vendors, $purposes, $special_purposes, $publisher_restrictions ) {
+		$is_selected             = in_array( (int) $vendor_id, array_map( 'intval', $selected_vendors ), true );
+		$vendor_purposes         = isset( $vendor['purposes'] ) ? $vendor['purposes'] : array();
+		$vendor_legint_purposes  = isset( $vendor['legIntPurposes'] ) ? $vendor['legIntPurposes'] : array();
+		$vendor_special_purposes = isset( $vendor['specialPurposes'] ) ? $vendor['specialPurposes'] : array();
+		$vendor_urls             = $this->get_vendor_urls_for_language( $vendor );
+
+		// Get vendor-specific restrictions.
+		$vendor_restrictions         = isset( $publisher_restrictions['vendors'][ $vendor_id ] ) ? $publisher_restrictions['vendors'][ $vendor_id ] : array();
+		$disallowed_purposes         = isset( $vendor_restrictions['disallowed_purposes'] ) ? $vendor_restrictions['disallowed_purposes'] : array();
+		$require_consent_for_li      = isset( $vendor_restrictions['require_consent_for_li'] ) ? $vendor_restrictions['require_consent_for_li'] : array();
+		$disallowed_special_purposes = isset( $vendor_restrictions['disallowed_special_purposes'] ) ? $vendor_restrictions['disallowed_special_purposes'] : array();
+		?>
+		<div class="wpconsent-vendor-item <?php echo $is_selected ? 'selected' : ''; ?>" data-vendor-id="<?php echo esc_attr( $vendor_id ); ?>">
+			<div class="wpconsent-vendor-header">
+				<div class="wpconsent-vendor-selection">
+					<input type="checkbox"
+					       id="vendor-<?php echo esc_attr( $vendor_id ); ?>"
+					       name="selected_vendors[]"
+					       value="<?php echo esc_attr( $vendor_id ); ?>"
+							<?php checked( $is_selected ); ?>
+                           class="wpconsent-vendor-checkbox">
+				</div>
+				<div class="wpconsent-vendor-info">
+					<h3 class="wpconsent-vendor-name">
+						<label for="vendor-<?php echo esc_attr( $vendor_id ); ?>">
+							<?php echo esc_html( $vendor['name'] ); ?>
+							<span class="wpconsent-vendor-id">(ID: <?php echo esc_html( $vendor_id ); ?>)</span>
+						</label>
+					</h3>
+					<?php if ( ! empty( $vendor_urls['privacy'] ) || ! empty( $vendor_urls['legIntClaim'] ) ) : ?>
+						<div class="wpconsent-vendor-policy">
+							<?php if ( ! empty( $vendor_urls['privacy'] ) ) : ?>
+								<a href="<?php echo esc_url( $vendor_urls['privacy'] ); ?>" target="_blank" rel="noopener noreferrer">
+									<?php esc_html_e( 'Privacy Policy', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+									<span class="dashicons dashicons-external"></span>
+								</a>
+							<?php endif; ?>
+							<?php if ( ! empty( $vendor_urls['legIntClaim'] ) ) : ?>
+								<?php if ( ! empty( $vendor_urls['privacy'] ) ) : ?>
+									<span class="wpconsent-vendor-policy-separator"> | </span>
+								<?php endif; ?>
+								<a href="<?php echo esc_url( $vendor_urls['legIntClaim'] ); ?>" target="_blank" rel="noopener noreferrer">
+									<?php esc_html_e( 'Legitimate Interest', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+									<span class="dashicons dashicons-external"></span>
+								</a>
+							<?php endif; ?>
+						</div>
+					<?php endif; ?>
+				</div>
+				<div class="wpconsent-vendor-toggle">
+					<button type="button" class="wpconsent-vendor-details-toggle" aria-expanded="false">
+						<span class="dashicons dashicons-arrow-down-alt2"></span>
+					</button>
+				</div>
+			</div>
+			<div class="wpconsent-vendor-details" style="display: none;">
+				<?php if ( ! empty( $vendor_purposes ) || ! empty( $vendor_legint_purposes ) ) : ?>
+					<div class="wpconsent-vendor-purposes">
+						<h4><?php esc_html_e( 'Declared Purposes', 'wpconsent-cookies-banner-privacy-suite' ); ?></h4>
+
+						<?php if ( ! empty( $vendor_purposes ) ) : ?>
+							<div class="wpconsent-purposes-section">
+								<h5><?php esc_html_e( 'Consent Purposes', 'wpconsent-cookies-banner-privacy-suite' ); ?></h5>
+								<ul class="wpconsent-purposes-list">
+									<?php foreach ( $vendor_purposes as $purpose_id ) : ?>
+										<li>
+											<strong><?php echo esc_html( $purpose_id ); ?>:</strong>
+											<?php if ( isset( $purposes[ $purpose_id ] ) ) : ?>
+												<?php echo esc_html( $purposes[ $purpose_id ]['name'] ); ?>
+											<?php else : ?>
+												<?php esc_html_e( 'Unknown Purpose', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+											<?php endif; ?>
+										</li>
+									<?php endforeach; ?>
+								</ul>
+							</div>
+						<?php endif; ?>
+
+						<?php if ( ! empty( $vendor_legint_purposes ) ) : ?>
+							<div class="wpconsent-purposes-section">
+								<h5><?php esc_html_e( 'Legitimate Interest Purposes', 'wpconsent-cookies-banner-privacy-suite' ); ?></h5>
+								<ul class="wpconsent-purposes-list">
+									<?php foreach ( $vendor_legint_purposes as $purpose_id ) : ?>
+										<li>
+											<strong><?php echo esc_html( $purpose_id ); ?>:</strong>
+											<?php if ( isset( $purposes[ $purpose_id ] ) ) : ?>
+												<?php echo esc_html( $purposes[ $purpose_id ]['name'] ); ?>
+											<?php else : ?>
+												<?php esc_html_e( 'Unknown Purpose', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+											<?php endif; ?>
+										</li>
+									<?php endforeach; ?>
+								</ul>
+							</div>
+						<?php endif; ?>
+					</div>
+				<?php endif; ?>
+
+				<?php if ( ! empty( $vendor_special_purposes ) ) : ?>
+					<div class="wpconsent-vendor-special-purposes">
+						<h4><?php esc_html_e( 'Special Purposes', 'wpconsent-cookies-banner-privacy-suite' ); ?></h4>
+						<ul class="wpconsent-purposes-list">
+							<?php foreach ( $vendor_special_purposes as $special_purpose_id ) : ?>
+								<li>
+									<strong><?php echo esc_html( $special_purpose_id ); ?>:</strong>
+									<?php if ( isset( $special_purposes[ $special_purpose_id ] ) ) : ?>
+										<?php echo esc_html( $special_purposes[ $special_purpose_id ]['name'] ); ?>
+									<?php else : ?>
+										<?php esc_html_e( 'Unknown Special Purpose', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+									<?php endif; ?>
+								</li>
+							<?php endforeach; ?>
+						</ul>
+					</div>
+				<?php endif; ?>
+
+				<?php $this->output_vendor_restrictions( $vendor_id, $vendor_purposes, $vendor_legint_purposes, $vendor_special_purposes, $purposes, $special_purposes, $disallowed_purposes, $require_consent_for_li, $disallowed_special_purposes ); ?>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Get vendor URLs for the current language.
+	 *
+	 * @param array $vendor The vendor data.
+	 *
+	 * @return array Array with 'privacy' and 'legIntClaim' URLs.
+	 */
+	protected function get_vendor_urls_for_language( $vendor ) {
+		$urls = array(
+				'privacy'     => '',
+				'legIntClaim' => '',
+		);
+
+		// Fallback to legacy policyUrl if urls array is not available.
+		if ( ! isset( $vendor['urls'] ) || ! is_array( $vendor['urls'] ) ) {
+			if ( isset( $vendor['policyUrl'] ) ) {
+				$urls['privacy'] = $vendor['policyUrl'];
+			}
+
+			return $urls;
+		}
+
+		// Get current language code (e.g., 'en' from 'en_US').
+		$current_locale = get_locale();
+		$current_lang   = substr( $current_locale, 0, 2 );
+
+		// First, try to find exact match for current language.
+		foreach ( $vendor['urls'] as $url_data ) {
+			if ( isset( $url_data['langId'] ) && $url_data['langId'] === $current_lang ) {
+				if ( isset( $url_data['privacy'] ) ) {
+					$urls['privacy'] = $url_data['privacy'];
+				}
+				if ( isset( $url_data['legIntClaim'] ) ) {
+					$urls['legIntClaim'] = $url_data['legIntClaim'];
+				}
+
+				return $urls;
+			}
+		}
+
+		// If no match found, try to find English as fallback.
+		foreach ( $vendor['urls'] as $url_data ) {
+			if ( isset( $url_data['langId'] ) && $url_data['langId'] === 'en' ) {
+				if ( isset( $url_data['privacy'] ) ) {
+					$urls['privacy'] = $url_data['privacy'];
+				}
+				if ( isset( $url_data['legIntClaim'] ) ) {
+					$urls['legIntClaim'] = $url_data['legIntClaim'];
+				}
+
+				return $urls;
+			}
+		}
+
+		// If no English found, use the first available URL.
+		if ( ! empty( $vendor['urls'] ) && is_array( $vendor['urls'] ) ) {
+			$first_url = reset( $vendor['urls'] );
+			if ( isset( $first_url['privacy'] ) ) {
+				$urls['privacy'] = $first_url['privacy'];
+			}
+			if ( isset( $first_url['legIntClaim'] ) ) {
+				$urls['legIntClaim'] = $first_url['legIntClaim'];
+			}
+		}
+
+		return $urls;
+	}
+
+	/**
+	 * Output per-vendor restriction controls.
+	 *
+	 * @param int   $vendor_id The vendor ID.
+	 * @param array $vendor_purposes The vendor's consent purposes.
+	 * @param array $vendor_legint_purposes The vendor's legitimate interest purposes.
+	 * @param array $vendor_special_purposes The vendor's special purposes.
+	 * @param array $purposes The purposes data.
+	 * @param array $special_purposes The special purposes data.
+	 * @param array $disallowed_purposes Current disallowed purposes for this vendor.
+	 * @param array $require_consent_for_li Current purposes requiring consent for LI.
+	 * @param array $disallowed_special_purposes Current disallowed special purposes.
+	 *
+	 * @return void
+	 */
+	protected function output_vendor_restrictions( $vendor_id, $vendor_purposes, $vendor_legint_purposes, $vendor_special_purposes, $purposes, $special_purposes, $disallowed_purposes, $require_consent_for_li, $disallowed_special_purposes ) {
+		// Only show restrictions if vendor has any purposes.
+		if ( empty( $vendor_purposes ) && empty( $vendor_legint_purposes ) && empty( $vendor_special_purposes ) ) {
+			return;
+		}
+		?>
+		<div class="wpconsent-vendor-restrictions">
+			<h4><?php esc_html_e( 'Publisher Restrictions', 'wpconsent-cookies-banner-privacy-suite' ); ?></h4>
+			<p class="wpconsent-restrictions-description">
+				<?php esc_html_e( 'Override the default legal bases for this vendor. These restrictions allow you to enforce stricter data policies for individual vendors.', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+			</p>
+
+			<?php if ( ! empty( $vendor_purposes ) ) : ?>
+				<div class="wpconsent-restrictions-section">
+					<h5><?php esc_html_e( 'Consent Purpose Restrictions', 'wpconsent-cookies-banner-privacy-suite' ); ?></h5>
+					<div class="wpconsent-restrictions-list">
+						<?php foreach ( $vendor_purposes as $purpose_id ) : ?>
+							<div class="wpconsent-restriction-item">
+								<label class="wpconsent-restriction-label">
+									<strong><?php echo esc_html( $purpose_id ); ?>:</strong>
+									<?php if ( isset( $purposes[ $purpose_id ] ) ) : ?>
+										<?php echo esc_html( $purposes[ $purpose_id ]['name'] ); ?>
+									<?php else : ?>
+										<?php esc_html_e( 'Unknown Purpose', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+									<?php endif; ?>
+								</label>
+								<div class="wpconsent-restriction-control">
+									<label class="wpconsent-checkbox-label">
+										<input type="checkbox"
+										       name="vendor_restrictions[<?php echo esc_attr( $vendor_id ); ?>][disallowed_purposes][]"
+										       value="<?php echo esc_attr( $purpose_id ); ?>"
+												<?php checked( in_array( $purpose_id, $disallowed_purposes, true ), true ); ?>>
+										<span><?php esc_html_e( 'Disallow', 'wpconsent-cookies-banner-privacy-suite' ); ?></span>
+									</label>
+								</div>
+							</div>
+						<?php endforeach; ?>
+					</div>
+				</div>
+			<?php endif; ?>
+
+			<?php if ( ! empty( $vendor_legint_purposes ) ) : ?>
+				<div class="wpconsent-restrictions-section">
+					<h5><?php esc_html_e( 'Legitimate Interest Purpose Restrictions', 'wpconsent-cookies-banner-privacy-suite' ); ?></h5>
+					<div class="wpconsent-restrictions-list">
+						<?php foreach ( $vendor_legint_purposes as $purpose_id ) : ?>
+							<div class="wpconsent-restriction-item">
+								<label class="wpconsent-restriction-label">
+									<strong><?php echo esc_html( $purpose_id ); ?>:</strong>
+									<?php if ( isset( $purposes[ $purpose_id ] ) ) : ?>
+										<?php echo esc_html( $purposes[ $purpose_id ]['name'] ); ?>
+									<?php else : ?>
+										<?php esc_html_e( 'Unknown Purpose', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+									<?php endif; ?>
+								</label>
+								<div class="wpconsent-restriction-control">
+									<select name="vendor_restrictions[<?php echo esc_attr( $vendor_id ); ?>][li_purposes][<?php echo esc_attr( $purpose_id ); ?>]" class="wpconsent-select-small">
+										<option value="allow" <?php selected( ! in_array( $purpose_id, $disallowed_purposes, true ) && ! in_array( $purpose_id, $require_consent_for_li, true ), true ); ?>>
+											<?php esc_html_e( 'Allow LI', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+										</option>
+										<option value="disallow" <?php selected( in_array( $purpose_id, $disallowed_purposes, true ), true ); ?>>
+											<?php esc_html_e( 'Disallow', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+										</option>
+										<option value="require_consent" <?php selected( in_array( $purpose_id, $require_consent_for_li, true ), true ); ?>>
+											<?php esc_html_e( 'Require Consent', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+										</option>
+									</select>
+								</div>
+							</div>
+						<?php endforeach; ?>
+					</div>
+				</div>
+			<?php endif; ?>
+
+			<?php if ( ! empty( $vendor_special_purposes ) ) : ?>
+				<div class="wpconsent-restrictions-section">
+					<h5><?php esc_html_e( 'Special Purpose Restrictions', 'wpconsent-cookies-banner-privacy-suite' ); ?></h5>
+					<div class="wpconsent-restrictions-list">
+						<?php foreach ( $vendor_special_purposes as $special_purpose_id ) : ?>
+							<div class="wpconsent-restriction-item">
+								<label class="wpconsent-restriction-label">
+									<strong><?php echo esc_html( $special_purpose_id ); ?>:</strong>
+									<?php if ( isset( $special_purposes[ $special_purpose_id ] ) ) : ?>
+										<?php echo esc_html( $special_purposes[ $special_purpose_id ]['name'] ); ?>
+									<?php else : ?>
+										<?php esc_html_e( 'Unknown Special Purpose', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+									<?php endif; ?>
+								</label>
+								<div class="wpconsent-restriction-control">
+									<label class="wpconsent-checkbox-label">
+										<input type="checkbox"
+										       name="vendor_restrictions[<?php echo esc_attr( $vendor_id ); ?>][disallowed_special_purposes][]"
+										       value="<?php echo esc_attr( $special_purpose_id ); ?>"
+												<?php checked( in_array( $special_purpose_id, $disallowed_special_purposes, true ), true ); ?>>
+										<span><?php esc_html_e( 'Disallow', 'wpconsent-cookies-banner-privacy-suite' ); ?></span>
+									</label>
+								</div>
+							</div>
+						<?php endforeach; ?>
+					</div>
+				</div>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+
+	/**
+	 * Filter vendors based on search term and status.
+	 *
+	 * @param array  $vendors The vendors array.
+	 * @param string $search_term The search term.
+	 * @param string $status_filter The status filter.
+	 * @param array  $selected_vendors The selected vendors.
+	 *
+	 * @return array Filtered vendors.
+	 */
+	protected function filter_vendors( $vendors, $search_term, $status_filter, $selected_vendors ) {
+		$filtered = array();
+
+		foreach ( $vendors as $vendor_id => $vendor ) {
+			// Search filter.
+			if ( ! empty( $search_term ) ) {
+				$search_lower      = strtolower( $search_term );
+				$vendor_name_lower = strtolower( $vendor['name'] );
+				$vendor_id_str     = strval( $vendor_id );
+
+				if ( strpos( $vendor_name_lower, $search_lower ) === false &&
+				     strpos( $vendor_id_str, $search_lower ) === false ) {
+					continue;
+				}
+			}
+
+			// Status filter.
+			if ( ! empty( $status_filter ) ) {
+				$is_selected = in_array( (int) $vendor_id, array_map( 'intval', $selected_vendors ), true );
+				if ( ( $status_filter === 'selected' && ! $is_selected ) ||
+				     ( $status_filter === 'not_selected' && $is_selected ) ) {
+					continue;
+				}
+			}
+
+			$filtered[ $vendor_id ] = $vendor;
+		}
+
+		return $filtered;
+	}
+
+	/**
+	 * Sort vendors based on sort order.
+	 *
+	 * @param array  $vendors The vendors array.
+	 * @param string $sort_order The sort order.
+	 *
+	 * @return array Sorted vendors.
+	 */
+	protected function sort_vendors( $vendors, $sort_order ) {
+		switch ( $sort_order ) {
+			case 'name_desc':
+				uasort( $vendors, function ( $a, $b ) {
+					return strcasecmp( $b['name'], $a['name'] );
+				} );
+				break;
+			case 'id_asc':
+				uksort( $vendors, function ( $a, $b ) {
+					return $a - $b;
+				} );
+				break;
+			case 'id_desc':
+				uksort( $vendors, function ( $a, $b ) {
+					return $b - $a;
+				} );
+				break;
+			case 'name_asc':
+			default:
+				uasort( $vendors, function ( $a, $b ) {
+					return strcasecmp( $a['name'], $b['name'] );
+				} );
+				break;
+		}
+
+		return $vendors;
+	}
+
+	/**
+	 * Output vendor controls (search, filters, sorting).
+	 *
+	 * @param int $total_vendors Total number of vendors.
+	 *
+	 * @return void
+	 */
+	protected function output_vendor_controls( $total_vendors ) {
+		?>
+		<div class="wpconsent-vendor-controls">
+			<div class="wpconsent-vendor-controls-row">
+				<div class="wpconsent-vendor-search">
+					<input type="text"
+					       id="vendor-search"
+					       placeholder="<?php esc_attr_e( 'Search vendors by name or ID...', 'wpconsent-cookies-banner-privacy-suite' ); ?>"
+					       class="wpconsent-input-text">
+					<button type="button" class="wpconsent-button wpconsent-button-secondary" id="vendor-search-btn">
+						<?php esc_html_e( 'Search', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+					</button>
+					<button type="button" class="wpconsent-button wpconsent-button-secondary" id="vendor-clear-search" style="display: none;">
+						<?php esc_html_e( 'Clear', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+					</button>
+				</div>
+				<div class="wpconsent-vendor-filters">
+					<select id="vendor-status-filter" class="wpconsent-select">
+						<option value=""><?php esc_html_e( 'All Vendors', 'wpconsent-cookies-banner-privacy-suite' ); ?></option>
+						<option value="selected"><?php esc_html_e( 'Selected', 'wpconsent-cookies-banner-privacy-suite' ); ?></option>
+						<option value="not_selected"><?php esc_html_e( 'Not Selected', 'wpconsent-cookies-banner-privacy-suite' ); ?></option>
+					</select>
+					<select id="vendor-sort-order" class="wpconsent-select">
+						<option value="name_asc"><?php esc_html_e( 'Name A-Z', 'wpconsent-cookies-banner-privacy-suite' ); ?></option>
+						<option value="name_desc"><?php esc_html_e( 'Name Z-A', 'wpconsent-cookies-banner-privacy-suite' ); ?></option>
+						<option value="id_asc"><?php esc_html_e( 'ID Low-High', 'wpconsent-cookies-banner-privacy-suite' ); ?></option>
+						<option value="id_desc"><?php esc_html_e( 'ID High-Low', 'wpconsent-cookies-banner-privacy-suite' ); ?></option>
+					</select>
+				</div>
+			</div>
+			<div class="wpconsent-vendor-results-info">
+				<span><?php printf( esc_html__( 'Showing %d vendors', 'wpconsent-cookies-banner-privacy-suite' ), $total_vendors ); ?></span>
+			</div>
+			<div class="wpconsent-vendor-save-section">
+				<button type="submit" class="wpconsent-button wpconsent-button-primary" id="wpconsent-save-vendors">
+					<?php esc_html_e( 'Save Changes', 'wpconsent-cookies-banner-privacy-suite' ); ?>
+				</button>
+			</div>
+		</div>
+		<?php
 	}
 }

@@ -33,4 +33,24 @@ jQuery( function ( $ ) {
  $( '.wpconsent-add-service-from-library-lite' ).on( 'click', function () {
  	WPConsentAdminNotices.show_pro_notice( wpconsent.service_library_upsell.title, wpconsent.service_library_upsell.text, wpconsent.service_library_upsell.url );
  } );
+
+ $( '#export-records-of-consent-lite .wpconsent-button' ).on( 'click', function ( e ) {
+ 	e.preventDefault();
+ 	WPConsentAdminNotices.show_pro_notice( wpconsent.consent_logs_export.title, wpconsent.consent_logs_export.text, wpconsent.consent_logs_export.url );
+ } );
+
+ $( '#export-do-not-track-lite .wpconsent-button' ).on( 'click', function ( e ) {
+ 	e.preventDefault();
+ 	WPConsentAdminNotices.show_pro_notice( wpconsent.do_not_track_export.title, wpconsent.do_not_track_export.text, wpconsent.do_not_track_export.url );
+ } );
+
+ $( '#delete-consent-logs-lite .wpconsent-button' ).on( 'click', function ( e ) {
+ 	e.preventDefault();
+ 	WPConsentAdminNotices.show_pro_notice( wpconsent.consent_logs_delete.title, wpconsent.consent_logs_delete.text, wpconsent.consent_logs_delete.url );
+ } );
+
+ $( '#delete-dnt-logs-lite .wpconsent-button' ).on( 'click', function ( e ) {
+ 	e.preventDefault();
+ 	WPConsentAdminNotices.show_pro_notice( wpconsent.do_not_track_delete.title, wpconsent.do_not_track_delete.text, wpconsent.do_not_track_delete.url );
+ } );
 } );

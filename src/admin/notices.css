@@ -1,0 +1,12 @@
+/**
+ * Admin notices styles.
+ */
+
+.wpconsent-notice-top-area .notice-top {
+	margin: 0;
+	border: 0;
+	box-shadow: none;
+	background-color: #dddddd;
+	color: var(--wpconsent-text-color-heading);
+	text-align: center;
+}

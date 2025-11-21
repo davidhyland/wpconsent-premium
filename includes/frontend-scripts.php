@@ -62,6 +62,7 @@ function wpconsent_frontend_scripts() {
 				'enable_script_blocking'     => wpconsent()->settings->get_option( 'enable_script_blocking', 1 ),
 				'enable_consent_floating'    => boolval( wpconsent()->settings->get_option( 'enable_consent_floating', 0 ) ),
 				'enable_shared_consent'      => boolval( wpconsent()->settings->get_option( 'enable_shared_consent', 0 ) ),
+				'cookie_domain'              => wpconsent()->settings->get_option( 'cookie_domain', '' ),
 				'accept_button_enabled'      => boolval( wpconsent()->settings->get_option( 'accept_button_enabled', 1 ) ),
 				'cancel_button_enabled'      => boolval( wpconsent()->settings->get_option( 'cancel_button_enabled', 1 ) ),
 				'preferences_button_enabled' => boolval( wpconsent()->settings->get_option( 'preferences_button_enabled', 1 ) ),
@@ -93,6 +94,7 @@ function wpconsent_google_consent_script() {
 	$default = intval( wpconsent()->settings->get_option( 'default_allow', 0 ) );
 
 	// We need to load the Google consent script earlier than other tracking scripts for it to take effect correctly.
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	echo "<script data-cfasync=\"false\" data-wpfc-render=\"false\">
 		(function () {
 			window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}

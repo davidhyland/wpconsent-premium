@@ -424,7 +424,16 @@ class WPConsent_Scanner {
 		}
 
 		$this->scripts_by_category = $data['scripts'];
-		$this->services_needed     = $data['services'];
+		/**
+		 * Filters the list of detected services before the scanner uses them.
+		 *
+		 * @param array             $services Detected services from the remote scanner.
+		 * @param string            $url      The URL that was scanned.
+		 * @param array             $data     The full response body from the scanner.
+		 * @param WPConsent_Scanner $scanner  The scanner instance processing the request.
+		 */
+		$this->services_needed = apply_filters( 'wpconsent_scanner_services_needed', $data['services'], $url, $data, $this );
+		$this->services        = null;
 
 		return $result;
 	}
@@ -505,7 +514,15 @@ class WPConsent_Scanner {
 			}
 		}
 
-		return $scripts_data;
+		/**
+		 * Filters the scripts displayed in the scanner results.
+		 *
+		 * @param array             $scripts_data        Formatted scripts grouped by category.
+		 * @param array             $scripts_by_category Raw scripts returned by the scanner endpoint.
+		 * @param array             $services            Loaded service definitions.
+		 * @param WPConsent_Scanner $scanner             The scanner instance.
+		 */
+		return apply_filters( 'wpconsent_scanner_formatted_scripts', $scripts_data, $this->scripts_by_category, $services, $this );
 	}
 
 	/**
