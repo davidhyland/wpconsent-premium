@@ -65,8 +65,11 @@ class WPConsent_Settings {
 	 * @return array
 	 */
 	protected function load_options() {
-		return get_option(
-			$this->settings_key,
+		// Get default strings from the strings instance.
+		$default_strings = wpconsent()->strings->get_strings();
+
+		// Merge strings with other default settings.
+		$defaults = array_merge(
 			array(
 				'banner_layout'              => 'long',
 				'banner_position'            => 'bottom',
@@ -82,8 +85,6 @@ class WPConsent_Settings {
 				'banner_cancel_color'        => '#000000',
 				'banner_preferences_bg'      => '#ffffff',
 				'banner_preferences_color'   => '#000000',
-				'banner_message'             => 'We use cookies to improve your experience on our site. By using our site, you consent to cookies.',
-				'accept_button_text'         => 'Accept All',
 				'accept_button_enabled'      => 1,
 				'button_order'               => array(
 					0 => 'preferences',
@@ -91,16 +92,17 @@ class WPConsent_Settings {
 					2 => 'accept',
 				),
 				'banner_logo'                => '',
-				'preferences_button_text'    => 'Preferences',
-				'cancel_button_text'         => 'Reject',
 				'cancel_button_enabled'      => 1,
 				'preferences_button_enabled' => 1,
 				'consent_floating_icon'      => 'preferences',
 				'enable_consent_banner'      => 0,
 				'disable_close_button'       => 1,
 				'manual_scan_pages'          => array(),
-			)
+			),
+			$default_strings
 		);
+
+		return get_option( $this->settings_key, $defaults );
 	}
 
 	/**

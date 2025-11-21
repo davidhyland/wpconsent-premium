@@ -21,10 +21,12 @@ function wpconsent_utm_url( $url, $medium = '', $campaign = '', $ad_content = ''
 		$args['utm_content'] = sanitize_key( $ad_content );
 	}
 
-	return add_query_arg(
+	$utm_url = add_query_arg(
 		$args,
 		$url
 	);
+
+	return apply_filters( 'wpconsent_utm_url', $utm_url, $url, $medium, $campaign, $ad_content );
 }
 
 

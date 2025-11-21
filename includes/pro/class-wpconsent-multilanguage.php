@@ -18,35 +18,12 @@ class WPConsent_Multilanguage {
 	private $locale;
 
 	/**
-	 * Translatable options.
-	 *
-	 * @var string[]
-	 */
-	private $translatable_options = array(
-		'banner_message',
-		'accept_button_text',
-		'cancel_button_text',
-		'preferences_button_text',
-		'preferences_panel_title',
-		'preferences_panel_description',
-		'cookie_policy_title',
-		'cookie_policy_text',
-		'save_preferences_button_text',
-		'close_button_text',
-		'content_blocking_placeholder_text',
-		'cookie_table_header_name',
-		'cookie_table_header_description',
-		'cookie_table_header_duration',
-		'cookie_table_header_category',
-	);
-
-	/**
 	 * Get translatable options.
 	 *
 	 * @return string[]
 	 */
 	public function get_translatable_options() {
-		return apply_filters( 'wpconsent_translatable_options', $this->translatable_options );
+		return apply_filters( 'wpconsent_translatable_options', wpconsent()->strings->get_keys() );
 	}
 
 	/**
@@ -74,6 +51,12 @@ class WPConsent_Multilanguage {
 
 		add_filter( 'wpconsent_get_cookie_policy_id', array( $this, 'maybe_get_translated_id' ), 10, 2 );
 		add_filter( 'wpconsent_get_privacy_policy_id', array( $this, 'maybe_get_translated_id' ), 10, 2 );
+
+		// Make preference cookies cache locale-aware.
+		add_filter( 'wpconsent_preference_cookies_cache_key', array( $this, 'add_locale_to_cache_key' ) );
+
+		// Clear locale-specific caches when base cache is cleared.
+		add_action( 'wpconsent_clear_preference_cookies_cache', array( $this, 'clear_locale_caches' ) );
 	}
 
 	/**
@@ -89,8 +72,26 @@ class WPConsent_Multilanguage {
 			return $options;
 		}
 
+		// Always preserve all locale arrays to prevent accidental data loss.
+		// This handles cases where forms without translatable fields are saved.
+		foreach ( $original_options as $key => $value ) {
+			// Match locale patterns: en_US, nl_NL, fr_FR, de_DE, etc.
+			if ( is_string( $key ) && preg_match( '/^[a-z]{2,3}_[A-Z]{2}$/', $key ) && is_array( $value ) ) {
+				// Only preserve if not in new options (allow intentional updates).
+				if ( ! isset( $options[ $key ] ) ) {
+					$options[ $key ] = $value;
+				}
+			}
+		}
+
 		$default_locale = $this->get_plugin_locale();
 		$user_locale    = get_user_meta( get_current_user_id(), 'wpconsent_admin_language', true );
+
+		// Additional safety check: if user_locale is empty or numeric (background context),
+		// don't process as a translation save.
+		if ( empty( $user_locale ) || is_numeric( $user_locale ) ) {
+			return $options;
+		}
 
 		if ( $user_locale === $default_locale ) {
 			return $options;
@@ -100,12 +101,19 @@ class WPConsent_Multilanguage {
 			$options[ $user_locale ] = array();
 		}
 
-		// Otherwise let's move the translatable options to an array with the key of the locale.
-		// And make sure we don't override previous values in the default locale.
+		// Only process translatable options if they were actually modified in the form.
+		// If the value matches the original, it wasn't in the form submission.
 		foreach ( $this->get_translatable_options() as $option ) {
 			if ( isset( $options[ $option ] ) ) {
-				$options[ $user_locale ][ $option ] = $options[ $option ];
-				$options[ $option ]                 = $original_options[ $option ];
+				// Check if this field was actually modified (present in form submission).
+				$was_modified = ! isset( $original_options[ $option ] ) ||
+								$options[ $option ] !== $original_options[ $option ];
+
+				if ( $was_modified ) {
+					// Field was in the form and changed - save as translation.
+					$options[ $user_locale ][ $option ] = $options[ $option ];
+					$options[ $option ]                 = $original_options[ $option ];
+				}
 			}
 		}
 
@@ -134,7 +142,7 @@ class WPConsent_Multilanguage {
 			$locale = get_user_meta( get_current_user_id(), 'wpconsent_admin_language', true );
 		}
 
-		if ( $locale === $wplang || 'en_US' === $locale && empty( $wplang ) ) {
+		if ( $locale === $wplang || ( 'en_US' === $locale && empty( $wplang ) ) ) {
 			return $value;
 		}
 
@@ -429,6 +437,70 @@ class WPConsent_Multilanguage {
 		// Get categories with the new locale.
 		$categories = wpconsent()->cookies->get_categories();
 
+		// Add services and cookies to each category for translation.
+		foreach ( $categories as $category_slug => &$category ) {
+			$services        = wpconsent()->cookies->get_services_by_category( $category['id'] );
+			$category_cookies = wpconsent()->cookies->get_cookies_by_category( $category['id'] );
+
+			// Structure services by slug for easier JavaScript access.
+			$category['services'] = array();
+			if ( ! empty( $services ) ) {
+				foreach ( $services as $service ) {
+					$service_slug                           = sanitize_title( $service['name'] );
+					$category['services'][ $service_slug ] = array(
+						'name'        => $service['name'],
+						'description' => $service['description'],
+						'service_url' => $service['service_url'],
+						'cookies'     => array(),
+					);
+
+					// Add cookies for this service.
+					if ( ! empty( $category_cookies ) ) {
+						foreach ( $category_cookies as $cookie ) {
+							if ( in_array( $service['id'], $cookie['categories'], true ) ) {
+								$category['services'][ $service_slug ]['cookies'][ $cookie['id'] ] = array(
+									'id'          => $cookie['id'],
+									'name'        => $cookie['name'],
+									'description' => $cookie['description'],
+									'duration'    => $cookie['duration'],
+								);
+							}
+						}
+					}
+				}
+			}
+
+			// Add direct category cookies (not associated with services).
+			$category['cookies'] = array();
+			if ( ! empty( $category_cookies ) ) {
+				foreach ( $category_cookies as $cookie ) {
+					// Only include cookies directly associated with this category (not via services).
+					if ( in_array( $category['id'], $cookie['categories'], true ) ) {
+						// Check if this cookie is NOT associated with any service in this category.
+						$is_service_cookie = false;
+						if ( ! empty( $services ) ) {
+							foreach ( $services as $service ) {
+								if ( in_array( $service['id'], $cookie['categories'], true ) ) {
+									$is_service_cookie = true;
+									break;
+								}
+							}
+						}
+
+						// Only add if it's not a service cookie.
+						if ( ! $is_service_cookie ) {
+							$category['cookies'][ $cookie['id'] ] = array(
+								'id'          => $cookie['id'],
+								'name'        => $cookie['name'],
+								'description' => $cookie['description'],
+								'duration'    => $cookie['duration'],
+							);
+						}
+					}
+				}
+			}
+		}
+
 		// Add translated categories to response.
 		$texts['categories'] = $categories;
 
@@ -605,5 +677,47 @@ class WPConsent_Multilanguage {
 		}
 
 		return $text;
+	}
+
+	/**
+	 * Add locale to preference cookies cache key for multilanguage support.
+	 *
+	 * @param string $cache_key The original cache key.
+	 *
+	 * @return string The modified cache key with locale appended.
+	 */
+	public function add_locale_to_cache_key( $cache_key ) {
+		if ( ! $this->multilanguage_enabled() ) {
+			return $cache_key;
+		}
+
+		$locale = $this->get_plugin_locale();
+
+		return $cache_key . '_' . $locale;
+	}
+
+	/**
+	 * Clear locale-specific preference cookies caches.
+	 *
+	 * This method is called when the base plugin clears its cache,
+	 * ensuring that all language-specific caches are also cleared.
+	 *
+	 * @return void
+	 */
+	public function clear_locale_caches() {
+		if ( ! $this->multilanguage_enabled() ) {
+			return;
+		}
+
+		$enabled_languages = (array) wpconsent()->settings->get_option( 'enabled_languages', array() );
+
+		// Clear cache for each enabled language.
+		foreach ( $enabled_languages as $locale ) {
+			delete_transient( 'wpconsent_preference_cookies_' . $locale );
+		}
+
+		// Also clear cache for the default/current locale.
+		$current_locale = $this->get_plugin_locale();
+		delete_transient( 'wpconsent_preference_cookies_' . $current_locale );
 	}
 }

@@ -24,6 +24,8 @@ add_action( 'wp_ajax_wpconsent_generate_cookie_policy', 'wpconsent_ajax_generate
 add_action( 'wp_ajax_wpconsent_search_content', 'wpconsent_ajax_search_content' );
 add_action( 'wp_ajax_wpconsent_save_scanner_items', 'wpconsent_ajax_save_scanner_items' );
 
+add_action( 'wp_ajax_wpconsent_reset_to_defaults', 'wpconsent_ajax_reset_to_defaults' );
+
 /**
  * Add a new category via AJAX.
  *
@@ -631,4 +633,30 @@ function wpconsent_ajax_save_scanner_items() {
 			'items'   => $unique_items,
 		)
 	);
+}
+
+/**
+ * Reset banner content to default English state via AJAX.
+ *
+ * @return void
+ */
+function wpconsent_ajax_reset_to_defaults() {
+	check_ajax_referer( 'wpconsent_admin', 'nonce' );
+
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error(
+			array(
+				'message' => esc_html__( 'You do not have permission to perform this action.', 'wpconsent-cookies-banner-privacy-suite' ),
+			)
+		);
+	}
+
+	// Reset default strings.
+	$default_strings = wpconsent()->strings->get_strings();
+	wpconsent()->settings->bulk_update_options( $default_strings );
+
+	// Reset default categories and cookies.
+	wpconsent()->cookies->reset_to_defaults();
+
+	wp_send_json_success();
 }

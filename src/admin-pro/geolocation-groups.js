@@ -361,12 +361,75 @@
 							$( '#show_banner' ).prop( 'checked', response.data.group_settings.show_banner );
 							$( '#enable_consent_floating' ).prop( 'checked', response.data.group_settings.enable_consent_floating );
 							$( '#manual_toggle_services' ).prop( 'checked', response.data.group_settings.manual_toggle_services );
+
+							// Handle button customization settings
+							const customizeButtons = response.data.group_settings.customize_banner_buttons || false;
+							$( 'input[name="customize_banner_buttons"]' ).prop( 'checked', customizeButtons );
+
+							if ( customizeButtons ) {
+								// Show the button customization section
+								$( '#wpconsent-button-customization-section' ).show();
+
+								// Populate button text fields
+								if ( response.data.group_settings.accept_button_text ) {
+									$( 'input[name="accept_button_text"]' ).val( response.data.group_settings.accept_button_text );
+								}
+								if ( response.data.group_settings.cancel_button_text ) {
+									$( 'input[name="cancel_button_text"]' ).val( response.data.group_settings.cancel_button_text );
+								}
+								if ( response.data.group_settings.preferences_button_text ) {
+									$( 'input[name="preferences_button_text"]' ).val( response.data.group_settings.preferences_button_text );
+								}
+
+								// Set button enabled states
+								$( 'input[name="accept_button_enabled"]' ).prop( 'checked', response.data.group_settings.accept_button_enabled !== false );
+								$( 'input[name="cancel_button_enabled"]' ).prop( 'checked', response.data.group_settings.cancel_button_enabled !== false );
+								$( 'input[name="preferences_button_enabled"]' ).prop( 'checked', response.data.group_settings.preferences_button_enabled !== false );
+
+								// Handle button order if available
+								if ( response.data.group_settings.button_order && response.data.group_settings.button_order.length > 0 ) {
+									const buttonOrder = response.data.group_settings.button_order;
+									const $buttonsList = $( '#wpconsent-geolocation-buttons-list' );
+
+									// Reorder the button rows based on saved order
+									buttonOrder.forEach( function( buttonId, index ) {
+										const $buttonRow = $buttonsList.find( '[data-button-id="' + buttonId + '"]' );
+										if ( $buttonRow.length ) {
+											$buttonsList.append( $buttonRow );
+										}
+									} );
+								}
+							} else {
+								// Hide the button customization section
+								$( '#wpconsent-button-customization-section' ).hide();
+							}
+
+							// Handle banner message customization settings
+							const customizeBannerMessage = response.data.group_settings.customize_banner_message || false;
+							$( 'input[name="customize_banner_message"]' ).prop( 'checked', customizeBannerMessage );
+
+							if ( customizeBannerMessage ) {
+								// Show the banner message customization section
+								$( '#wpconsent-banner-message-customization-section' ).show();
+
+								// Populate banner message field
+								if ( response.data.group_settings.banner_message ) {
+									$( 'textarea[name="banner_message"]' ).val( response.data.group_settings.banner_message );
+								}
+							} else {
+								// Hide the banner message customization section
+								$( '#wpconsent-banner-message-customization-section' ).hide();
+							}
 						} else {
 							// Fallback to defaults if no settings are available
 							$( '#enable_script_blocking' ).prop( 'checked', false );
 							$( '#show_banner' ).prop( 'checked', true );
 							$( '#enable_consent_floating' ).prop( 'checked', true );
 							$( '#manual_toggle_services' ).prop( 'checked', false );
+							$( 'input[name="customize_banner_buttons"]' ).prop( 'checked', false );
+							$( '#wpconsent-button-customization-section' ).hide();
+							$( 'input[name="customize_banner_message"]' ).prop( 'checked', false );
+							$( '#wpconsent-banner-message-customization-section' ).hide();
 						}
 
 						updateSelectedLocationsDisplay();
@@ -766,6 +829,27 @@
 				// Add selected locations to form data
 				selectedLocations.forEach( ( location, key ) => {
 					formData.append( location.type + '[]', location.code );
+				} );
+
+				// Explicitly handle button enabled checkboxes
+				// HTML checkboxes only send data when checked, so we need to explicitly check their state
+				const buttonEnabledCheckboxes = [
+					'accept_button_enabled',
+					'cancel_button_enabled',
+					'preferences_button_enabled'
+				];
+
+				buttonEnabledCheckboxes.forEach( function( checkboxName ) {
+					const $checkbox = $( 'input[name="' + checkboxName + '"]' );
+					if ( $checkbox.length ) {
+						// Add the checkbox value (1 if checked, nothing if unchecked)
+						// This ensures the server receives the correct state
+						if ( $checkbox.is( ':checked' ) ) {
+							formData.append( checkboxName, '1' );
+						}
+						// Note: We don't append anything for unchecked state
+						// The server-side code uses ! empty() which will be false for missing fields
+					}
 				} );
 
 

@@ -62,6 +62,7 @@ class WPConsent_Content_Placeholder {
 		$css_variables = wpconsent()->banner->get_css_variables( $colors );
 
 		wp_enqueue_style( 'wpconsent-placeholders-css', WPCONSENT_PLUGIN_URL . 'build/placeholders.css.css', null, $asset['version'] );
+		wp_style_add_data( 'wpconsent-placeholders-css', 'rtl', 'replace' );
 		wp_add_inline_style( 'wpconsent-placeholders-css', ':root{' . $css_variables . '}' );
 	}
 

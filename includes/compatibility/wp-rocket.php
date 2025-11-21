@@ -1,6 +1,6 @@
 <?php
 /**
- * WP Consent compatibility with WP Rocket.
+ * WPConsent compatibility with WP Rocket.
  *
  * @package WPConsent
  */

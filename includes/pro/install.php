@@ -28,6 +28,11 @@ function wpconsent_pro_install_routines() {
 		$activated['wpconsent_pro'] = time();
 		update_option( 'wpconsent_activated', $activated );
 
+		// Ensure strings instance exists before settings (settings depends on strings).
+		if ( ! isset( wpconsent()->strings ) ) {
+			wpconsent()->strings = new WPConsent_Strings();
+		}
+
 		if ( ! isset( wpconsent()->settings ) ) {
 			wpconsent()->settings = new WPConsent_Settings();
 		}
@@ -195,6 +200,6 @@ function wpconsent_pro_migrate_geolocation_settings() {
 	$location_groups[ $group['id'] ] = $group;
 	wpconsent()->settings->update_option( 'geolocation_groups', $location_groups );
 
-	// Check if we need to add the geolocation cookie
+	// Check if we need to add the geolocation cookie.
 	wpconsent()->geolocation->maybe_add_geolocation_cookie();
 }

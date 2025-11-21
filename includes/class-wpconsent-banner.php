@@ -53,6 +53,11 @@ class WPConsent_Banner {
 			return;
 		}
 
+		// Filter to prevent the banner from being output.
+		if ( apply_filters( 'wpconsent_banner_output', true ) === false ) {
+			return;
+		}
+
 		$this->output_banner();
 	}
 
@@ -77,9 +82,14 @@ class WPConsent_Banner {
 		// Add the SVG tags from our icons.
 		$allowed_tags = array_merge( $allowed_tags, wpconsent_get_icon_allowed_tags() );
 		// Let's allow tabindex attribute.
-		$allowed_tags['div']['tabindex'] = true;
-		$allowed_tags['div']['part']     = true;
-		$allowed_tags['button']['part']  = true;
+		$allowed_tags['div']['tabindex']   = true;
+		$allowed_tags['div']['part']       = true;
+		$allowed_tags['button']['part']    = true;
+		$allowed_tags['h2']['part']        = true;
+		$allowed_tags['label']['part']     = true;
+		$allowed_tags['span']['part']      = true;
+		$allowed_tags['input']['part']     = true;
+		$allowed_tags['p']['part']         = true;
 
 		// Get colors and create CSS variables.
 		$colors   = $this->get_color_settings();
@@ -198,7 +208,7 @@ class WPConsent_Banner {
 			$html .= '</div>';
 		}
 
-		$text = wpconsent()->settings->get_option( 'banner_message', esc_html__( 'This website uses cookies to ensure you get the best experience on our website.', 'wpconsent-cookies-banner-privacy-suite' ) );
+		$text = wpconsent()->settings->get_option( 'banner_message', wpconsent()->strings->get_string( 'banner_message' ) );
 
 		$html .= '<div class="wpconsent-banner-body" part="wpconsent-banner-body">';
 		$html .= '<h2 id="wpconsent-banner-title" class="screen-reader-text">' . esc_html__( 'Cookie Consent', 'wpconsent-cookies-banner-privacy-suite' ) . '</h2>';
@@ -208,13 +218,14 @@ class WPConsent_Banner {
 		$html .= '<div class="wpconsent-banner-footer wpconsent-button-size-' . esc_attr( $button_size ) . ' wpconsent-button-corner-' . esc_attr( $button_corner ) . ' wpconsent-button-type-' . esc_attr( $button_type ) . '" part="wpconsent-banner-footer">';
 
 		foreach ( $button_order as $button_id ) {
-			$enabled = wpconsent()->settings->get_option( $button_id . '_button_enabled', true );
-			if ( ! $enabled ) {
-				continue;
-			}
+			$enabled     = wpconsent()->settings->get_option( $button_id . '_button_enabled', true );
 			$button_text = wpconsent()->settings->get_option( $button_id . '_button_text', '' );
 
-			$html .= '<button type="button" id="wpconsent-' . esc_attr( $button_id ) . '-all" class="wpconsent-' . esc_attr( $button_id ) . '-cookies wpconsent-banner-button wpconsent-' . esc_attr( $button_id ) . '-all" part="wpconsent-button-' . esc_attr( $button_id ) . '">' . esc_html( $button_text ) . '</button>';
+			// Always render the button but add disabled class and data attribute if not enabled
+			$disabled_class = ! $enabled ? ' wpconsent-button-disabled' : '';
+			$disabled_attr  = ! $enabled ? ' data-disabled="true"' : '';
+
+			$html .= '<button type="button" id="wpconsent-' . esc_attr( $button_id ) . '-all" class="wpconsent-' . esc_attr( $button_id ) . '-cookies wpconsent-banner-button wpconsent-' . esc_attr( $button_id ) . '-all' . esc_attr( $disabled_class ) . '" part="wpconsent-button-' . esc_attr( $button_id ) . '"' . $disabled_attr . '>' . esc_html( $button_text ) . '</button>';
 		}
 
 		$html .= '</div>'; // .wpconsent-banner-footer
@@ -268,31 +279,32 @@ class WPConsent_Banner {
 	 */
 	public function get_preferences_modal() {
 		$categories              = wpconsent()->cookies->get_categories();
-		$accept_button_text      = wpconsent()->settings->get_option( 'accept_button_text', '' );
+		$accept_button_text      = wpconsent()->settings->get_option( 'accept_button_text', wpconsent()->strings->get_string( 'accept_button_text' ) );
 		$logo                    = wpconsent()->settings->get_option( 'banner_logo', '' );
-		$cookie_policy_title     = wpconsent()->settings->get_option( 'cookie_policy_title', esc_html__( 'Cookie Policy', 'wpconsent-cookies-banner-privacy-suite' ) );
-		$preferences_panel_title = wpconsent()->settings->get_option( 'preferences_panel_title', esc_html__( 'Cookie Preferences', 'wpconsent-cookies-banner-privacy-suite' ) );
+		$cookie_policy_title     = wpconsent()->settings->get_option( 'cookie_policy_title', wpconsent()->strings->get_string( 'cookie_policy_title' ) );
+		$preferences_panel_title = wpconsent()->settings->get_option( 'preferences_panel_title', wpconsent()->strings->get_string( 'preferences_panel_title' ) );
+		$default_allow           = wpconsent()->settings->get_option( 'default_allow', 0 );
 
 		$html = '<div id="wpconsent-preferences-modal" class="wpconsent-preferences-modal" style="display:none;" tabindex="-1" role="dialog" aria-labelledby="wpconsent-preferences-title" aria-modal="true" part="wpconsent-preferences-modal">';
 
-		$html .= '<div class="wpconsent-preferences-content">';
+		$html .= '<div class="wpconsent-preferences-content" part="wpconsent-preferences-content">';
 
 		// Preferences header div.
-		$html .= '<div class="wpconsent-preferences-header">';
-		$html .= '<h2 id="wpconsent-preferences-title" tabindex="0">' . esc_html( $preferences_panel_title ) . '</h2>';
+		$html .= '<div class="wpconsent-preferences-header" part="wpconsent-preferences-header">';
+		$html .= '<h2 id="wpconsent-preferences-title" tabindex="0" part="wpconsent-preferences-title">' . esc_html( $preferences_panel_title ) . '</h2>';
 		$html .= '<div class="wpconsent-preferences-header-right">';
 		if ( ! empty( $logo ) ) {
 			$site_name = get_bloginfo( 'name' );
 
 			$html .= '<div class="wpconsent-banner-logo"><img height="30" src="' . esc_url( $logo ) . '" alt="' . esc_html( $site_name ) . '" /></div>';
 		}
-		$html .= '<button class="wpconsent-preferences-header-close" id="wpconsent-preferences-close" aria-label="' . esc_attr__( 'Close', 'wpconsent-cookies-banner-privacy-suite' ) . '" aria-label="' . esc_attr__( 'Close', 'wpconsent-cookies-banner-privacy-suite' ) . '">&times;</button>';
+		$html .= '<button class="wpconsent-preferences-header-close" id="wpconsent-preferences-close" aria-label="' . esc_attr__( 'Close', 'wpconsent-cookies-banner-privacy-suite' ) . '" aria-label="' . esc_attr__( 'Close', 'wpconsent-cookies-banner-privacy-suite' ) . '" part="wpconsent-preferences-close">&times;</button>';
 
 		$html .= '</div>'; // .wpconsent-preferences-header-right
 		$html .= '</div>'; // .wpconsent-preferences-header
-		$html .= '<div class="wpconsent_preferences_panel_description">' . wpautop( wp_kses_post( wpconsent()->settings->get_option( 'preferences_panel_description', esc_html__( 'Manage your cookie preferences below:', 'wpconsent-cookies-banner-privacy-suite' ) ) ) ) . '</div>';
+		$html .= '<div class="wpconsent_preferences_panel_description" part="wpconsent-preferences-description">' . wpautop( wp_kses_post( wpconsent()->settings->get_option( 'preferences_panel_description', wpconsent()->strings->get_string('preferences_panel_description') ) ) ) . '</div>';
 
-		$html .= '<div class="wpconsent-preference-cookies wpconsent-preferences-accordion">';
+		$html .= '<div class="wpconsent-preference-cookies wpconsent-preferences-accordion" part="wpconsent-preferences-accordion">';
 		foreach ( $categories as $category_slug => $category ) {
 			$all_cookies = $this->get_cookies_from_cache();
 			$cookies     = isset( $all_cookies[ $category['id'] ] ) ? $all_cookies[ $category['id'] ] : array();
@@ -301,31 +313,39 @@ class WPConsent_Banner {
 				continue;
 			}
 
-			$html .= '<div class="wpconsent-preferences-accordion-item wpconsent-cookie-category wpconsent-cookie-category-' . esc_attr( $category_slug ) . '">';
-			$html .= '<div class="wpconsent-preferences-accordion-header">';
+			$html .= '<div class="wpconsent-preferences-accordion-item wpconsent-cookie-category wpconsent-cookie-category-' . esc_attr( $category_slug ) . '" part="wpconsent-accordion-item wpconsent-category-' . esc_attr( $category_slug ) . '">';
+			$html .= '<div class="wpconsent-preferences-accordion-header" part="wpconsent-accordion-header">';
 			$html .= '<div class="wpconsent-cookie-category-text">';
-			$html .= '<button class="wpconsent-preferences-accordion-toggle">';
+			$html .= '<button class="wpconsent-preferences-accordion-toggle" part="wpconsent-accordion-toggle">';
 			$html .= '<span class="wpconsent-preferences-accordion-arrow"></span>';
 			$html .= '</button>';  // .wpconsent-preferences-accordion-toggle
-			$html .= '<label>' . esc_html( $category['name'] ) . '</label>';
+			$html .= '<label for="cookie-category-' . esc_attr( $category_slug ) . '">' . esc_html( $category['name'] ) . '</label>';
 			$html .= '</div>'; // .wpconsent-cookie-category-text
 			$html .= '<div class="wpconsent-cookie-category-checkbox">';
 			if ( 'essential' === $category_slug ) {
-				$html .= '<label class="wpconsent-preferences-checkbox-toggle wpconsent-preferences-checkbox-toggle-disabled">';
+				$html .= '<label class="wpconsent-preferences-checkbox-toggle wpconsent-preferences-checkbox-toggle-disabled" part="wpconsent-checkbox-toggle wpconsent-checkbox-toggle-disabled">';
 				$html .= '<input type="checkbox" id="cookie-category-' . esc_attr( $category_slug ) . '" checked disabled>';
 				$html .= '<span class="wpconsent-preferences-checkbox-toggle-slider"></span>';
 				$html .= '</label>';  // .wpconsent-preferences-checkbox-toggle
 			} else {
-				$html .= '<label class="wpconsent-preferences-checkbox-toggle">';
-				$html .= '<input type="checkbox" id="cookie-category-' . esc_attr( $category_slug ) . '" name="wpconsent_cookie[]" value="' . esc_attr( $category_slug ) . '" ' . ( $category['required'] ? 'checked disabled' : '' ) . '>';
+				// Apply filter to allow customization of default state for this category.
+				$default_checked = apply_filters( 'wpconsent_category_default_checked', $default_allow, $category_slug, $category );
+
+				$checked_attr = '';
+				if ( $default_checked ) {
+					$checked_attr = 'checked';
+				}
+
+				$html .= '<label class="wpconsent-preferences-checkbox-toggle" part="wpconsent-checkbox-toggle">';
+				$html .= '<input type="checkbox" id="cookie-category-' . esc_attr( $category_slug ) . '" name="wpconsent_cookie[]" value="' . esc_attr( $category_slug ) . '" ' . $checked_attr . '>';
 				$html .= '<span class="wpconsent-preferences-checkbox-toggle-slider"></span>';
 				$html .= '</label>';  // .wpconsent-preferences-checkbox-toggle
 			}
 			$html .= '</div>'; // .wpconsent-cookie-category-checkbox
 			$html .= '</div>'; // .wpconsent-preferences-accordion-header
 
-			$html .= '<div class="wpconsent-preferences-accordion-content">';
-			$html .= '<p tabindex="0">' . wp_kses_post( $category['description'] ) . '</p>';
+			$html .= '<div class="wpconsent-preferences-accordion-content" part="wpconsent-accordion-content">';
+			$html .= '<p class="wpconsent-category-description" tabindex="0">' . wp_kses_post( $category['description'] ) . '</p>';
 			$html .= $this->get_cookies_content_by_category( $cookies, $category['name'], $category_slug );
 			$html .= '</div>'; // .wpconsent-preferences-accordion-content
 
@@ -338,17 +358,17 @@ class WPConsent_Banner {
 			$cookie_policy_page_url = get_permalink( $cookie_policy_page_id );
 			$privacy_policy         = get_privacy_policy_url();
 
-			$html .= '<div class="wpconsent-preferences-accordion-item wpconsent-cookie-category">';
-			$html .= '<div class="wpconsent-preferences-accordion-header">';
+			$html .= '<div class="wpconsent-preferences-accordion-item wpconsent-cookie-category" part="wpconsent-accordion-item wpconsent-cookie-policy-item">';
+			$html .= '<div class="wpconsent-preferences-accordion-header" part="wpconsent-accordion-header">';
 			$html .= '<div class="wpconsent-cookie-category-text">';
-			$html .= '<button class="wpconsent-preferences-accordion-toggle">';
+			$html .= '<button class="wpconsent-preferences-accordion-toggle" part="wpconsent-accordion-toggle">';
 			$html .= '<span class="wpconsent-preferences-accordion-arrow"></span>';
 			$html .= '</button>';  // .wpconsent-preferences-accordion-toggle
 			$html .= '<label class="wpconsent-cookie-policy-title">' . esc_html( $cookie_policy_title ) . '</label>';
 			$html .= '</div>'; // .wpconsent-cookie-category-text
 			$html .= '</div>'; // .wpconsent-preferences-accordion-header
 
-			$html .= '<div class="wpconsent-preferences-accordion-content">';
+			$html .= '<div class="wpconsent-preferences-accordion-content" part="wpconsent-accordion-content">';
 			$html .= '<p tabindex="0" class="wpconsent-cookie-policy-text">';
 
 			if ( $privacy_policy ) {
@@ -372,19 +392,19 @@ class WPConsent_Banner {
 		}
 		$html .= '</div>'; // .wpconsent-preference-cookies
 
-		$save_preferences_text = wpconsent()->settings->get_option( 'save_preferences_button_text', esc_html__( 'Save and Close', 'wpconsent-cookies-banner-privacy-suite' ) );
-		$close_text            = wpconsent()->settings->get_option( 'close_button_text', esc_html__( 'Close', 'wpconsent-cookies-banner-privacy-suite' ) );
+		$save_preferences_text = wpconsent()->settings->get_option( 'save_preferences_button_text', wpconsent()->strings->get_string( 'save_preferences_button_text' ) );
+		$close_text            = wpconsent()->settings->get_option( 'close_button_text', wpconsent()->strings->get_string( 'close_button_text' ) );
 		$button_size           = wpconsent()->settings->get_option( 'banner_button_size', 'regular' );
 		$button_corner         = wpconsent()->settings->get_option( 'banner_button_corner', 'slightly-rounded' );
 		$button_type           = wpconsent()->settings->get_option( 'banner_button_type', 'filled' );
 
-		$html .= '<div class="wpconsent-preferences-actions">';
-		$html .= '<div class="wpconsent-preferences-buttons wpconsent-button-size-' . esc_attr( $button_size ) . ' wpconsent-button-corner-' . esc_attr( $button_corner ) . ' wpconsent-button-type-' . esc_attr( $button_type ) . '">';
-		$html .= '<div class="wpconsent-preferences-buttons-left">';
-		$html .= '<button class="wpconsent-accept-all wpconsent-banner-button">' . esc_html( $accept_button_text ) . '</button>';
-		$html .= '<button class="wpconsent-close-preferences wpconsent-banner-button">' . esc_html( $close_text ) . '</button>';
+		$html .= '<div class="wpconsent-preferences-actions" part="wpconsent-preferences-actions">';
+		$html .= '<div class="wpconsent-preferences-buttons wpconsent-button-size-' . esc_attr( $button_size ) . ' wpconsent-button-corner-' . esc_attr( $button_corner ) . ' wpconsent-button-type-' . esc_attr( $button_type ) . '" part="wpconsent-preferences-buttons">';
+		$html .= '<div class="wpconsent-preferences-buttons-left" part="wpconsent-preferences-buttons-left">';
+		$html .= '<button class="wpconsent-accept-all wpconsent-banner-button" part="wpconsent-preferences-accept-button">' . esc_html( $accept_button_text ) . '</button>';
+		$html .= '<button class="wpconsent-close-preferences wpconsent-banner-button" part="wpconsent-preferences-cancel-button">' . esc_html( $close_text ) . '</button>';
 		$html .= '</div>'; // .wpconsent-preferences-buttons-left
-		$html .= '<button class="wpconsent-save-preferences wpconsent-banner-button">' . esc_html( $save_preferences_text ) . '</button>';
+		$html .= '<button class="wpconsent-save-preferences wpconsent-banner-button" part="wpconsent-preferences-save-button">' . esc_html( $save_preferences_text ) . '</button>';
 		$html .= '</div>'; // .wpconsent-preferences-buttons
 		$html .= '</div>'; // .wpconsent-preferences-actions
 		// div for Powered by WPConsent.
@@ -406,7 +426,11 @@ class WPConsent_Banner {
 	 */
 	private function get_cookies_from_cache() {
 		$cache_key = 'wpconsent_preference_cookies';
-		$cookies   = get_transient( $cache_key );
+
+		// Allow cache key to be filtered (e.g., for multilanguage support).
+		$cache_key = apply_filters( 'wpconsent_preference_cookies_cache_key', $cache_key );
+
+		$cookies = get_transient( $cache_key );
 
 		if ( false === $cookies ) {
 			$categories = wpconsent()->cookies->get_categories();
@@ -477,7 +501,8 @@ class WPConsent_Banner {
 			return '';
 		}
 
-		$html = '';
+		$html          = '';
+		$default_allow = wpconsent()->settings->get_option( 'default_allow', false );
 
 		if ( ! empty( $cookies['cookies'] ) ) {
 			$html .= $this->get_cookies_table_by_category( $cookies['cookies'] );
@@ -486,10 +511,10 @@ class WPConsent_Banner {
 		// First display services and their cookies.
 		if ( ! empty( $cookies['services'] ) ) {
 			foreach ( $cookies['services'] as $service_slug => $service ) {
-				$html .= '<div class="wpconsent-preferences-accordion-item wpconsent-cookie-service">';
-				$html .= '<div class="wpconsent-preferences-accordion-header">';
+				$html .= '<div class="wpconsent-preferences-accordion-item wpconsent-cookie-service" part="wpconsent-accordion-item wpconsent-service-' . esc_attr( $service_slug ) . '">';
+				$html .= '<div class="wpconsent-preferences-accordion-header" part="wpconsent-accordion-header">';
 				$html .= '<div class="wpconsent-cookie-category-text">';
-				$html .= '<button class="wpconsent-preferences-accordion-toggle">';
+				$html .= '<button class="wpconsent-preferences-accordion-toggle" part="wpconsent-accordion-toggle">';
 				$html .= '<span class="wpconsent-preferences-accordion-arrow"></span>';
 				$html .= '</button>';  // .wpconsent-preferences-accordion-toggle
 				$html .= '<label>' . esc_html( $service['name'] ) . '</label>';
@@ -498,13 +523,18 @@ class WPConsent_Banner {
 
 				if ( wpconsent()->settings->get_option( 'manual_toggle_services', false ) ) {
 					if ( 'essential' === $category_slug ) {
-						$html .= '<label class="wpconsent-preferences-checkbox-toggle wpconsent-preferences-checkbox-toggle-disabled">';
+						$html .= '<label class="wpconsent-preferences-checkbox-toggle wpconsent-preferences-checkbox-toggle-disabled" part="wpconsent-checkbox-toggle wpconsent-checkbox-toggle-disabled">';
 						$html .= '<input type="checkbox" id="cookie-service-' . esc_attr( $service_slug ) . '" name="wpconsent_cookie[]" value="' . esc_attr( $service_slug ) . '" checked disabled>';
 						$html .= '<span class="wpconsent-preferences-checkbox-toggle-slider"></span>';
 						$html .= '</label>';  // .wpconsent-preferences-checkbox-toggle
 					} else {
-						$html .= '<label class="wpconsent-preferences-checkbox-toggle">';
-						$html .= '<input type="checkbox" id="cookie-service-' . esc_attr( $service_slug ) . '" name="wpconsent_cookie[]" value="' . esc_attr( $service_slug ) . '">';
+						// Apply filter to allow customization of default state for this service.
+						$default_checked = apply_filters( 'wpconsent_service_default_checked', $default_allow, $service_slug, $service, $category_slug );
+
+						$checked_attr = $default_checked ? 'checked' : '';
+
+						$html .= '<label class="wpconsent-preferences-checkbox-toggle" part="wpconsent-checkbox-toggle">';
+						$html .= '<input type="checkbox" id="cookie-service-' . esc_attr( $service_slug ) . '" name="wpconsent_cookie[]" value="' . esc_attr( $service_slug ) . '" ' . $checked_attr . '>';
 						$html .= '<span class="wpconsent-preferences-checkbox-toggle-slider"></span>';
 						$html .= '</label>';  // .wpconsent-preferences-checkbox-toggle
 					}
@@ -513,13 +543,13 @@ class WPConsent_Banner {
 				$html .= '</div>'; // .wpconsent-cookie-category-checkbox
 				$html .= '</div>'; // .wpconsent-preferences-accordion-header
 
-				$html .= '<div class="wpconsent-preferences-accordion-content">';
+				$html .= '<div class="wpconsent-preferences-accordion-content" part="wpconsent-accordion-content">';
 				if ( ! empty( $service['description'] ) ) {
-					$html .= '<p tabindex="0">' . wp_kses_post( $service['description'] ) . '</p>';
+					$html .= '<p class="wpconsent-service-description" tabindex="0">' . wp_kses_post( $service['description'] ) . '</p>';
 				}
 				// Add service URL to description if it exists.
 				if ( ! empty( $service['service_url'] ) ) {
-					$service_url_label = wpconsent()->settings->get_option( 'cookie_table_header_service_url', esc_html__( 'Service URL', 'wpconsent-cookies-banner-privacy-suite' ) );
+					$service_url_label = wpconsent()->settings->get_option( 'cookie_table_header_service_url', wpconsent()->strings->get_string( 'cookie_table_header_service_url' ) );
 
 					$html .= '<p tabindex="0" class="wpconsent-service-url">' . sprintf(
 						/* translators: %1$s: Service URL label, %2$s: Service URL */
@@ -549,16 +579,16 @@ class WPConsent_Banner {
 			return '';
 		}
 
-		$html = '<div class="wpconsent-preferences-cookies-list">';
+		$html = '<div class="wpconsent-preferences-cookies-list" part="wpconsent-cookies-list">';
 
-		$html .= '<div class="wpconsent-preferences-list-header">';
-		$html .= '<div class="cookie-name">' . esc_html( wpconsent()->settings->get_option( 'cookie_table_header_name', __( 'Name', 'wpconsent-cookies-banner-privacy-suite' ) ) ) . '</div>';
-		$html .= '<div class="cookie-desc">' . esc_html( wpconsent()->settings->get_option( 'cookie_table_header_description', __( 'Description', 'wpconsent-cookies-banner-privacy-suite' ) ) ) . '</div>';
-		$html .= '<div class="cookie-duration">' . esc_html( wpconsent()->settings->get_option( 'cookie_table_header_duration', __( 'Duration', 'wpconsent-cookies-banner-privacy-suite' ) ) ) . '</div>';
+		$html .= '<div class="wpconsent-preferences-list-header" part="wpconsent-cookies-list-header">';
+		$html .= '<div class="cookie-name">' . esc_html( wpconsent()->settings->get_option( 'cookie_table_header_name', wpconsent()->strings->get_string( 'cookie_table_header_name' ) ) ) . '</div>';
+		$html .= '<div class="cookie-desc">' . esc_html( wpconsent()->settings->get_option( 'cookie_table_header_description', wpconsent()->strings->get_string( 'cookie_table_header_description' ) ) ) . '</div>';
+		$html .= '<div class="cookie-duration">' . esc_html( wpconsent()->settings->get_option( 'cookie_table_header_duration', wpconsent()->strings->get_string( 'cookie_table_header_duration' ) ) ) . '</div>';
 		$html .= '</div>'; // .wpconsent-preferences-list-header
 
 		foreach ( $cookies as $cookie ) {
-			$html .= '<div class="wpconsent-preferences-list-item">';
+			$html .= '<div class="wpconsent-preferences-list-item" data-cookie-id="' . esc_attr( $cookie['id'] ) . '" part="wpconsent-cookies-list-item">';
 			$html .= '<div class="cookie-name">' . esc_html( $cookie['name'] ) . '</div>';
 			$html .= '<div class="cookie-desc">' . wp_kses_post( $cookie['description'] ) . '</div>';
 			$html .= '<div class="cookie-duration">' . esc_html( ! empty( $cookie['duration'] ) ? $cookie['duration'] : '-' ) . '</div>';

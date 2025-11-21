@@ -42,22 +42,30 @@ function wpconsent_frontend_scripts() {
 
 	wp_enqueue_script( 'wpconsent-frontend-js', WPCONSENT_PLUGIN_URL . 'build/frontend.js', $asset['dependencies'], $asset['version'], true );
 
+	// Determine the correct CSS file based on RTL.
+	$css_file = is_rtl() ? 'frontend-rtl.css' : 'frontend.css';
+
 	wp_localize_script(
 		'wpconsent-frontend-js',
 		'wpconsent',
 		apply_filters(
 			'wpconsent_frontend_js_data',
 			array(
-				'consent_duration'        => wpconsent()->settings->get_option( 'consent_duration', 30 ),
-				'css_url'                 => WPCONSENT_PLUGIN_URL . 'build/frontend.css',
-				'css_version'             => $asset['version'],
-				'default_allow'           => $default_allow,
-				'consent_type'            => $default_allow ? 'optout' : 'optin',
-				'manual_toggle_services'  => $manual_toggle_services,
-				'slugs'                   => $slugs,
-				'enable_consent_banner'   => wpconsent()->settings->get_option( 'enable_consent_banner', 1 ),
-				'enable_script_blocking'  => wpconsent()->settings->get_option( 'enable_script_blocking', 1 ),
-				'enable_consent_floating' => boolval( wpconsent()->settings->get_option( 'enable_consent_floating', 0 ) ),
+				'consent_duration'           => wpconsent()->settings->get_option( 'consent_duration', 30 ),
+				'css_url'                    => WPCONSENT_PLUGIN_URL . 'build/' . $css_file,
+				'css_version'                => $asset['version'],
+				'default_allow'              => $default_allow,
+				'consent_type'               => $default_allow ? 'optout' : 'optin',
+				'manual_toggle_services'     => $manual_toggle_services,
+				'slugs'                      => $slugs,
+				'enable_consent_banner'      => wpconsent()->settings->get_option( 'enable_consent_banner', 1 ),
+				'enable_script_blocking'     => wpconsent()->settings->get_option( 'enable_script_blocking', 1 ),
+				'enable_consent_floating'    => boolval( wpconsent()->settings->get_option( 'enable_consent_floating', 0 ) ),
+				'enable_shared_consent'      => boolval( wpconsent()->settings->get_option( 'enable_shared_consent', 0 ) ),
+				'accept_button_enabled'      => boolval( wpconsent()->settings->get_option( 'accept_button_enabled', 1 ) ),
+				'cancel_button_enabled'      => boolval( wpconsent()->settings->get_option( 'cancel_button_enabled', 1 ) ),
+				'preferences_button_enabled' => boolval( wpconsent()->settings->get_option( 'preferences_button_enabled', 1 ) ),
+				'respect_gpc'                => boolval( wpconsent()->settings->get_option( 'respect_gpc', 0 ) ),
 			)
 		)
 	);

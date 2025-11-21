@@ -49,3 +49,22 @@
 		fill: #646970;
 	}
 }
+
+/* Fix for geolocation groups modal - remove min-width values to prevent overflow */
+.wpconsent-modal-inner .wpconsent-button-row {
+	.wpconsent-button-label-column {
+		min-width: unset;
+	}
+
+	.wpconsent-button-text-column {
+		min-width: unset;
+
+		input[type="text"] {
+			width: 100%;
+		}
+	}
+
+	.wpconsent-button-enabled-column {
+		min-width: unset;
+	}
+}

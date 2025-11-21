@@ -27,4 +27,27 @@ jQuery( document ).ready( function ( $ ) {
 			$section.find( '.wpconsent-language-section-title' ).toggle( hasVisibleItemsInSection );
 		} );
 	} );
+
+	// Handle review button clicks - delegate to WPConsentLanguagePicker
+	$( document ).on( 'click', '.wpconsent-review-banner-content, .wpconsent-review-cookie-content', function ( e ) {
+		e.preventDefault();
+		
+		var $button = $( this );
+		var locale = $button.data( 'locale' );
+		var redirectUrl = $button.data( 'redirect-url' );
+		var target = $button.data( 'target' );
+		
+		if ( ! locale || ! redirectUrl ) {
+			return;
+		}
+		
+		// Use the shared language switching functionality
+		if ( window.WPConsentLanguagePicker ) {
+			window.WPConsentLanguagePicker.switchLanguage( locale, {
+				$button: $button,
+				redirectUrl: redirectUrl,
+				target: target
+			} );
+		}
+	} );
 } );

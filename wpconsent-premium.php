@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WPConsent Pro
  * Description: Improve your WordPress website privacy compliance. Custom cookie banner, website scanner, automatic script blocking, and easy cookie configuration.
- * Version:     1.0.9
+ * Version:     1.1.0.1
  * Author:      WPConsent
  * Author URI:  https://wpconsent.com
  * License:     GPL v2 or later
@@ -162,6 +162,13 @@ class WPConsent_Premium {
 	public $settings;
 
 	/**
+	 * The strings instance.
+	 *
+	 * @var WPConsent_Strings
+	 */
+	public $strings;
+
+	/**
 	 * The banner instance.
 	 *
 	 * @var WPConsent_Banner
@@ -281,6 +288,13 @@ class WPConsent_Premium {
 	public $privacy_integration;
 
 	/**
+	 * The translation services instance.
+	 *
+	 * @var WPConsent_Translation_Services
+	 */
+	public $translation_services;
+
+	/**
 	 * Main instance of WPConsent.
 	 *
 	 * @return WPConsent_Premium
@@ -334,6 +348,7 @@ class WPConsent_Premium {
 		require_once WPCONSENT_PLUGIN_PATH . 'includes/class-wpconsent-install.php';
 		require_once WPCONSENT_PLUGIN_PATH . 'includes/icons.php';
 		require_once WPCONSENT_PLUGIN_PATH . 'includes/class-wpconsent-settings.php';
+		require_once WPCONSENT_PLUGIN_PATH . 'includes/class-wpconsent-strings.php';
 		require_once WPCONSENT_PLUGIN_PATH . 'includes/class-wpconsent-cookies.php';
 		require_once WPCONSENT_PLUGIN_PATH . 'includes/class-wpconsent-banner.php';
 		require_once WPCONSENT_PLUGIN_PATH . 'includes/class-wpconsent-content-placeholder.php';
@@ -370,20 +385,22 @@ class WPConsent_Premium {
 	 */
 	public function load_components() {
 		if ( is_admin() || wp_doing_ajax() || defined( 'DOING_CRON' ) && DOING_CRON ) {
-			$this->admin_page_loader   = new WPConsent_Admin_Page_Loader_Pro();
-			$this->services            = WPConsent_Services::get_instance();
-			$this->scanner             = WPConsent_Scanner_Pro::get_instance();
-			$this->notice              = new WPConsent_Notice();
-			$this->license             = new WPConsent_License();
-			$this->addons              = new WPConsent_Addons_Pro();
-			$this->notifications       = new WPConsent_Notifications();
-			$this->services_library    = new WPConsent_Services_Library();
-			$this->privacy_integration = new WPConsent_Privacy_Integration();
+			$this->admin_page_loader     = new WPConsent_Admin_Page_Loader_Pro();
+			$this->services              = WPConsent_Services::get_instance();
+			$this->scanner               = WPConsent_Scanner_Pro::get_instance();
+			$this->notice                = new WPConsent_Notice();
+			$this->license               = new WPConsent_License();
+			$this->addons                = new WPConsent_Addons_Pro();
+			$this->notifications         = new WPConsent_Notifications();
+			$this->services_library      = new WPConsent_Services_Library();
+			$this->translation_services  = WPConsent_Translation_Services::get_instance();
+			$this->privacy_integration   = new WPConsent_Privacy_Integration();
 
 			// Load the reminders.
 			new WPConsent_Reminders();
 		}
 		$this->file_cache = new WPConsent_File_Cache();
+		$this->strings    = new WPConsent_Strings();
 		$this->settings   = new WPConsent_Settings();
 		$this->banner     = new WPConsent_Banner_Pro();
 		$this->cookies    = new WPConsent_Cookies_Pro();

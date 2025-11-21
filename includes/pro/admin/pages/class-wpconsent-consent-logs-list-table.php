@@ -337,6 +337,16 @@ class WPConsent_Consent_Logs_List_Table extends WP_List_Table {
 		$main_output     = '';
 		$services        = array();
 
+		// Check for GPC status first.
+		if ( isset( $consent_data['respect_gpc'] ) ) {
+			$status       = $consent_data['respect_gpc'];
+			$main_output .= sprintf(
+				'<li><strong>%1$s:</strong> %2$s</li>',
+				esc_html__( 'GPC', 'wpconsent-premium' ),
+				esc_html( $status ? __( 'Acknowledged', 'wpconsent-premium' ) : __( 'User Overridden', 'wpconsent-premium' ) )
+			);
+		}
+
 		foreach ( $consent_data as $category => $status ) {
 			if ( in_array( $category, $main_categories, true ) ) {
 				$main_output .= sprintf(
@@ -344,7 +354,7 @@ class WPConsent_Consent_Logs_List_Table extends WP_List_Table {
 					esc_html( $category ),
 					esc_html( $status ? __( 'Accepted', 'wpconsent-premium' ) : __( 'Declined', 'wpconsent-premium' ) )
 				);
-			} else {
+			} elseif ( 'respect_gpc' !== $category ) { // Exclude respect_gpc from services since we handled it above.
 				$services[ $category ] = $status;
 			}
 		}
@@ -363,7 +373,7 @@ class WPConsent_Consent_Logs_List_Table extends WP_List_Table {
 					esc_html( $status ? __( 'Accepted', 'wpconsent-premium' ) : __( 'Declined', 'wpconsent-premium' ) )
 				);
 			}
-			$output .= '</ul>'; // .wpconsent-consent-services
+			$output .= '</ul>'; // .wpconsent-consent-services.
 		}
 
 		$output .= '</ul>';

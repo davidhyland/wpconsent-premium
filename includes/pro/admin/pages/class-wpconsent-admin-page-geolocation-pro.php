@@ -13,6 +13,16 @@ class WPConsent_Admin_Page_Geolocation_Pro extends WPConsent_Admin_Page_Geolocat
 	use WPConsent_Input_Select;
 
 	/**
+	 * Page scripts.
+	 *
+	 * @return void
+	 */
+	public function page_scripts() {
+		// Enqueue sortable for button reordering functionality.
+		wp_enqueue_script( 'jquery-ui-sortable' );
+	}
+
+	/**
 	 * Hooks.
 	 *
 	 * @return void
@@ -162,8 +172,58 @@ class WPConsent_Admin_Page_Geolocation_Pro extends WPConsent_Admin_Page_Geolocat
 				$this->get_consent_mode_selector(),
 				'consent_mode'
 			);
-			?>
 
+			$this->metabox_row_separator();
+
+			$this->metabox_row(
+				__( 'Customize Banner Buttons', 'wpconsent-premium' ),
+				$this->get_checkbox_toggle(
+					false,
+					'customize_banner_buttons',
+					__( 'Enable custom button configuration for this location group.', 'wpconsent-premium' ),
+					1
+				),
+				'customize_banner_buttons'
+			);
+
+			// Button customization interface (hidden by default)
+			?>
+			<div id="wpconsent-button-customization-section" style="display: none;">
+				<?php
+				$this->metabox_row_separator();
+				$this->metabox_row(
+					__( 'Button Configuration', 'wpconsent-premium' ),
+					$this->get_geolocation_buttons_content_fields( array() )
+				);
+				?>
+			</div>
+			<?php
+
+			$this->metabox_row(
+				__( 'Customize Banner Message', 'wpconsent-premium' ),
+				$this->get_checkbox_toggle(
+					false,
+					'customize_banner_message',
+					__( 'Enable custom banner message for this location group.', 'wpconsent-premium' ),
+					1
+				),
+				'customize_banner_message'
+			);
+
+			// Banner message customization interface (hidden by default)
+			?>
+			<div id="wpconsent-banner-message-customization-section" style="display: none;">
+				<?php
+				$this->metabox_row_separator();
+				$this->metabox_row(
+					__( 'Banner Message', 'wpconsent-premium' ),
+					$this->get_geolocation_banner_message_content_fields( array() )
+				);
+				?>
+			</div>
+			<?php
+
+			?>
 			<div class="wpconsent-form-actions">
 				<button type="submit" class="wpconsent-button wpconsent-save-group">
 					<?php esc_html_e( 'Save Location Group', 'wpconsent-premium' ); ?>
@@ -173,6 +233,41 @@ class WPConsent_Admin_Page_Geolocation_Pro extends WPConsent_Admin_Page_Geolocat
 				</button>
 			</div>
 		</form>
+		<script>
+			jQuery( document ).ready( function ( $ ) {
+				// Handle the customize banner buttons toggle
+				$( document ).on( 'change', 'input[name="customize_banner_buttons"]', function() {
+					var $buttonSection = $( '#wpconsent-button-customization-section' );
+					if ( $( this ).is( ':checked' ) ) {
+						$buttonSection.slideDown();
+					} else {
+						$buttonSection.slideUp();
+					}
+				} );
+
+				// Handle the customize banner message toggle
+				$( document ).on( 'change', 'input[name="customize_banner_message"]', function() {
+					var $messageSection = $( '#wpconsent-banner-message-customization-section' );
+					if ( $( this ).is( ':checked' ) ) {
+						$messageSection.slideDown();
+					} else {
+						$messageSection.slideUp();
+					}
+				} );
+
+				// Initialize the button section visibility based on current state
+				var $customizeToggle = $( 'input[name="customize_banner_buttons"]' );
+				if ( $customizeToggle.length && $customizeToggle.is( ':checked' ) ) {
+					$( '#wpconsent-button-customization-section' ).show();
+				}
+
+				// Initialize the message section visibility based on current state
+				var $customizeMessageToggle = $( 'input[name="customize_banner_message"]' );
+				if ( $customizeMessageToggle.length && $customizeMessageToggle.is( ':checked' ) ) {
+					$( '#wpconsent-banner-message-customization-section' ).show();
+				}
+			} );
+		</script>
 		<?php
 		return ob_get_clean();
 	}
@@ -652,5 +747,166 @@ class WPConsent_Admin_Page_Geolocation_Pro extends WPConsent_Admin_Page_Geolocat
 			default:
 				return $code;
 		}
+	}
+
+	/**
+	 * Check if multilanguage is enabled and should show override notice.
+	 *
+	 * @return bool
+	 */
+	private function should_show_multilanguage_override_notice() {
+		return wpconsent()->multilanguage && wpconsent()->multilanguage->multilanguage_enabled();
+	}
+
+	/**
+	 * Get the banner message configuration fields for geolocation groups.
+	 *
+	 * @param array $group_data Existing group data for editing.
+	 *
+	 * @return string
+	 */
+	public function get_geolocation_banner_message_content_fields( $group_data = array() ) {
+		$current_message = ! empty( $group_data['banner_message'] ) ? $group_data['banner_message'] : '';
+		$default_message = wpconsent()->settings->get_option( 'banner_message', esc_html__( 'This website uses cookies to ensure you get the best experience on our website.', 'wpconsent-premium' ) );
+
+		ob_start();
+		?>
+		<div class="wpconsent-input-area-description">
+			<?php esc_html_e( 'Customize the banner message text for this location group.', 'wpconsent-premium' ); ?>
+			<?php if ( $this->should_show_multilanguage_override_notice() ) : ?>
+				<div class="wpconsent-notice wpconsent-notice-warning" style="margin-top: 10px;">
+					<p><?php esc_html_e( 'Note: Customizing the banner message for this location group will override any translations configured in your multilanguage settings.', 'wpconsent-premium' ); ?></p>
+				</div>
+			<?php endif; ?>
+		</div>
+		<div class="wpconsent-banner-message-config-input">
+			<div class="wpconsent-input-field">
+				<label for="banner_message" class="wpconsent-label">
+					<?php esc_html_e( 'Banner Message', 'wpconsent-premium' ); ?>
+				</label>
+				<textarea
+					name="banner_message"
+					id="banner_message"
+					class="wpconsent-input-textarea"
+					rows="3"
+					placeholder="<?php echo esc_attr( $default_message ); ?>"
+				><?php echo esc_textarea( $current_message ); ?></textarea>
+				<p class="wpconsent-field-description">
+					<?php esc_html_e( 'Enter a custom banner message for visitors from this location. Leave empty to use the default message.', 'wpconsent-premium' ); ?>
+				</p>
+			</div>
+		</div>
+		<?php
+		return ob_get_clean();
+	}
+
+	/**
+	 * Get the button configuration fields for geolocation groups.
+	 * This is similar to the buttons_content_fields method from the banner page.
+	 *
+	 * @param array $group_data Existing group data for editing.
+	 *
+	 * @return string
+	 */
+	public function get_geolocation_buttons_content_fields( $group_data = array() ) {
+		$buttons = array(
+			'accept'      => array(
+				'label'   => esc_html__( 'Accept Button', 'wpconsent-premium' ),
+				'text'    => ! empty( $group_data['accept_button_text'] ) ? $group_data['accept_button_text'] : esc_html__( 'Accept All', 'wpconsent-premium' ),
+				'enabled' => isset( $group_data['accept_button_enabled'] ) ? $group_data['accept_button_enabled'] : true,
+			),
+			'cancel'      => array(
+				'label'   => esc_html__( 'Reject Button', 'wpconsent-premium' ),
+				'text'    => ! empty( $group_data['cancel_button_text'] ) ? $group_data['cancel_button_text'] : esc_html__( 'Reject', 'wpconsent-premium' ),
+				'enabled' => isset( $group_data['cancel_button_enabled'] ) ? $group_data['cancel_button_enabled'] : true,
+			),
+			'preferences' => array(
+				'label'   => esc_html__( 'Settings Button', 'wpconsent-premium' ),
+				'text'    => ! empty( $group_data['preferences_button_text'] ) ? $group_data['preferences_button_text'] : esc_html__( 'Preferences', 'wpconsent-premium' ),
+				'enabled' => isset( $group_data['preferences_button_enabled'] ) ? $group_data['preferences_button_enabled'] : true,
+			),
+		);
+
+		$button_order = ! empty( $group_data['button_order'] ) ? $group_data['button_order'] : array_keys( $buttons );
+		ob_start();
+		?>
+		<div class="wpconsent-input-area-description">
+			<?php esc_html_e( 'Customize the banner buttons output and order for this location group.', 'wpconsent-premium' ); ?>
+			<?php if ( $this->should_show_multilanguage_override_notice() ) : ?>
+				<div class="wpconsent-notice wpconsent-notice-warning" style="margin-top: 10px;">
+					<p><?php esc_html_e( 'Note: Customizing the button text for this location group will override any button text translations configured in your multilanguage settings.', 'wpconsent-premium' ); ?></p>
+				</div>
+			<?php endif; ?>
+		</div>
+		<div class="wpconsent-buttons-config-input">
+			<div class="wpconsent-button-row wpconsent-buttons-list-header">
+				<div class="wpconsent-button-label-column wpconsent-button-label-header">
+					<?php echo esc_html__( 'Title', 'wpconsent-premium' ); ?>
+				</div>
+				<div class="wpconsent-button-text-column wpconsent-button-text-header">
+					<?php echo esc_html__( 'Button Text', 'wpconsent-premium' ); ?>
+				</div>
+				<div class="wpconsent-button-enabled-column wpconsent-button-enabled-header">
+					<?php echo esc_html__( 'Status', 'wpconsent-premium' ); ?>
+				</div>
+			</div>
+			<div class="wpconsent-buttons-list" id="wpconsent-geolocation-buttons-list">
+				<?php
+				foreach ( $button_order as $button_id ) {
+					if ( ! isset( $buttons[ $button_id ] ) ) {
+						continue;
+					}
+					$button = $buttons[ $button_id ];
+					?>
+					<div class="wpconsent-button-row" data-button-id="<?php echo esc_attr( $button_id ); ?>">
+						<div class="wpconsent-button-label-column">
+							<div class="wpconsent-button-handle">
+								<?php wpconsent_icon( 'drag', 16, 6 ); ?>
+							</div>
+							<label class="wpconsent-button-label">
+								<?php echo esc_html( $button['label'] ); ?>
+							</label>
+						</div>
+						<div class="wpconsent-button-text-column">
+							<input
+									type="text"
+									name="<?php echo esc_attr( $button_id ); ?>_button_text"
+									value="<?php echo esc_attr( $button['text'] ); ?>"
+									class="wpconsent-input-text"
+							>
+						</div>
+						<div class="wpconsent-button-enabled-column">
+							<?php
+							echo $this->get_checkbox_toggle( $button['enabled'], $button_id . '_button_enabled', '', '', '' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+							?>
+						</div>
+						<input
+								type="hidden"
+								name="button_order[]"
+								value="<?php echo esc_attr( $button_id ); ?>"
+						>
+					</div>
+					<?php
+				}
+				?>
+			</div>
+		</div>
+		<script>
+			jQuery( document ).ready( function ( $ ) {
+				$( '#wpconsent-geolocation-buttons-list' ).sortable( {
+					handle: '.wpconsent-button-handle',
+					update: function ( event, ui ) {
+						// Update the order of hidden inputs
+						$( '#wpconsent-geolocation-buttons-list .wpconsent-button-row' ).each( function ( index ) {
+							var buttonId = $( this ).data( 'button-id' );
+							$( this ).find( 'input[name="button_order[]"]' ).val( buttonId );
+						} );
+					}
+				} );
+			} );
+		</script>
+		<?php
+
+		return ob_get_clean();
 	}
 }

@@ -29,6 +29,8 @@ if ( is_admin() || defined( 'DOING_CRON' ) && DOING_CRON ) {
 	require_once WPCONSENT_PLUGIN_PATH . 'includes/admin/class-wpconsent-review.php';
 	// Services library.
 	require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/class-wpconsent-services-library.php';
+	// Translation services.
+	require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/admin/class-wpconsent-translation-services.php';
 	// Addons manager.
 	require_once WPCONSENT_PLUGIN_PATH . 'includes/pro/admin/class-wpconsent-addons.php';
 	// Addons Pro manager.

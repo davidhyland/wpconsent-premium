@@ -19,6 +19,7 @@ import './admin/notices.js';
 import './admin/notifications.js';
 import './admin/spinner.js';
 import './admin/generate-cookie-policy.js';
+import './admin/reset-to-defaults.js';
 import './admin/script-blocking.js';
 import './admin/upsells.js';
 import './admin/manual-scan-input.js';

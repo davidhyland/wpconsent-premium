@@ -9,3 +9,4 @@ import './admin-pro/service-library.js';
 import './admin-pro/addons.js';
 import './admin-pro/script-management.js';
 import './admin-pro/geolocation-groups.js';
+import './admin-pro/translation.js';

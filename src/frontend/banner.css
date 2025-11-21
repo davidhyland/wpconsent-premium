@@ -375,6 +375,11 @@ input[type="checkbox"]:focus,
 		background-color: var(--wpconsent-preferences-bg);
 		color: var(--wpconsent-preferences-color);
 	}
+
+	/* Hide disabled buttons by default - they can be shown dynamically via JavaScript */
+	&.wpconsent-button-disabled {
+		display: none !important;
+	}
 }
 
 

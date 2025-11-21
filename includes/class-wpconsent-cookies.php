@@ -109,6 +109,7 @@ class WPConsent_Cookies {
 						'post_status'  => 'publish',
 					)
 				);
+				update_post_meta( $post_id, 'wpconsent_cookie_duration', $duration );
 			}
 		} else {
 			$post_id = wp_insert_post(
@@ -119,12 +120,12 @@ class WPConsent_Cookies {
 					'post_status'  => 'publish',
 				)
 			);
+			update_post_meta( $post_id, 'wpconsent_cookie_duration', $duration );
 		}
 
 		if ( ! is_wp_error( $post_id ) ) {
 			wp_set_object_terms( $post_id, $cookie_category, $this->taxonomy );
 			update_post_meta( $post_id, 'wpconsent_cookie_id', $cookie_id );
-			update_post_meta( $post_id, 'wpconsent_cookie_duration', $duration );
 		}
 
 		$this->clear_cookies_cache();
@@ -500,10 +501,10 @@ class WPConsent_Cookies {
 		if ( ! is_wp_error( $term ) ) {
 			update_term_meta( $term['term_id'], 'wpconsent_service_url', $service_url );
 
+			$this->clear_cookies_cache();
+
 			return $term['term_id'];
 		}
-
-		$this->clear_cookies_cache();
 
 		return false;
 	}
@@ -669,6 +670,45 @@ class WPConsent_Cookies {
 	}
 
 	/**
+	 * Whether this site is using Microsoft Clarity services that require Clarity Consent.
+	 *
+	 * @return bool
+	 */
+	public function needs_clarity_consent() {
+		if ( ! wpconsent()->cookie_blocking->get_clarity_consent_mode() ) {
+			return false;
+		}
+
+		// Check if we have a cached result.
+		$cached_result = get_transient( 'wpconsent_needs_clarity_consent' );
+		if ( false !== $cached_result ) {
+			return 'yes' === $cached_result;
+		}
+
+		// Now let's look at all the services to check if any of them are Clarity services.
+		$services = get_terms(
+			array(
+				'taxonomy'   => $this->taxonomy,
+				'hide_empty' => false,
+				'number'     => 0,
+			)
+		);
+
+		// Let's see if any of the service slugs contain "google".
+		foreach ( $services as $service ) {
+			if ( false !== strpos( $service->slug, 'clarity' ) ) {
+				set_transient( 'wpconsent_needs_clarity_consent', 'yes', DAY_IN_SECONDS );
+
+				return true;
+			}
+		}
+
+		set_transient( 'wpconsent_needs_clarity_consent', 'no', DAY_IN_SECONDS );
+
+		return false;
+	}
+
+	/**
 	 * Clear cookies cache for a category for prefernces modal.
 	 *
 	 * @return void
@@ -680,6 +720,9 @@ class WPConsent_Cookies {
 		delete_transient( 'wpconsent_preference_cookies' );
 		// Delete transient wpconsent_preference_slugs.
 		delete_transient( 'wpconsent_preference_slugs' );
+
+		// Allow extensions to clear additional caches (e.g., locale-specific caches).
+		do_action( 'wpconsent_clear_preference_cookies_cache' );
 	}
 
 	/**
@@ -716,5 +759,49 @@ class WPConsent_Cookies {
 		set_transient( 'wpconsent_preference_slugs', $slugs, DAY_IN_SECONDS );
 
 		return $slugs;
+	}
+
+	/**
+	 * Reset categories and cookies to their default state.
+	 *
+	 * @return void
+	 */
+	public function reset_to_defaults() {
+		// Reset default categories.
+		$default_categories = $this->get_default_categories();
+		foreach ( $default_categories as $slug => $category_data ) {
+			$category = get_term_by( 'slug', $slug, $this->taxonomy );
+			if ( $category ) {
+				$this->update_category( $category->term_id, $category_data['name'], $category_data['description'] );
+			}
+		}
+
+		// Reset default preferences cookie - find it by cookie_id meta.
+		$preferences_cookies = get_posts(
+			array(
+				'post_type'      => $this->post_type,
+				'posts_per_page' => 1,
+				'meta_query'     => array(
+					array(
+						'key'   => 'wpconsent_cookie_id',
+						'value' => 'wpconsent_preferences',
+					),
+				),
+			)
+		);
+
+		if ( ! empty( $preferences_cookies ) ) {
+			$preferences_cookie = $preferences_cookies[0];
+			$post_id            = $this->update_cookie(
+				$preferences_cookie->ID,
+				'wpconsent_preferences',
+				__( 'Cookie Preferences', 'wpconsent-cookies-banner-privacy-suite' ),
+				__( 'This cookie is used to store the user\'s cookie consent preferences.', 'wpconsent-cookies-banner-privacy-suite' ),
+				'essential',
+				'30 days'
+			);
+		}
+
+		$this->clear_cookies_cache();
 	}
 }

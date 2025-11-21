@@ -752,6 +752,35 @@ class WPConsent_Geolocation {
 					$location['group_id']                = isset( $group['id'] ) ? $group['id'] : '';
 					$location['country']                 = $current_country;
 					$location['use_default']             = false;
+
+					// Add button parameters if available.
+					if ( isset( $group['accept_button_text'] ) ) {
+						$location['accept_button_text'] = $group['accept_button_text'];
+					}
+					if ( isset( $group['cancel_button_text'] ) ) {
+						$location['cancel_button_text'] = $group['cancel_button_text'];
+					}
+					if ( isset( $group['preferences_button_text'] ) ) {
+						$location['preferences_button_text'] = $group['preferences_button_text'];
+					}
+					if ( isset( $group['accept_button_enabled'] ) ) {
+						$location['accept_button_enabled'] = (bool) $group['accept_button_enabled'];
+					}
+					if ( isset( $group['cancel_button_enabled'] ) ) {
+						$location['cancel_button_enabled'] = (bool) $group['cancel_button_enabled'];
+					}
+					if ( isset( $group['preferences_button_enabled'] ) ) {
+						$location['preferences_button_enabled'] = (bool) $group['preferences_button_enabled'];
+					}
+					if ( isset( $group['button_order'] ) && is_array( $group['button_order'] ) ) {
+						$location['button_order'] = $group['button_order'];
+					}
+
+					// Add banner message parameter if available.
+					if ( isset( $group['banner_message'] ) && ! empty( $group['banner_message'] ) ) {
+						$location['banner_message'] = $group['banner_message'];
+					}
+
 					// Once we find a matching group, we can stop checking.
 					break;
 				}
@@ -936,25 +965,14 @@ class WPConsent_Geolocation {
 
 		// Grab the settings unfiltered.
 		$options = wpconsent()->settings->get_options();
-		// Let's check if any of our geolocation groups are set to optin.
-		$location_groups = wpconsent()->settings->get_option( 'geolocation_groups', array() );
 
-		if ( ! empty( $location_groups ) ) {
-			foreach ( $location_groups as $group ) {
-				// If any group is set to show the banner, return true.
-				if ( isset( $group['consent_mode'] ) && 'optin' === $group['consent_mode'] ) {
-					$js_data['original_default_allow'] = boolval( $options['default_allow'] );
-				}
-				// If any group is set to show the banner, return true.
-				if ( isset( $group['show_banner'] ) && (bool) $group['show_banner'] ) {
-					$js_data['original_enable_consent_banner'] = boolval( $options['enable_consent_banner'] );
-				}
-				// If any group is set to show the banner, return true.
-				if ( isset( $group['enable_script_blocking'] ) && (bool) $group['enable_script_blocking'] ) {
-					$js_data['original_enable_script_blocking'] = boolval( $options['enable_script_blocking'] );
-				}
-			}
-		}
+		$js_data['original_default_allow']              = isset( $options['default_allow'] ) && boolval( $options['default_allow'] );
+		$js_data['original_enable_consent_banner']      = boolval( $options['enable_consent_banner'] );
+		$js_data['original_enable_script_blocking']     = boolval( $options['enable_script_blocking'] );
+		$js_data['original_accept_button_enabled']      = boolval( $options['accept_button_enabled'] );
+		$js_data['original_cancel_button_enabled']      = boolval( $options['cancel_button_enabled'] );
+		$js_data['original_preferences_button_enabled'] = boolval( $options['preferences_button_enabled'] );
+		$js_data['original_banner_message']             = $options['banner_message'] ?? '';
 
 		return $js_data;
 	}

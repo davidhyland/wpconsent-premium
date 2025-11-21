@@ -577,7 +577,7 @@ class WPConsent_Admin_Page_Banner extends WPConsent_Admin_Page {
 			esc_html__( 'Message', 'wpconsent-cookies-banner-privacy-suite' ),
 			$this->wysiwyg(
 				'banner_message',
-				wpconsent()->settings->get_option( 'banner_message', '' ),
+				wpconsent()->settings->get_option( 'banner_message', wpconsent()->strings->get_string( 'banner_message' ) ),
 				'',
 				'.wpconsent-banner-body'
 			),
@@ -617,7 +617,7 @@ class WPConsent_Admin_Page_Banner extends WPConsent_Admin_Page {
 			esc_html__( 'Preferences Panel Title', 'wpconsent-cookies-banner-privacy-suite' ),
 			$this->get_input_text(
 				'preferences_panel_title',
-				wpconsent()->settings->get_option( 'preferences_panel_title', 'This website uses cookies' ),
+				wpconsent()->settings->get_option( 'preferences_panel_title', wpconsent()->strings->get_string( 'preferences_panel_title' ) ),
 				'',
 				'preferences_panel_title'
 			),
@@ -627,7 +627,7 @@ class WPConsent_Admin_Page_Banner extends WPConsent_Admin_Page {
 			esc_html__( 'Preferences Panel Description', 'wpconsent-cookies-banner-privacy-suite' ),
 			$this->get_input_textarea(
 				'preferences_panel_description',
-				wpconsent()->settings->get_option( 'preferences_panel_description', 'Websites store cookies to enhance functionality and personalise your experience. You can manage your preferences, but blocking some cookies may impact site performance and services.' ),
+				wpconsent()->settings->get_option( 'preferences_panel_description', wpconsent()->strings->get_string( 'preferences_panel_description' ) ),
 				'',
 				'preferences_panel_description'
 			),
@@ -637,7 +637,7 @@ class WPConsent_Admin_Page_Banner extends WPConsent_Admin_Page {
 			esc_html__( 'Cookie Policy Title', 'wpconsent-cookies-banner-privacy-suite' ),
 			$this->get_input_text(
 				'cookie_policy_title',
-				wpconsent()->settings->get_option( 'cookie_policy_title', 'Cookie Policy' ),
+				wpconsent()->settings->get_option( 'cookie_policy_title', wpconsent()->strings->get_string( 'cookie_policy_title' ) ),
 				'',
 				'cookie_policy_title'
 			),
@@ -647,7 +647,7 @@ class WPConsent_Admin_Page_Banner extends WPConsent_Admin_Page {
 			esc_html__( 'Cookie Policy Text', 'wpconsent-cookies-banner-privacy-suite' ),
 			$this->get_input_textarea(
 				'cookie_policy_text',
-				wpconsent()->settings->get_option( 'cookie_policy_text', 'You can find more information in our {cookie_policy} and {privacy_policy}.' ),
+				wpconsent()->settings->get_option( 'cookie_policy_text', wpconsent()->strings->get_string( 'cookie_policy_text' ) ),
 				sprintf(
 				// Translators: %1$s is the cookie policy placeholder ({cookie_policy}), %2$s is the privacy policy placeholder ({privacy_policy}).
 					esc_html__( 'This text will appear at the bottom of the Preferences panel. We recommend including the %1$s and %2$s placeholders.', 'wpconsent-cookies-banner-privacy-suite' ),
@@ -663,7 +663,7 @@ class WPConsent_Admin_Page_Banner extends WPConsent_Admin_Page {
 			esc_html__( 'Save Preferences Button Text', 'wpconsent-cookies-banner-privacy-suite' ),
 			$this->get_input_text(
 				'save_preferences_button_text',
-				wpconsent()->settings->get_option( 'save_preferences_button_text', esc_html__( 'Save and Close', 'wpconsent-cookies-banner-privacy-suite' ) ),
+				wpconsent()->settings->get_option( 'save_preferences_button_text', wpconsent()->strings->get_string( 'save_preferences_button_text' ) ),
 				'',
 				'save_preferences_button_text'
 			),
@@ -673,7 +673,7 @@ class WPConsent_Admin_Page_Banner extends WPConsent_Admin_Page {
 			esc_html__( 'Close Button Text', 'wpconsent-cookies-banner-privacy-suite' ),
 			$this->get_input_text(
 				'close_button_text',
-				wpconsent()->settings->get_option( 'close_button_text', esc_html__( 'Close', 'wpconsent-cookies-banner-privacy-suite' ) ),
+				wpconsent()->settings->get_option( 'close_button_text', wpconsent()->strings->get_string( 'close_button_text' ) ),
 				'',
 				'close_button_text'
 			),
@@ -684,7 +684,7 @@ class WPConsent_Admin_Page_Banner extends WPConsent_Admin_Page {
 			esc_html__( 'Service URL Label', 'wpconsent-cookies-banner-privacy-suite' ),
 			$this->get_input_text(
 				'cookie_table_header_service_url',
-				wpconsent()->settings->get_option( 'cookie_table_header_service_url', esc_html__( 'Service URL', 'wpconsent-cookies-banner-privacy-suite' ) ),
+				wpconsent()->settings->get_option( 'cookie_table_header_service_url', wpconsent()->strings->get_string( 'cookie_table_header_service_url' ) ),
 				esc_html__( 'The label text for the Service URL in the cookie table.', 'wpconsent-cookies-banner-privacy-suite' ),
 				'cookie_table_header_service_url'
 			),
@@ -708,7 +708,7 @@ class WPConsent_Admin_Page_Banner extends WPConsent_Admin_Page {
 			esc_html__( 'Name Header', 'wpconsent-cookies-banner-privacy-suite' ),
 			$this->get_input_text(
 				'cookie_table_header_name',
-				wpconsent()->settings->get_option( 'cookie_table_header_name', esc_html__( 'Name', 'wpconsent-cookies-banner-privacy-suite' ) ),
+				wpconsent()->settings->get_option( 'cookie_table_header_name', wpconsent()->strings->get_string( 'cookie_table_header_name' ) ),
 				esc_html__( 'The header text for the Name column in the cookie table.', 'wpconsent-cookies-banner-privacy-suite' ),
 				'cookie_table_header_name'
 			),
@@ -719,7 +719,7 @@ class WPConsent_Admin_Page_Banner extends WPConsent_Admin_Page {
 			esc_html__( 'Description Header', 'wpconsent-cookies-banner-privacy-suite' ),
 			$this->get_input_text(
 				'cookie_table_header_description',
-				wpconsent()->settings->get_option( 'cookie_table_header_description', esc_html__( 'Description', 'wpconsent-cookies-banner-privacy-suite' ) ),
+				wpconsent()->settings->get_option( 'cookie_table_header_description', wpconsent()->strings->get_string( 'cookie_table_header_description' ) ),
 				esc_html__( 'The header text for the Description column in the cookie table.', 'wpconsent-cookies-banner-privacy-suite' ),
 				'cookie_table_header_description'
 			),
@@ -730,7 +730,7 @@ class WPConsent_Admin_Page_Banner extends WPConsent_Admin_Page {
 			esc_html__( 'Duration Header', 'wpconsent-cookies-banner-privacy-suite' ),
 			$this->get_input_text(
 				'cookie_table_header_duration',
-				wpconsent()->settings->get_option( 'cookie_table_header_duration', esc_html__( 'Duration', 'wpconsent-cookies-banner-privacy-suite' ) ),
+				wpconsent()->settings->get_option( 'cookie_table_header_duration', wpconsent()->strings->get_string( 'cookie_table_header_duration' ) ),
 				esc_html__( 'The header text for the Duration column in the cookie table.', 'wpconsent-cookies-banner-privacy-suite' ),
 				'cookie_table_header_duration'
 			),
@@ -938,6 +938,9 @@ class WPConsent_Admin_Page_Banner extends WPConsent_Admin_Page {
 
 			if ( ! empty( $settings ) ) {
 				wpconsent()->settings->bulk_update_options( $settings );
+
+				// Clear translation strings cache when settings change.
+				delete_transient( 'wpconsent_translation_strings' );
 			}
 
 			wp_safe_redirect( $redirect );
@@ -1016,17 +1019,17 @@ class WPConsent_Admin_Page_Banner extends WPConsent_Admin_Page {
 		$buttons = array(
 			'accept'      => array(
 				'label'   => esc_html__( 'Accept Button', 'wpconsent-cookies-banner-privacy-suite' ),
-				'text'    => wpconsent()->settings->get_option( 'accept_button_text', esc_html__( 'Accept All', 'wpconsent-cookies-banner-privacy-suite' ) ),
+				'text'    => wpconsent()->settings->get_option( 'accept_button_text', wpconsent()->strings->get_string( 'accept_button_text' ) ),
 				'enabled' => wpconsent()->settings->get_option( 'accept_button_enabled', true ),
 			),
 			'cancel'      => array(
 				'label'   => esc_html__( 'Reject Button', 'wpconsent-cookies-banner-privacy-suite' ),
-				'text'    => wpconsent()->settings->get_option( 'cancel_button_text', esc_html__( 'Reject', 'wpconsent-cookies-banner-privacy-suite' ) ),
+				'text'    => wpconsent()->settings->get_option( 'cancel_button_text', wpconsent()->strings->get_string( 'cancel_button_text' ) ),
 				'enabled' => wpconsent()->settings->get_option( 'cancel_button_enabled', true ),
 			),
 			'preferences' => array(
 				'label'   => esc_html__( 'Settings Button', 'wpconsent-cookies-banner-privacy-suite' ),
-				'text'    => wpconsent()->settings->get_option( 'preferences_button_text', esc_html__( 'Preferences', 'wpconsent-cookies-banner-privacy-suite' ) ),
+				'text'    => wpconsent()->settings->get_option( 'preferences_button_text', wpconsent()->strings->get_string( 'preferences_button_text' ) ),
 				'enabled' => wpconsent()->settings->get_option( 'preferences_button_enabled', true ),
 			),
 		);

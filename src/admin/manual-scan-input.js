@@ -4,7 +4,7 @@
  */
 import Choices from 'choices.js';
 
-jQuery(function($) {    
+jQuery(function($) {
     // Constants
     const DEBOUNCE_DELAY = 300;
     const MIN_SEARCH_LENGTH = 3;
@@ -32,7 +32,7 @@ jQuery(function($) {
      */
     const saveScannerItems = (items) => {
         const uniqueItems = [...new Set(items)];
-        
+
         $.ajax({
             url: ajaxurl,
             type: 'POST',
@@ -95,9 +95,13 @@ jQuery(function($) {
     if (!selectElement) return;
 
     let choices;
-    if (selectElement.classList.contains('choices__input')) {
-        choices = window.wpconsent_choices?.[selectElement.id];
-        if (!choices) return;
+
+    // Check if Choices instance already exists (from choices-handler.js)
+    if (window.wpconsent_choices?.[selectElement.id]) {
+        choices = window.wpconsent_choices[selectElement.id];
+    } else if (selectElement.classList.contains('choices__input')) {
+        // Element has already been processed by Choices.js but not stored globally
+        return; // Exit to avoid duplicate initialization
     } else {
         choices = new Choices(selectElement, {
             removeItemButton: true,
@@ -132,7 +136,7 @@ jQuery(function($) {
 
         const selectedItemHTML = createSelectedItemHTML(selectedValue, selectedLabel, selectedUrl);
         const container = document.querySelector('.wpconsent-scanner-selected-items-container');
-        
+
         if (container) {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = selectedItemHTML;
@@ -159,45 +163,47 @@ jQuery(function($) {
         });
     });
 
-    // Search functionality
-    selectElement.addEventListener('search', debounce((event) => {
-        const value = event.detail.value;
-        if (!value || value.length < MIN_SEARCH_LENGTH) return;
+    // Search functionality - only add if choices-handler.js isn't already handling it
+    if (selectElement.dataset.ajax !== 'true') {
+        selectElement.addEventListener('search', debounce((event) => {
+            const value = event.detail.value;
+            if (!value || value.length < MIN_SEARCH_LENGTH) return;
 
-        choices.setChoices([{
-            value: '',
-            label: wpconsent.searching || 'Searching...',
-            disabled: true
-        }], 'value', 'label', true);
+            choices.setChoices([{
+                value: '',
+                label: wpconsent.searching || 'Searching...',
+                disabled: true
+            }], 'value', 'label', true);
 
-        $.ajax({
-            url: ajaxurl,
-            type: 'POST',
-            data: {
-                action: selectElement.dataset.ajaxAction || 'wpconsent_search_content',
-                nonce: wpconsent.nonce,
-                search: value
-            },
-            success: function(response) {
-                if (response.success && response.data) {
-                    const options = response.data.map(item => ({
-                        value: item.value,
-                        label: item.label,
-                        customProperties: {
-                            url: item.url || ''
-                        }
-                    }));
-                    choices.setChoices(options, 'value', 'label', true);
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: selectElement.dataset.ajaxAction || 'wpconsent_search_content',
+                    nonce: wpconsent.nonce,
+                    search: value
+                },
+                success: function(response) {
+                    if (response.success && response.data) {
+                        const options = response.data.map(item => ({
+                            value: item.value,
+                            label: item.label,
+                            customProperties: {
+                                url: item.url || ''
+                            }
+                        }));
+                        choices.setChoices(options, 'value', 'label', true);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error searching content:', error);
+                    choices.setChoices([{
+                        value: '',
+                        label: 'Error searching content',
+                        disabled: true
+                    }], 'value', 'label', true);
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error searching content:', error);
-                choices.setChoices([{
-                    value: '',
-                    label: 'Error searching content',
-                    disabled: true
-                }], 'value', 'label', true);
-            }
-        });
-    }, DEBOUNCE_DELAY));
+            });
+        }, DEBOUNCE_DELAY));
+    }
 });

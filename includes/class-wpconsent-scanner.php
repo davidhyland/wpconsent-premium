@@ -26,7 +26,7 @@ class WPConsent_Scanner {
 	 *
 	 * @var WPConsent_Scanner
 	 */
-	private static $instance;
+	protected static $instance;
 
 	/**
 	 * The services needed for the scanner.

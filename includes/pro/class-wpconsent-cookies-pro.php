@@ -123,6 +123,36 @@ class WPConsent_Cookies_Pro extends WPConsent_Cookies {
 	}
 
 	/**
+	 * Clear cookies cache and translation strings cache (Pro version).
+	 * Extends the base clear_cookies_cache method with pro-specific functionality.
+	 *
+	 * @return void
+	 */
+	public function clear_cookies_cache() {
+		// Call parent method to clear base caches.
+		parent::clear_cookies_cache();
+
+		// Clear translation strings cache (pro-specific).
+		delete_transient( 'wpconsent_translation_strings' );
+	}
+
+	/**
+	 * Reset categories and cookies to their default state (Pro version).
+	 * Extends the base reset_to_defaults method with pro-specific functionality.
+	 *
+	 * @return void
+	 */
+	public function reset_to_defaults() {
+		// Call parent method to reset base categories and cookies.
+		parent::reset_to_defaults();
+
+		// Reset translation flags using the translation services class.
+		if ( wpconsent()->translation_services ) {
+			wpconsent()->translation_services->reset_translation_flags();
+		}
+	}
+
+	/**
 	 * Delete a script from the WordPress option.
 	 *
 	 * @param string $script_id The unique ID of the script to delete.

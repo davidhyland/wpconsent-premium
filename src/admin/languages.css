@@ -43,9 +43,12 @@
 	margin-bottom: 8px;
 }
 
-.wpconsent-language-item {
+.wpconsent-language-settings .wpconsent-language-item {
 	padding: 8px;
 	border-bottom: 1px solid #eee;
+	display: flex;
+	align-items: center;
+	min-height: 44px;
 }
 
 .wpconsent-language-item:last-child {
@@ -82,10 +85,12 @@
 	font-size: 0.9em;
 }
 
-.wpconsent-checkbox-label {
+.wpconsent-language-settings .wpconsent-checkbox-label {
 	display: flex;
 	align-items: center;
 	cursor: pointer;
+	flex: 1;
+	min-width: 0;
 }
 
 .wpconsent-checkbox-text {
@@ -93,5 +98,34 @@
 }
 
 .wpconsent-language-default .wpconsent-checkbox-label {
+	cursor: not-allowed;
+}
+
+.wpconsent-language-actions {
+	display: flex;
+	gap: 8px;
+	margin-left: auto;
+	flex-shrink: 0;
+	align-items: center;
+}
+
+.wpconsent-language-actions .wpconsent-button {
+	white-space: nowrap;
+}
+
+/* Make translate button appear disabled for Basic/no license. */
+.wpconsent-translation-restricted .wpconsent-translate-language {
+	opacity: 0.5;
+	cursor: not-allowed;
+	position: relative;
+}
+
+.wpconsent-translation-restricted .wpconsent-translate-language::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
 	cursor: not-allowed;
 }

@@ -34,9 +34,19 @@
             });
         },
 
-        switchLanguage(language) {
+        switchLanguage(language, options = {}) {
+            // Default options
+            const defaults = {
+                $button: this.$languageButton,
+                redirectUrl: null,
+                target: null
+            };
+            const settings = Object.assign({}, defaults, options);
+
             // Show loading state
-            this.$languageButton.prop('disabled', true);
+            if (settings.$button) {
+                settings.$button.prop('disabled', true);
+            }
 
             // Show a loading modal until the request is completed.
             WPConsentConfirm.show_please_wait();
@@ -52,8 +62,18 @@
                 },
                 success: (response) => {
                     if (response.success) {
-                        // Reload the page to reflect the new language
-                        window.location.reload();
+                        // Handle different redirect behaviors
+                        if (settings.redirectUrl) {
+                            if (settings.target === '_blank') {
+                                window.open(settings.redirectUrl, '_blank');
+                                WPConsentConfirm.close();
+                            } else {
+                                window.location.href = settings.redirectUrl;
+                            }
+                        } else {
+                            // Default behavior: reload page
+                            window.location.reload();
+                        }
                     } else {
                         WPConsentConfirm.close();
                         // Show error message
@@ -65,7 +85,9 @@
                     alert('Failed to switch language. Please try again.');
                 },
                 complete: () => {
-                    this.$languageButton.prop('disabled', false);
+                    if (settings.$button) {
+                        settings.$button.prop('disabled', false);
+                    }
                 }
             });
         }
@@ -73,4 +95,7 @@
 
     // Initialize when DOM is ready
     $(document).ready(() => WPConsentLanguagePicker.init());
+
+    // Expose globally for reuse (following WPConsent patterns)
+    window.WPConsentLanguagePicker = WPConsentLanguagePicker;
 })(jQuery);

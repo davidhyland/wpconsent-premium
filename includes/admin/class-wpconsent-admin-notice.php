@@ -15,7 +15,6 @@ class WPConsent_Notice {
 	 *
 	 * Constant attended to use as the value of the $args['dismiss'] argument.
 	 * DISMISS_NONE means that the notice is not dismissible.
-	 *
 	 */
 	const DISMISS_NONE = 0;
 
@@ -24,7 +23,6 @@ class WPConsent_Notice {
 	 *
 	 * Constant attended to use as the value of the $args['dismiss'] argument.
 	 * DISMISS_GLOBAL means that the notice will have the dismiss button, and after clicking this button, the notice will be dismissed for all users.
-	 *
 	 */
 	const DISMISS_GLOBAL = 1;
 
@@ -33,7 +31,6 @@ class WPConsent_Notice {
 	 *
 	 * Constant attended to use as the value of the $args['dismiss'] argument.
 	 * DISMISS_USER means that the notice will have the dismiss button, and after clicking this button, the notice will be dismissed only for the current user..
-	 *
 	 */
 	const DISMISS_USER = 2;
 
@@ -53,7 +50,6 @@ class WPConsent_Notice {
 
 	/**
 	 * Init.
-	 *
 	 */
 	public function __construct() {
 
@@ -62,7 +58,6 @@ class WPConsent_Notice {
 
 	/**
 	 * Hooks.
-	 *
 	 */
 	public function hooks() {
 		add_action( 'admin_notices', array( $this, 'display' ), 999000 );
@@ -202,7 +197,7 @@ class WPConsent_Notice {
 			esc_attr( $type_class ),
 			esc_attr( $class ),
 			esc_attr( $id ),
-			wp_kses_post( $message )
+			$message
 		);
 
 		if ( 'top' === $type ) {
@@ -225,7 +220,6 @@ class WPConsent_Notice {
 	/**
 	 * Add info notice.
 	 *
-	 *
 	 * @param string $message Message to display.
 	 * @param array  $args Array of additional arguments. Details in the self::add() method.
 	 */
@@ -236,7 +230,6 @@ class WPConsent_Notice {
 
 	/**
 	 * Add top notice (displayed before the header on wpconsent pages only).
-	 *
 	 *
 	 * @param string $message Message to display.
 	 * @param array  $args Array of additional arguments. Details in the self::add() method.
@@ -249,7 +242,6 @@ class WPConsent_Notice {
 	/**
 	 * Add error notice.
 	 *
-	 *
 	 * @param string $message Message to display.
 	 * @param array  $args Array of additional arguments. Details in the self::add() method.
 	 */
@@ -260,7 +252,6 @@ class WPConsent_Notice {
 
 	/**
 	 * Add success notice.
-	 *
 	 *
 	 * @param string $message Message to display.
 	 * @param array  $args Array of additional arguments. Details in the self::add() method.
@@ -273,7 +264,6 @@ class WPConsent_Notice {
 	/**
 	 * Add warning notice.
 	 *
-	 *
 	 * @param string $message Message to display.
 	 * @param array  $args Array of additional arguments. Details in the self::add() method.
 	 */
@@ -284,8 +274,6 @@ class WPConsent_Notice {
 
 	/**
 	 * AJAX routine that updates dismissed notices meta data.
-	 *
-
 	 */
 	public function dismiss_ajax() {
 
@@ -329,7 +317,6 @@ class WPConsent_Notice {
 	/**
 	 * AJAX sub-routine that updates dismissed notices option.
 	 *
-	 *
 	 * @param string $id Notice Id.
 	 *
 	 * @return array Notices.
@@ -355,7 +342,6 @@ class WPConsent_Notice {
 
 	/**
 	 *  AJAX sub-routine that updates dismissed notices user meta.
-	 *
 	 *
 	 * @param string $id Notice Id.
 	 *
@@ -393,7 +379,20 @@ class WPConsent_Notice {
 				continue;
 			}
 
-			// Skip if notice is dismissed by the current user.
+			// Special handling for translation notices: check if content changed since dismissal.
+			if ( strpos( $slug, 'translation_' ) === 0 && isset( $user_dismissed[ $slug ] ) ) {
+				$dismissal_time = isset( $user_dismissed[ $slug ]['time'] ) ? $user_dismissed[ $slug ]['time'] : 0;
+				$notice_time    = isset( $notice['time'] ) ? $notice['time'] : 0;
+
+				// If notice is newer than dismissal, allow it to show (new translation).
+				if ( $notice_time > $dismissal_time ) {
+					// Remove old dismissal to allow new translation notice.
+					unset( $user_dismissed[ $slug ] );
+					update_user_meta( get_current_user_id(), 'wpconsent_admin_notices', $user_dismissed );
+				}
+			}
+
+			// Skip if notice is dismissed by the current user (after potential cleanup above).
 			if ( isset( $user_dismissed[ $slug ] ) && ! empty( $user_dismissed[ $slug ]['dismissed'] ) ) {
 				continue;
 			}
@@ -404,7 +403,7 @@ class WPConsent_Notice {
 			}
 
 			// Add the notice to be displayed.
-			$args = isset( $notice['args'] ) ? $notice['args'] : array();
+			$args         = isset( $notice['args'] ) ? $notice['args'] : array();
 			$args['slug'] = $slug; // Ensure the slug is set.
 
 			self::add( $notice['message'], $notice['type'], $args );
@@ -446,5 +445,78 @@ class WPConsent_Notice {
 		self::add( $message, $type, $args );
 
 		return $args['slug'];
+	}
+
+	/**
+	 * Register a translation notice with simple per-language cleanup.
+	 * Expects normalized lowercase locale input to prevent case issues.
+	 *
+	 * @param string $message The notice message.
+	 * @param string $type The notice type (success, error).
+	 * @param string $locale The target locale (should be lowercase).
+	 * @return string The notice slug.
+	 */
+	public static function register_translation_notice( $message, $type, $locale ) {
+		$slug = 'translation_' . $locale;
+
+		// Simple cleanup - remove existing notice for this locale.
+		self::cleanup_specific_translation_notice( $locale );
+
+		// Force register notice (always create new).
+		$notices          = get_option( 'wpconsent_admin_notices', array() );
+		$notices[ $slug ] = array(
+			'time'      => time(),
+			'dismissed' => false,
+			'message'   => $message,
+			'type'      => $type,
+			'args'      => array(
+				'slug'    => $slug,
+				'dismiss' => self::DISMISS_USER,
+				'class'   => 'wpconsent-translation-notice',
+			),
+		);
+
+		update_option( 'wpconsent_admin_notices', $notices, true );
+
+		// Also add to immediate display.
+		self::add(
+			$message,
+			$type,
+			array(
+				'slug'    => $slug,
+				'dismiss' => self::DISMISS_USER,
+				'class'   => 'wpconsent-translation-notice',
+			)
+		);
+
+		return $slug;
+	}
+
+	/**
+	 * Clean up a specific translation notice for a given locale.
+	 * Removes both the option entry and user dismissal for that language only.
+	 *
+	 * @param string $locale The locale to clean up.
+	 * @return void
+	 */
+	public static function cleanup_specific_translation_notice( $locale ) {
+		$slug = 'translation_' . $locale;
+
+		// Clean from global option.
+		$notices = get_option( 'wpconsent_admin_notices', array() );
+		if ( isset( $notices[ $slug ] ) ) {
+			unset( $notices[ $slug ] );
+			update_option( 'wpconsent_admin_notices', $notices, true );
+		}
+
+		// Clean from user meta.
+		$user_id = get_current_user_id();
+		if ( $user_id ) {
+			$user_notices = get_user_meta( $user_id, 'wpconsent_admin_notices', true );
+			if ( is_array( $user_notices ) && isset( $user_notices[ $slug ] ) ) {
+				unset( $user_notices[ $slug ] );
+				update_user_meta( $user_id, 'wpconsent_admin_notices', $user_notices );
+			}
+		}
 	}
 }

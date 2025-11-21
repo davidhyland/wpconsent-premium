@@ -29,6 +29,10 @@ add_action( 'wp_ajax_wpconsent_add_script', 'wpconsent_ajax_add_script' );
 add_action( 'wp_ajax_wpconsent_edit_script', 'wpconsent_ajax_edit_script' );
 add_action( 'wp_ajax_wpconsent_delete_script', 'wpconsent_ajax_delete_script' );
 
+add_action( 'wp_ajax_wpconsent_start_translation', 'wpconsent_ajax_start_translation' );
+add_action( 'wp_ajax_wpconsent_check_translation_progress', 'wpconsent_ajax_check_translation_progress' );
+add_action( 'wp_ajax_wpconsent_reset_translation', 'wpconsent_ajax_reset_translation' );
+
 /**
  * Verify license via Ajax.
  *
@@ -79,7 +83,6 @@ function wpconsent_deactivate_license() {
  *
  * @throws Exception If an error occurs during the export process.
  * @since 1.0.0
- *
  */
 function wpconsent_handle_export_start() {
 	try {
@@ -383,10 +386,10 @@ function wpconsent_ajax_get_services_library() {
 		}
 	}
 
-	// Get categories to include in the response
+	// Get categories to include in the response.
 	$categories = wpconsent()->cookies->get_categories();
 
-	// Send both services and categories in the response
+	// Send both services and categories in the response.
 	wp_send_json_success(
 		array(
 			'services'   => $services,
@@ -436,11 +439,11 @@ function wpconsent_ajax_import_service_from_library() {
 		wp_send_json_error( array( 'message' => esc_html__( 'Failed to import service.', 'wpconsent-premium' ) ) );
 	}
 
-	// Mark as auto added
+	// Mark as auto added.
 	update_term_meta( $service_id, '_wpconsent_auto_added', true );
 	update_term_meta( $service_id, '_wpconsent_source_slug', $service_key );
 
-	// Add the cookies for this service
+	// Add the cookies for this service.
 	$imported_cookies = array();
 	if ( ! empty( $service_data['cookies'] ) ) {
 		foreach ( $service_data['cookies'] as $cookie => $cookie_data ) {
@@ -711,10 +714,10 @@ function wpconsent_save_location_group() {
 		wp_send_json_error( array( 'message' => __( 'At least one location must be selected.', 'wpconsent-premium' ) ) );
 	}
 
-	$location_groups = wpconsent()->settings->get_option( 'geolocation_groups', array() );
+	$location_groups = (array) wpconsent()->settings->get_option( 'geolocation_groups', array() );
 	$group_id        = ! empty( $group_data['group_id'] ) ? $group_data['group_id'] : uniqid( 'group_' );
 
-	// Check for location conflicts
+	// Check for location conflicts.
 	$conflicts = wpconsent_check_location_conflicts( $group_data['locations'], $group_id, $location_groups );
 	if ( ! empty( $conflicts ) ) {
 		wp_send_json_error( array( 'message' => __( 'Some selected locations are already used in other groups.', 'wpconsent-premium' ) ) );
@@ -724,7 +727,7 @@ function wpconsent_save_location_group() {
 
 	wpconsent()->settings->update_option( 'geolocation_groups', $location_groups );
 
-	// Check if we need to add the geolocation cookie
+	// Check if we need to add the geolocation cookie.
 	wpconsent()->geolocation->maybe_add_geolocation_cookie();
 
 	wp_send_json_success( array(
@@ -854,7 +857,7 @@ function wpconsent_create_predefined_rule() {
 	// Save the updated location groups.
 	wpconsent()->settings->update_option( 'geolocation_groups', $location_groups );
 
-	// Check if we need to add the geolocation cookie
+	// Check if we need to add the geolocation cookie.
 	wpconsent()->geolocation->maybe_add_geolocation_cookie();
 
 	wp_send_json_success(
@@ -1022,15 +1025,62 @@ function wpconsent_sanitize_group_data( $data ) {
 	}
 
 	$sanitized = array(
-		'group_id'                => ! empty( $data['group_id'] ) ? sanitize_text_field( wp_unslash( $data['group_id'] ) ) : '',
-		'name'                    => ! empty( $data['group_name'] ) ? sanitize_text_field( wp_unslash( $data['group_name'] ) ) : '',
-		'locations'               => array(),
-		'enable_script_blocking'  => ! empty( $data['enable_script_blocking'] ),
-		'show_banner'             => ! empty( $data['show_banner'] ),
-		'enable_consent_floating' => ! empty( $data['enable_consent_floating'] ),
-		'manual_toggle_services'  => ! empty( $data['manual_toggle_services'] ),
-		'consent_mode'            => $consent_mode,
+		'group_id'                 => ! empty( $data['group_id'] ) ? sanitize_text_field( wp_unslash( $data['group_id'] ) ) : '',
+		'name'                     => ! empty( $data['group_name'] ) ? sanitize_text_field( wp_unslash( $data['group_name'] ) ) : '',
+		'locations'                => array(),
+		'enable_script_blocking'   => ! empty( $data['enable_script_blocking'] ),
+		'show_banner'              => ! empty( $data['show_banner'] ),
+		'enable_consent_floating'  => ! empty( $data['enable_consent_floating'] ),
+		'manual_toggle_services'   => ! empty( $data['manual_toggle_services'] ),
+		'consent_mode'             => $consent_mode,
+		'customize_banner_buttons' => ! empty( $data['customize_banner_buttons'] ),
+		'customize_banner_message' => ! empty( $data['customize_banner_message'] ),
 	);
+
+	// Handle button customization fields based on customize_banner_buttons toggle.
+	if ( $sanitized['customize_banner_buttons'] ) {
+		// Save button customization fields if they exist in the form data.
+		$sanitized['accept_button_text']      = ! empty( $data['accept_button_text'] ) ? sanitize_text_field( wp_unslash( $data['accept_button_text'] ) ) : '';
+		$sanitized['cancel_button_text']      = ! empty( $data['cancel_button_text'] ) ? sanitize_text_field( wp_unslash( $data['cancel_button_text'] ) ) : '';
+		$sanitized['preferences_button_text'] = ! empty( $data['preferences_button_text'] ) ? sanitize_text_field( wp_unslash( $data['preferences_button_text'] ) ) : '';
+
+		$sanitized['accept_button_enabled']      = ! empty( $data['accept_button_enabled'] );
+		$sanitized['cancel_button_enabled']      = ! empty( $data['cancel_button_enabled'] );
+		$sanitized['preferences_button_enabled'] = ! empty( $data['preferences_button_enabled'] );
+
+		// Sanitize button order.
+		$sanitized['button_order'] = array();
+		if ( ! empty( $data['button_order'] ) && is_array( $data['button_order'] ) ) {
+			foreach ( $data['button_order'] as $button_id ) {
+				$button_id = sanitize_text_field( $button_id );
+				if ( in_array( $button_id, array( 'accept', 'cancel', 'preferences' ), true ) ) {
+					$sanitized['button_order'][] = $button_id;
+				}
+			}
+		}
+		// Default order if none provided.
+		if ( empty( $sanitized['button_order'] ) ) {
+			$sanitized['button_order'] = array( 'accept', 'cancel', 'preferences' );
+		}
+	} else {
+		// Reset all button-related options to defaults when customize_banner_buttons is disabled.
+		$sanitized['accept_button_text']         = '';
+		$sanitized['cancel_button_text']         = '';
+		$sanitized['preferences_button_text']    = '';
+		$sanitized['accept_button_enabled']      = true;
+		$sanitized['cancel_button_enabled']      = true;
+		$sanitized['preferences_button_enabled'] = true;
+		$sanitized['button_order']               = array( 'accept', 'cancel', 'preferences' );
+	}
+
+	// Handle banner message customization fields based on customize_banner_message toggle.
+	if ( $sanitized['customize_banner_message'] ) {
+		// Save banner message customization field if it exists in the form data.
+		$sanitized['banner_message'] = ! empty( $data['banner_message'] ) ? sanitize_textarea_field( wp_unslash( $data['banner_message'] ) ) : '';
+	} else {
+		// Reset banner message to default when customize_banner_message is disabled.
+		$sanitized['banner_message'] = '';
+	}
 
 	// Sanitize locations data from mixed inputs.
 	$location_types = array(
@@ -1061,4 +1111,165 @@ function wpconsent_sanitize_group_data( $data ) {
 	}
 
 	return $sanitized;
+}
+
+/**
+ * Start translation process via AJAX.
+ *
+ * @return void
+ */
+function wpconsent_ajax_start_translation() {
+	check_ajax_referer( 'wpconsent_admin', 'nonce' );
+
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error(
+			array(
+				'message' => esc_html__( 'You do not have permission to perform this action.', 'wpconsent-premium' ),
+			)
+		);
+	}
+
+	$target_locale = isset( $_POST['target_locale'] ) ? sanitize_text_field( wp_unslash( $_POST['target_locale'] ) ) : '';
+	$language_name = isset( $_POST['language_name'] ) ? sanitize_text_field( wp_unslash( $_POST['language_name'] ) ) : '';
+
+	if ( empty( $target_locale ) ) {
+		wp_send_json_error(
+			array(
+				'message' => esc_html__( 'Target language is required.', 'wpconsent-premium' ),
+			)
+		);
+	}
+
+	if ( empty( $language_name ) ) {
+		$language_name = $target_locale; // Fallback to locale.
+	}
+
+	// Check if translation service is available and language is supported.
+	if ( ! isset( wpconsent()->translation_services ) ) {
+		wp_send_json_error(
+			array(
+				'message' => esc_html__( 'Translation service is not available.', 'wpconsent-premium' ),
+			)
+		);
+	}
+
+	if ( ! wpconsent()->translation_services->is_language_supported( $target_locale ) ) {
+		wp_send_json_error(
+			array(
+				'message' => esc_html__( 'This language is not supported for translation.', 'wpconsent-premium' ),
+			)
+		);
+	}
+
+	// Check if any translation is already active.
+	if ( wpconsent()->translation_services->is_translation_active() ) {
+		wp_send_json_error(
+			array(
+				'message' => esc_html__( 'Another translation is already in progress. Please wait for it to complete.', 'wpconsent-premium' ),
+			)
+		);
+	}
+
+	// Generate a language-specific translation job ID for proper duplicate prevention.
+	$job_id = 'wpconsent_translation_' . $target_locale;
+
+	// Schedule the background translation process using Action Scheduler.
+	$scheduled = wpconsent()->translation_services->schedule_translation( $job_id, $target_locale, $language_name );
+
+	if ( ! $scheduled ) {
+		wp_send_json_error(
+			array(
+				'message' => esc_html__( 'Failed to schedule translation job.', 'wpconsent-premium' ),
+			)
+		);
+	}
+
+	wp_send_json_success(
+		array(
+			'message' => sprintf(
+				/* translators: %s is the target language locale */
+				esc_html__( 'Translation process started for %s. You will be notified when complete.', 'wpconsent-premium' ),
+				$target_locale
+			),
+		)
+	);
+}
+
+/**
+ * Check translation progress via AJAX.
+ *
+ * @return void
+ */
+function wpconsent_ajax_check_translation_progress() {
+	check_ajax_referer( 'wpconsent_admin', 'nonce' );
+
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error(
+			array(
+				'message' => esc_html__( 'You do not have permission to perform this action.', 'wpconsent-premium' ),
+			)
+		);
+	}
+
+	if ( ! isset( wpconsent()->translation_services ) ) {
+		wp_send_json_success(
+			array(
+				'translation_active' => false,
+				'progress'           => false,
+			)
+		);
+		return;
+	}
+
+	$translation_active = wpconsent()->translation_services->is_translation_active();
+	$progress           = wpconsent()->translation_services->get_translation_progress();
+
+	wp_send_json_success(
+		array(
+			'translation_active' => $translation_active,
+			'progress'           => $progress,
+		)
+	);
+}
+
+/**
+ * Reset stuck translation via AJAX.
+ *
+ * @return void
+ */
+function wpconsent_ajax_reset_translation() {
+	check_ajax_referer( 'wpconsent_admin', 'nonce' );
+
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error(
+			array(
+				'message' => esc_html__( 'You do not have permission to perform this action.', 'wpconsent-premium' ),
+			)
+		);
+	}
+
+	if ( ! isset( wpconsent()->translation_services ) ) {
+		wp_send_json_error(
+			array(
+				'message' => esc_html__( 'Translation service is not available.', 'wpconsent-premium' ),
+			)
+		);
+	}
+
+	// Reset the translation status.
+	$reset = wpconsent()->translation_services->reset_translation_status();
+
+	if ( $reset ) {
+		wp_send_json_success(
+			array(
+				'message' => esc_html__( 'Translation has been reset. You can now start a new translation.', 'wpconsent-premium' ),
+			)
+		);
+	} else {
+		wp_send_json_error(
+			array(
+				'message' => esc_html__( 'Failed to reset translation.', 'wpconsent-premium' ),
+			)
+		);
+	}
 }

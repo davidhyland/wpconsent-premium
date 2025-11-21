@@ -26,6 +26,34 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 	}
 
 	/**
+	 * Add license-specific body classes.
+	 *
+	 * @param string $body_class The body class to append.
+	 *
+	 * @return string
+	 */
+	public function page_specific_body_class( $body_class ) {
+		// Call parent method first.
+		$body_class = parent::page_specific_body_class( $body_class );
+
+		// Add license level class.
+		$license_type = wpconsent()->license->type();
+		if ( ! empty( $license_type ) ) {
+			$body_class .= ' wpconsent-license-' . sanitize_html_class( $license_type );
+		} else {
+			$body_class .= ' wpconsent-license-none';
+		}
+
+		// Check if license is active and can use translation (Plus, Pro, Elite).
+		$can_translate = wpconsent()->license->license_can( 'plus', is_multisite() && is_network_admin() );
+		if ( ! $can_translate ) {
+			$body_class .= ' wpconsent-translation-restricted';
+		}
+
+		return $body_class;
+	}
+
+	/**
 	 * Add license strings to the JS object for the Pro settings page.
 	 *
 	 * @param string[] $data The translation strings.
@@ -35,6 +63,24 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 	public function add_js_data( $data ) {
 		$data['license_error_title'] = __( 'We encountered an error activating your license key', 'wpconsent-premium' );
 		$data['multisite']           = is_network_admin();
+		// Translation is available for Plus, Pro, and Elite licenses.
+		$data['license_can']         = wpconsent()->license->license_can( 'plus', is_multisite() && is_network_admin() );
+
+		// Add translation status to initial page load.
+		$data['translation_active'] = false;
+		if ( isset( wpconsent()->translation_services ) ) {
+			$data['translation_active'] = wpconsent()->translation_services->is_translation_active();
+		}
+
+		// Add translation upsell data.
+		$data['translation_upsell'] = array(
+				'title'       => esc_html__( 'Automatic Translations is not available on your plan', 'wpconsent-premium' ),
+				'text'        => esc_html__( 'Instead of manually translating every banner setting, categories, services, cookies info, let us do the heavy lifting. Upgrade to WPConsent Plus or higher to use high-quality, AI-powered automatic translation and have your site ready for a new audience today', 'wpconsent-premium' ),
+				'url'         => wpconsent_utm_url( 'https://wpconsent.com/my-account/', 'translation', 'languages' ),
+				'button_text' => esc_html__( 'Upgrade Now', 'wpconsent-premium' ),
+		);
+
+		$data['discount_note'] = false;
 
 		return $data;
 	}
@@ -50,18 +96,20 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 			return;
 		}
 
-		// Save the settings.
-		$settings = array(
-			'records_of_consent'    => isset( $_POST['records_of_consent'] ) ? 1 : 0,
-			'auto_scanner'          => isset( $_POST['auto_scanner'] ) ? 1 : 0,
-			'auto_scanner_interval' => isset( $_POST['auto_scanner_interval'] ) ? intval( $_POST['auto_scanner_interval'] ) : 1,
-		);
+		// Only process pro settings when we're in the settings view.
+		if ( 'settings' === $this->view ) {
+			$settings = array(
+					'records_of_consent'    => isset( $_POST['records_of_consent'] ) ? 1 : 0,
+					'auto_scanner'          => isset( $_POST['auto_scanner'] ) ? 1 : 0,
+					'auto_scanner_interval' => isset( $_POST['auto_scanner_interval'] ) ? intval( $_POST['auto_scanner_interval'] ) : 1,
+			);
 
-		if ( 0 === $settings['auto_scanner'] ) {
-			wp_clear_scheduled_hook( 'wpconsent_auto_scanner' );
+			if ( 0 === $settings['auto_scanner'] ) {
+				wp_clear_scheduled_hook( 'wpconsent_auto_scanner' );
+			}
+
+			wpconsent()->settings->bulk_update_options( $settings );
 		}
-
-		wpconsent()->settings->bulk_update_options( $settings );
 
 		// Let the parent class save things too.
 		parent::handle_submit();
@@ -75,16 +123,16 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 	 */
 	public function records_of_consent_input() {
 		$this->metabox_row(
-			esc_html__( 'Consent Logs', 'wpconsent-premium' ),
-			$this->get_checkbox_toggle(
-				wpconsent()->settings->get_option( 'records_of_consent', false ),
+				esc_html__( 'Consent Logs', 'wpconsent-premium' ),
+				$this->get_checkbox_toggle(
+						wpconsent()->settings->get_option( 'records_of_consent', false ),
+						'records_of_consent',
+						esc_html__( 'Enable keeping records of consent for all visitors that give consent.', 'wpconsent-premium' )
+				),
 				'records_of_consent',
-				esc_html__( 'Enable keeping records of consent for all visitors that give consent.', 'wpconsent-premium' )
-			),
-			'records_of_consent',
-			'',
-			'',
-			''
+				'',
+				'',
+				''
 		);
 	}
 
@@ -95,29 +143,29 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 	 */
 	public function automatic_scanning_input() {
 		$this->metabox_row(
-			esc_html__( 'Auto Scanning', 'wpconsent-premium' ),
-			$this->get_checkbox_toggle(
-				wpconsent()->settings->get_option( 'auto_scanner', false ),
-				'auto_scanner',
-				esc_html__( 'Enable automatic scanning of consent compliance in the background.', 'wpconsent-premium' )
-			),
-			'auto_scanner'
+				esc_html__( 'Auto Scanning', 'wpconsent-premium' ),
+				$this->get_checkbox_toggle(
+						wpconsent()->settings->get_option( 'auto_scanner', false ),
+						'auto_scanner',
+						esc_html__( 'Enable automatic scanning of consent compliance in the background.', 'wpconsent-premium' )
+				),
+				'auto_scanner'
 		);
 		$this->metabox_row(
-			esc_html__( 'Scan Interval', 'wpconsent-premium' ),
-			$this->select(
-				'auto_scanner_interval',
-				array(
-					1  => esc_html__( 'Daily', 'wpconsent-premium' ),
-					7  => esc_html__( 'Weekly', 'wpconsent-premium' ),
-					30 => esc_html__( 'Monthly', 'wpconsent-premium' ),
+				esc_html__( 'Scan Interval', 'wpconsent-premium' ),
+				$this->select(
+						'auto_scanner_interval',
+						array(
+								1  => esc_html__( 'Daily', 'wpconsent-premium' ),
+								7  => esc_html__( 'Weekly', 'wpconsent-premium' ),
+								30 => esc_html__( 'Monthly', 'wpconsent-premium' ),
+						),
+						intval( wpconsent()->settings->get_option( 'auto_scanner_interval', 1 ) )
 				),
-				intval( wpconsent()->settings->get_option( 'auto_scanner_interval', 1 ) )
-			),
-			'auto_scanner_interval',
-			'',
-			'',
-			esc_html__( 'Choose how often to automatically scan your website for compliance.', 'wpconsent-premium' )
+				'auto_scanner_interval',
+				'',
+				'',
+				esc_html__( 'Choose how often to automatically scan your website for compliance.', 'wpconsent-premium' )
 		);
 	}
 
@@ -131,12 +179,13 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 		<form action="<?php echo esc_url( $this->get_page_action_url() ); ?>" method="post">
 			<?php
 			$this->metabox(
-				esc_html__( 'Language Settings', 'wpconsent-premium' ),
-				$this->get_language_settings_content()
+					esc_html__( 'Language Settings', 'wpconsent-premium' ),
+					$this->get_language_settings_content()
 			);
+
 			wp_nonce_field(
-				'wpconsent_save_language_settings',
-				'wpconsent_save_language_settings_nonce'
+					'wpconsent_save_language_settings',
+					'wpconsent_save_language_settings_nonce'
 			);
 			?>
 			<div class="wpconsent-submit">
@@ -178,9 +227,18 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 		// Add English (United States) only if it's in the enabled languages array or if it's the WordPress default language.
 		if ( in_array( 'en_US', $enabled_languages, true ) || 'en_US' === $wp_default_language ) {
 			$available_languages['en_US'] = array(
-				'language'     => 'en_US',
-				'english_name' => 'English (United States)',
-				'native_name'  => 'English (United States)',
+					'language'     => 'en_US',
+					'english_name' => 'English (United States)',
+					'native_name'  => 'English (United States)',
+			);
+		}
+
+		// If en_US is not already in the available languages, add en_US to the available languages.
+		if ( ! isset( $available_languages['en_US'] ) ) {
+			$available_languages['en_US'] = array(
+					'language'     => 'en_US',
+					'english_name' => 'English (United States)',
+					'native_name'  => 'English (United States)',
 			);
 		}
 
@@ -220,8 +278,8 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 					<?php
 					printf(
 					// Translators: %s is the current WordPress language name.
-						esc_html__( 'Select the languages you want to make available for your content. The default language (%s) will be used for the current settings until you configure translations.', 'wpconsent-premium' ),
-						esc_html( isset( $available_languages[ $wp_default_language ]['english_name'] ) ? $available_languages[ $wp_default_language ]['english_name'] : 'English (United States)' )
+							esc_html__( 'Select the languages you want to make available for your content. The default language (%s) will be used for the current settings until you configure translations.', 'wpconsent-premium' ),
+							esc_html( isset( $available_languages[ $wp_default_language ]['english_name'] ) ? $available_languages[ $wp_default_language ]['english_name'] : 'English (United States)' )
 					);
 					?>
 				</p>
@@ -229,15 +287,20 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 					<?php
 					printf(
 					// Translators: %s is the icon for the language switcher.
-						esc_html__(
-							'Easily switch between languages using the globe icon (%s) in the header of any WPConsent admin page.',
-							'wpconsent-premium'
-						),
-						wp_kses(
-							wpconsent_get_icon( 'globe', 16, 16, '0 -960 960 960' ),
-							wpconsent_get_icon_allowed_tags()
-						)
+							esc_html__(
+									'Easily switch between languages using the globe icon (%s) in the header of any WPConsent admin page.',
+									'wpconsent-premium'
+							),
+							wp_kses(
+									wpconsent_get_icon( 'globe', 16, 16, '0 -960 960 960' ),
+									wpconsent_get_icon_allowed_tags()
+							)
 					);
+					?>
+				</p>
+				<p>
+					<?php
+					esc_html_e( 'The "Translate" button appears for languages that are supported by our translation service. Click the button to start the automatic translation process for your consent banner content. Translation happens asynchronously in the background, and you will be notified when the process is complete.', 'wpconsent-premium' );
 					?>
 				</p>
 			</div>
@@ -252,50 +315,138 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 				<div class="wpconsent-language-setting-list" id="wpconsent-language-list">
 					<?php
 					// Output selected languages first.
-					if ( ! empty( $selected_languages ) ) : ?>
+					if ( ! empty( $selected_languages ) ) :
+						?>
 						<div class="wpconsent-language-section">
 							<div class="wpconsent-language-section-title">
 								<?php esc_html_e( 'Selected Languages', 'wpconsent-premium' ); ?>
 							</div>
-							<?php foreach ( $selected_languages as $locale => $language ) :
+							<?php
+							foreach ( $selected_languages as $locale => $language ) :
 								$is_default = $locale === $wp_default_language;
-								$this->output_language_item( $locale, $language, $is_default, true );
-							endforeach; ?>
+								$this->output_language_item( $locale, $language, $is_default, true, $wp_default_language );
+							endforeach;
+							?>
 						</div>
-					<?php endif;
+					<?php
+					endif;
 
 					// Output unselected languages.
-					if ( ! empty( $unselected_languages ) ) : ?>
+					if ( ! empty( $unselected_languages ) ) :
+						?>
 						<div class="wpconsent-language-section">
 							<div class="wpconsent-language-section-title">
 								<?php esc_html_e( 'Available Languages', 'wpconsent-premium' ); ?>
 							</div>
-							<?php foreach ( $unselected_languages as $locale => $language ) :
+							<?php
+							foreach ( $unselected_languages as $locale => $language ) :
 								$is_default = $locale === $wp_default_language;
-								$this->output_language_item( $locale, $language, $is_default, false );
-							endforeach; ?>
+								$this->output_language_item( $locale, $language, $is_default, false, $wp_default_language );
+							endforeach;
+							?>
 						</div>
-					<?php endif; ?>
+					<?php
+					endif;
+					?>
 				</div>
 			</div>
 		</div>
 		<?php
 		$this->metabox_row(
-			esc_html__( 'Language Picker', 'wpconsent-premium' ),
-			$this->get_checkbox_toggle(
-				wpconsent()->settings->get_option( 'show_language_picker', 0 ),
+				esc_html__( 'Language Picker', 'wpconsent-premium' ),
+				$this->get_checkbox_toggle(
+						wpconsent()->settings->get_option( 'show_language_picker', 0 ),
+						'show_language_picker',
+						esc_html__( 'Show a language picker in the consent banner', 'wpconsent-premium' )
+				),
 				'show_language_picker',
-				esc_html__( 'Show a language picker in the consent banner', 'wpconsent-premium' )
-			),
-			'show_language_picker',
-			'',
-			'',
-			esc_html__( 'This will show a globe icon in the header of the consent banner, allowing users to switch between languages just for the banner/preferences panel even if you do not use a translation plugin. If you are using a translation plugin the banner should automatically display the content in the selected language, if available.', 'wpconsent-premium' )
+				'',
+				'',
+				esc_html__( 'This will show a globe icon in the header of the consent banner, allowing users to switch between languages just for the banner/preferences panel even if you do not use a translation plugin. If you are using a translation plugin the banner should automatically display the content in the selected language, if available.', 'wpconsent-premium' )
 		);
 
 		return ob_get_clean();
 	}
 
+	/**
+	 * Override the output_language_item method to add translate buttons for enabled languages.
+	 *
+	 * @param string $locale The language locale.
+	 * @param array  $language The language data.
+	 * @param bool   $is_default Whether this is the default language.
+	 * @param bool   $is_enabled Whether this language is enabled.
+	 * @param string $wp_default_language The WordPress default language.
+	 *
+	 * @return void
+	 */
+	protected function output_language_item( $locale, $language, $is_default, $is_enabled, $wp_default_language = 'en_US' ) {
+		$classes = array( 'wpconsent-language-item' );
+		if ( $is_default ) {
+			$classes[] = 'wpconsent-language-default';
+		}
+		if ( $is_enabled ) {
+			$classes[] = 'wpconsent-language-enabled';
+		}
+
+		// Check if this language is supported by the translation service.
+		$translation_supported = false;
+		if ( isset( wpconsent()->translation_services ) ) {
+			$translation_supported = wpconsent()->translation_services->is_language_supported( $locale );
+		}
+		?>
+		<div class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>" data-locale="<?php echo esc_attr( $locale ); ?>" data-search="<?php echo esc_attr( strtolower( $language['english_name'] . ' ' . $language['native_name'] . ' ' . $locale ) ); ?>">
+			<label class="wpconsent-checkbox-label">
+				<input type="checkbox" name="enabled_languages[]" value="<?php echo esc_attr( $locale ); ?>"
+						<?php checked( $is_enabled ); ?>
+						<?php disabled( $is_default ); ?>>
+				<span class="wpconsent-checkbox-text">
+					<?php echo esc_html( $language['english_name'] ); ?>
+					<span class="wpconsent-language-locale">(<?php echo esc_html( $locale ); ?>)</span>
+					<?php if ( $language['native_name'] !== $language['english_name'] ) : ?>
+						<span class="wpconsent-language-native-name">
+							(<?php echo esc_html( $language['native_name'] ); ?>)
+						</span>
+					<?php endif; ?>
+					<?php if ( $is_default ) : ?>
+						<span class="wpconsent-language-default-badge">
+							<?php esc_html_e( 'Default', 'wpconsent-premium' ); ?>
+						</span>
+					<?php endif; ?>
+				</span>
+			</label>
+			<?php if ( $is_enabled ) : ?>
+				<div class="wpconsent-language-actions">
+					<button type="button"
+					        class="wpconsent-button wpconsent-button-secondary wpconsent-review-banner-content"
+					        data-locale="<?php echo esc_attr( $locale ); ?>"
+					        data-redirect-url="<?php echo esc_url( admin_url( 'admin.php?page=wpconsent-banner&view=content' ) ); ?>"
+					        data-target="_blank">
+						<?php esc_html_e( 'Review Banner Content', 'wpconsent-premium' ); ?>
+					</button>
+					<button type="button"
+					        class="wpconsent-button wpconsent-button-secondary wpconsent-review-cookie-content"
+					        data-locale="<?php echo esc_attr( $locale ); ?>"
+					        data-redirect-url="<?php echo esc_url( admin_url( 'admin.php?page=wpconsent-cookies&view=cookies' ) ); ?>"
+					        data-target="_blank">
+						<?php esc_html_e( 'Review Cookie Content', 'wpconsent-premium' ); ?>
+					</button>
+					<?php
+					$is_english_variant           = str_starts_with( $locale, 'en_' );
+					$is_default_language_english  = str_starts_with( $wp_default_language, 'en_' );
+					$should_show_translate_button = $translation_supported && ( ! $is_english_variant || ( $is_english_variant && ! $is_default_language_english ) );
+					if ( $should_show_translate_button ) :
+						?>
+						<button type="button"
+						        class="wpconsent-button wpconsent-button-primary wpconsent-translate-language"
+						        data-locale="<?php echo esc_attr( $locale ); ?>">
+							<?php esc_html_e( 'Auto-Translate', 'wpconsent-premium' ); ?>
+						</button>
+					<?php endif; ?>
+				</div>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
 
 	/**
 	 * Handle language settings submission.
@@ -314,10 +465,10 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 
 		// Save enabled languages.
 		wpconsent()->settings->bulk_update_options(
-			array(
-				'enabled_languages'    => $enabled_languages,
-				'show_language_picker' => $show_language_picker,
-			)
+				array(
+						'enabled_languages'    => $enabled_languages,
+						'show_language_picker' => $show_language_picker,
+				)
 		);
 
 		wp_safe_redirect( $this->get_page_action_url() );
@@ -331,16 +482,16 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 	 */
 	public function export_custom_scripts_input() {
 		$this->metabox_row(
-			esc_html__( 'Custom Scripts', 'wpconsent-premium' ),
-			$this->get_checkbox_toggle(
-				false,
+				esc_html__( 'Custom Scripts', 'wpconsent-premium' ),
+				$this->get_checkbox_toggle(
+						false,
+						'export_custom_scripts',
+						esc_html__( 'Export custom scripts and iframes.', 'wpconsent-premium' )
+				),
 				'export_custom_scripts',
-				esc_html__( 'Export custom scripts and iframes.', 'wpconsent-premium' )
-			),
-			'export_custom_scripts',
-			'',
-			'',
-			'',
+				'',
+				'',
+				''
 		);
 	}
 
@@ -398,15 +549,19 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 
 			// Sanitize and build the script data for export.
 			$sanitized_scripts[ $sanitized_script_id ] = array(
-				'category'         => sanitize_key( $category_data['slug'] ),
-				'service'          => sanitize_key( $service_data['slug'] ),
-				'type'             => in_array( $script_data['type'], array(
-					'script',
-					'iframe'
-				), true ) ? $script_data['type'] : 'script',
-				'tag'              => wp_kses_post( $script_data['tag'] ),
-				'blocked_elements' => isset( $script_data['blocked_elements'] ) && is_array( $script_data['blocked_elements'] ) ?
-					wpconsent()->cookies->blocked_elements_to_string( $script_data['blocked_elements'] ) : '',
+					'category'         => sanitize_key( $category_data['slug'] ),
+					'service'          => sanitize_key( $service_data['slug'] ),
+					'type'             => in_array(
+							$script_data['type'],
+							array(
+									'script',
+									'iframe',
+							),
+							true
+					) ? $script_data['type'] : 'script',
+					'tag'              => wp_kses_post( $script_data['tag'] ),
+					'blocked_elements' => isset( $script_data['blocked_elements'] ) && is_array( $script_data['blocked_elements'] ) ?
+							wpconsent()->cookies->blocked_elements_to_string( $script_data['blocked_elements'] ) : '',
 			);
 		}
 
@@ -489,11 +644,11 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 			$blocked_elements = isset( $script_data['blocked_elements'] ) ? sanitize_text_field( $script_data['blocked_elements'] ) : '';
 
 			wpconsent()->cookies->add_script(
-				$category_id,
-				$service_id,
-				$script_type,
-				$script_tag,
-				$blocked_elements
+					$category_id,
+					$service_id,
+					$script_type,
+					$script_tag,
+					$blocked_elements
 			);
 		}
 	}
@@ -572,6 +727,9 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 				wpconsent()->settings->bulk_update_options( array( $enabled_language => $language_texts ) );
 			}
 		}
+
+		// Clear translation strings cache when settings change.
+		delete_transient( 'wpconsent_translation_strings' );
 	}
 
 	/**
@@ -596,8 +754,8 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 				$translated_desc = get_term_meta( $category->term_id, 'wpconsent_category_description_' . $locale, true );
 				if ( $translated_name || $translated_desc ) {
 					$category_data['translations'][ $locale ] = array(
-						'name'        => $translated_name,
-						'description' => $translated_desc,
+							'name'        => $translated_name,
+							'description' => $translated_desc,
 					);
 				}
 			}
@@ -609,8 +767,8 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 					$translated_desc = get_post_meta( $cookie_data['id'], 'wpconsent_cookie_description_' . $locale, true );
 					if ( $translated_name || $translated_desc ) {
 						$cookie_data['translations'][ $locale ] = array(
-							'name'        => $translated_name,
-							'description' => $translated_desc,
+								'name'        => $translated_name,
+								'description' => $translated_desc,
 						);
 					}
 				}
@@ -624,9 +782,9 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 					$translated_url  = get_post_meta( $service_data['id'], 'wpconsent_service_url_' . $locale, true );
 					if ( $translated_name || $translated_desc || $translated_url ) {
 						$service_data['translations'][ $locale ] = array(
-							'name'        => $translated_name,
-							'description' => $translated_desc,
-							'service_url' => $translated_url,
+								'name'        => $translated_name,
+								'description' => $translated_desc,
+								'service_url' => $translated_url,
 						);
 					}
 				}
@@ -638,8 +796,8 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 						$translated_desc = get_post_meta( $cookie_data['id'], 'wpconsent_cookie_description_' . $locale, true );
 						if ( $translated_name || $translated_desc ) {
 							$cookie_data['translations'][ $locale ] = array(
-								'name'        => $translated_name,
-								'description' => $translated_desc,
+									'name'        => $translated_name,
+									'description' => $translated_desc,
 							);
 						}
 					}
@@ -719,6 +877,316 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 		}
 	}
 
+	/**
+	 * Get settings for export, excluding geolocation_groups.
+	 *
+	 * @param array $all_options All plugin options.
+	 *
+	 * @return array
+	 */
+	protected function get_settings_for_export( $all_options ) {
+		$settings = parent::get_settings_for_export( $all_options );
+
+		// Remove geolocation_groups as it's handled separately in Pro.
+		unset( $settings['geolocation_groups'] );
+
+		return $settings;
+	}
+
+	/**
+	 * Get geolocation groups for export.
+	 *
+	 * @param array $all_options All plugin options.
+	 *
+	 * @return array
+	 */
+	protected function get_geolocation_groups_for_export( $all_options ) {
+		$geolocation_groups = isset( $all_options['geolocation_groups'] ) ? $all_options['geolocation_groups'] : array();
+
+		if ( empty( $geolocation_groups ) || ! is_array( $geolocation_groups ) ) {
+			return array();
+		}
+
+		$export_groups = array();
+
+		foreach ( $geolocation_groups as $group_id => $group_data ) {
+			if ( ! is_array( $group_data ) ) {
+				continue;
+			}
+
+			$sanitized_group = array();
+
+			// Export basic fields.
+			if ( isset( $group_data['name'] ) ) {
+				$sanitized_group['name'] = $group_data['name'];
+			}
+
+			if ( isset( $group_data['enable_script_blocking'] ) ) {
+				$sanitized_group['enable_script_blocking'] = (bool) $group_data['enable_script_blocking'];
+			}
+
+			if ( isset( $group_data['show_banner'] ) ) {
+				$sanitized_group['show_banner'] = (bool) $group_data['show_banner'];
+			}
+
+			if ( isset( $group_data['enable_consent_floating'] ) ) {
+				$sanitized_group['enable_consent_floating'] = (bool) $group_data['enable_consent_floating'];
+			}
+
+			if ( isset( $group_data['manual_toggle_services'] ) ) {
+				$sanitized_group['manual_toggle_services'] = (bool) $group_data['manual_toggle_services'];
+			}
+
+			if ( isset( $group_data['consent_mode'] ) ) {
+				$sanitized_group['consent_mode'] = $group_data['consent_mode'];
+			}
+
+			if ( isset( $group_data['customize_banner_buttons'] ) ) {
+				$sanitized_group['customize_banner_buttons'] = (bool) $group_data['customize_banner_buttons'];
+			}
+
+			if ( isset( $group_data['customize_banner_message'] ) ) {
+				$sanitized_group['customize_banner_message'] = (bool) $group_data['customize_banner_message'];
+			}
+
+			// Export locations array.
+			if ( isset( $group_data['locations'] ) && is_array( $group_data['locations'] ) ) {
+				$sanitized_group['locations'] = array();
+				foreach ( $group_data['locations'] as $location ) {
+					if ( ! is_array( $location ) ) {
+						continue;
+					}
+
+					$sanitized_location = array();
+
+					if ( isset( $location['type'] ) ) {
+						$sanitized_location['type'] = $location['type'];
+					}
+
+					if ( isset( $location['code'] ) ) {
+						$sanitized_location['code'] = $location['code'];
+					}
+
+					if ( isset( $location['name'] ) ) {
+						$sanitized_location['name'] = $location['name'];
+					}
+
+					// Only add location if it has both type and code.
+					if ( ! empty( $sanitized_location['type'] ) && ! empty( $sanitized_location['code'] ) ) {
+						$sanitized_group['locations'][] = $sanitized_location;
+					}
+				}
+			}
+
+			// Export button customization fields.
+			if ( isset( $group_data['accept_button_text'] ) ) {
+				$sanitized_group['accept_button_text'] = $group_data['accept_button_text'];
+			}
+
+			if ( isset( $group_data['cancel_button_text'] ) ) {
+				$sanitized_group['cancel_button_text'] = $group_data['cancel_button_text'];
+			}
+
+			if ( isset( $group_data['preferences_button_text'] ) ) {
+				$sanitized_group['preferences_button_text'] = $group_data['preferences_button_text'];
+			}
+
+			if ( isset( $group_data['accept_button_enabled'] ) ) {
+				$sanitized_group['accept_button_enabled'] = (bool) $group_data['accept_button_enabled'];
+			}
+
+			if ( isset( $group_data['cancel_button_enabled'] ) ) {
+				$sanitized_group['cancel_button_enabled'] = (bool) $group_data['cancel_button_enabled'];
+			}
+
+			if ( isset( $group_data['preferences_button_enabled'] ) ) {
+				$sanitized_group['preferences_button_enabled'] = (bool) $group_data['preferences_button_enabled'];
+			}
+
+			if ( isset( $group_data['button_order'] ) && is_array( $group_data['button_order'] ) ) {
+				$sanitized_group['button_order'] = $group_data['button_order'];
+			}
+
+			// Export banner message.
+			if ( isset( $group_data['banner_message'] ) ) {
+				$sanitized_group['banner_message'] = $group_data['banner_message'];
+			}
+
+			// Only add the group if it has a name and at least one location.
+			if ( ! empty( $sanitized_group['name'] ) && ! empty( $sanitized_group['locations'] ) ) {
+				$export_groups[ $group_id ] = $sanitized_group;
+			}
+		}
+
+		return $export_groups;
+	}
+
+	/**
+	 * Import geolocation groups from import data.
+	 *
+	 * @param array $import_data The import data.
+	 *
+	 * @return void
+	 */
+	protected function import_geolocation_groups( $import_data ) {
+		if ( ! isset( $import_data['geolocation_groups'] ) || ! is_array( $import_data['geolocation_groups'] ) ) {
+			return;
+		}
+
+		$imported_groups = $import_data['geolocation_groups'];
+
+		if ( empty( $imported_groups ) ) {
+			// If the import data has an empty geolocation_groups array, clear the existing groups.
+			wpconsent()->settings->update_option( 'geolocation_groups', array() );
+
+			return;
+		}
+
+		$sanitized_groups = array();
+
+		foreach ( $imported_groups as $group_id => $group_data ) {
+			if ( ! is_array( $group_data ) ) {
+				continue;
+			}
+
+			$sanitized_group = array();
+
+			// Sanitize basic string fields.
+			if ( isset( $group_data['name'] ) ) {
+				$sanitized_group['name'] = sanitize_text_field( $group_data['name'] );
+			}
+
+			if ( isset( $group_data['consent_mode'] ) ) {
+				$consent_mode = sanitize_text_field( $group_data['consent_mode'] );
+				// Validate consent mode is one of the allowed values.
+				if ( in_array( $consent_mode, array( 'optin', 'optout' ), true ) ) {
+					$sanitized_group['consent_mode'] = $consent_mode;
+				} else {
+					$sanitized_group['consent_mode'] = 'optin';
+				}
+			}
+
+			// Sanitize boolean fields.
+			if ( isset( $group_data['enable_script_blocking'] ) ) {
+				$sanitized_group['enable_script_blocking'] = (bool) $group_data['enable_script_blocking'];
+			}
+
+			if ( isset( $group_data['show_banner'] ) ) {
+				$sanitized_group['show_banner'] = (bool) $group_data['show_banner'];
+			}
+
+			if ( isset( $group_data['enable_consent_floating'] ) ) {
+				$sanitized_group['enable_consent_floating'] = (bool) $group_data['enable_consent_floating'];
+			}
+
+			if ( isset( $group_data['manual_toggle_services'] ) ) {
+				$sanitized_group['manual_toggle_services'] = (bool) $group_data['manual_toggle_services'];
+			}
+
+			if ( isset( $group_data['customize_banner_buttons'] ) ) {
+				$sanitized_group['customize_banner_buttons'] = (bool) $group_data['customize_banner_buttons'];
+			}
+
+			if ( isset( $group_data['customize_banner_message'] ) ) {
+				$sanitized_group['customize_banner_message'] = (bool) $group_data['customize_banner_message'];
+			}
+
+			// Sanitize locations array.
+			if ( isset( $group_data['locations'] ) && is_array( $group_data['locations'] ) ) {
+				$sanitized_group['locations'] = array();
+				foreach ( $group_data['locations'] as $location ) {
+					if ( ! is_array( $location ) ) {
+						continue;
+					}
+
+					$sanitized_location = array();
+
+					if ( isset( $location['type'] ) ) {
+						$type = sanitize_text_field( $location['type'] );
+						// Validate type is one of the allowed values.
+						if ( in_array( $type, array( 'continent', 'country', 'us_state' ), true ) ) {
+							$sanitized_location['type'] = $type;
+						}
+					}
+
+					if ( isset( $location['code'] ) ) {
+						$sanitized_location['code'] = sanitize_text_field( $location['code'] );
+					}
+
+					if ( isset( $location['name'] ) ) {
+						$sanitized_location['name'] = sanitize_text_field( $location['name'] );
+					}
+
+					// Only add location if it has both type and code.
+					if ( ! empty( $sanitized_location['type'] ) && ! empty( $sanitized_location['code'] ) ) {
+						$sanitized_group['locations'][] = $sanitized_location;
+					}
+				}
+			}
+
+			// Sanitize button customization fields.
+			if ( isset( $group_data['accept_button_text'] ) ) {
+				$sanitized_group['accept_button_text'] = sanitize_text_field( $group_data['accept_button_text'] );
+			}
+
+			if ( isset( $group_data['cancel_button_text'] ) ) {
+				$sanitized_group['cancel_button_text'] = sanitize_text_field( $group_data['cancel_button_text'] );
+			}
+
+			if ( isset( $group_data['preferences_button_text'] ) ) {
+				$sanitized_group['preferences_button_text'] = sanitize_text_field( $group_data['preferences_button_text'] );
+			}
+
+			if ( isset( $group_data['accept_button_enabled'] ) ) {
+				$sanitized_group['accept_button_enabled'] = (bool) $group_data['accept_button_enabled'];
+			}
+
+			if ( isset( $group_data['cancel_button_enabled'] ) ) {
+				$sanitized_group['cancel_button_enabled'] = (bool) $group_data['cancel_button_enabled'];
+			}
+
+			if ( isset( $group_data['preferences_button_enabled'] ) ) {
+				$sanitized_group['preferences_button_enabled'] = (bool) $group_data['preferences_button_enabled'];
+			}
+
+			// Sanitize button order array.
+			if ( isset( $group_data['button_order'] ) && is_array( $group_data['button_order'] ) ) {
+				$sanitized_group['button_order'] = array();
+				foreach ( $group_data['button_order'] as $button_id ) {
+					$button_id = sanitize_text_field( $button_id );
+					if ( in_array( $button_id, array( 'accept', 'cancel', 'preferences' ), true ) ) {
+						$sanitized_group['button_order'][] = $button_id;
+					}
+				}
+				// Ensure we have a valid button order, otherwise use default.
+				if ( empty( $sanitized_group['button_order'] ) ) {
+					$sanitized_group['button_order'] = array( 'accept', 'cancel', 'preferences' );
+				}
+			}
+
+			// Sanitize banner message.
+			if ( isset( $group_data['banner_message'] ) ) {
+				$sanitized_group['banner_message'] = sanitize_textarea_field( $group_data['banner_message'] );
+			}
+
+			// Only add the group if it has a name and at least one location.
+			if ( ! empty( $sanitized_group['name'] ) && ! empty( $sanitized_group['locations'] ) ) {
+				// Sanitize the group ID.
+				$sanitized_group_id = sanitize_key( $group_id );
+				if ( ! empty( $sanitized_group_id ) ) {
+					$sanitized_groups[ $sanitized_group_id ] = $sanitized_group;
+				}
+			}
+		}
+
+		// Save the imported geolocation groups.
+		wpconsent()->settings->update_option( 'geolocation_groups', $sanitized_groups );
+
+		// Check if we need to add the geolocation cookie after import.
+		if ( ! empty( $sanitized_groups ) && class_exists( 'WPConsent_Geolocation' ) && isset( wpconsent()->geolocation ) ) {
+			wpconsent()->geolocation->maybe_add_geolocation_cookie();
+		}
+	}
 
 	/**
 	 * Get the service library button HTML.
@@ -805,13 +1273,13 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 						<div class="wpconsent-input-area-description">
 							<?php
 							printf(
-									// Translators: %1$s is a link to the documentation, %2$s is the closing tag for the link.
-								esc_html__(
-									'For instructions on how to add custom scripts, please refer to our %1$sdocumentation%2$s.',
-									'wpconsent-premium'
-								),
-								'<a href="' . esc_url( wpconsent_utm_url( 'https://wpconsent.com/docs/how-to-block-custom-scripts-and-iframes/', 'settings', 'custom-scripts' ) ) . '" target="_blank" rel="noopener noreferrer">',
-								'</a>'
+							// Translators: %1$s is a link to the documentation, %2$s is the closing tag for the link.
+									esc_html__(
+											'For instructions on how to add custom scripts, please refer to our %1$sdocumentation%2$s.',
+											'wpconsent-premium'
+									),
+									'<a href="' . esc_url( wpconsent_utm_url( 'https://wpconsent.com/docs/how-to-block-custom-scripts-and-iframes/', 'settings', 'custom-scripts' ) ) . '" target="_blank" rel="noopener noreferrer">',
+									'</a>'
 							);
 							?>
 						</div>
@@ -826,72 +1294,72 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 							$script_categories[ $categories['marketing']['id'] ] = esc_html( $categories['marketing']['name'] );
 						}
 						$this->metabox_row(
-							esc_html__( 'Category', 'wpconsent-premium' ),
-							$this->select( 'script_category', $script_categories )
+								esc_html__( 'Category', 'wpconsent-premium' ),
+								$this->select( 'script_category', $script_categories )
 						);
 
 						// Service dropdown: will be dynamically populated in JS based on selected category.
 						$this->metabox_row(
-							esc_html__( 'Service', 'wpconsent-premium' ),
-							$this->select( 'script_service', $this->get_services_options() )
+								esc_html__( 'Service', 'wpconsent-premium' ),
+								$this->select( 'script_service', $this->get_services_options() )
 						);
 
 						// Script or iFrame radio buttons.
 						$this->metabox_row(
-							esc_html__( 'Type', 'wpconsent-premium' ),
-							'<label><input class="wpconsent-input-radio" type="radio" name="script_type" value="script" checked> ' . esc_html__( 'Script', 'wpconsent-premium' ) . '</label> '
-							. '<label style="margin-left: 1em;"><input class="wpconsent-input-radio" type="radio" name="script_type" value="iframe"> ' . esc_html__( 'iFrame', 'wpconsent-premium' ) . '</label>',
-							'script_type'
+								esc_html__( 'Type', 'wpconsent-premium' ),
+								'<label><input class="wpconsent-input-radio" type="radio" name="script_type" value="script" checked> ' . esc_html__( 'Script', 'wpconsent-premium' ) . '</label> '
+								. '<label style="margin-left: 1em;"><input class="wpconsent-input-radio" type="radio" name="script_type" value="iframe"> ' . esc_html__( 'iFrame', 'wpconsent-premium' ) . '</label>',
+								'script_type'
 						);
 
-						// Script-specific fields (shown when script type is selected)
+						// Script-specific fields (shown when script type is selected).
 						$this->metabox_row(
-							esc_html__( 'Script Tag', 'wpconsent-premium' ),
-							$this->get_input_textarea(
+								esc_html__( 'Script Tag', 'wpconsent-premium' ),
+								$this->get_input_textarea(
+										'script_tag',
+										'',
+										esc_html__( 'Enter a unique string that identifies the script to block. Example: "connect.facebook.net/en_US/fbevents.js"', 'wpconsent-premium' )
+								),
 								'script_tag',
-								'',
-								esc_html__( 'Enter a unique string that identifies the script to block. Example: "connect.facebook.net/en_US/fbevents.js"', 'wpconsent-premium' )
-							),
-							'script_tag',
-							'[name="script_type"]',
-							'script'
+								'[name="script_type"]',
+								'script'
 						);
 
 						$this->metabox_row(
-							esc_html__( 'Script Keywords', 'wpconsent-premium' ),
-							$this->get_input_text(
+								esc_html__( 'Script Keywords', 'wpconsent-premium' ),
+								$this->get_input_text(
+										'script_keywords',
+										'',
+										esc_html__( 'JavaScript function names to block that depend on the main script (comma separated). Example: "fbq, fbq.push"', 'wpconsent-premium' )
+								),
 								'script_keywords',
-								'',
-								esc_html__( 'JavaScript function names to block that depend on the main script (comma separated). Example: "fbq, fbq.push"', 'wpconsent-premium' )
-							),
-							'script_keywords',
-							'[name="script_type"]',
-							'script'
+								'[name="script_type"]',
+								'script'
 						);
 
-						// iFrame-specific fields (shown when iframe type is selected)
+						// iFrame-specific fields (shown when iframe type is selected).
 						$this->metabox_row(
-							esc_html__( 'iFrame Tag', 'wpconsent-premium' ),
-							$this->get_input_textarea(
-								'iframe_tag',
-								'',
-								esc_html__( 'Enter a unique string that identifies the iframe to block. Example: "youtube.com/embed"', 'wpconsent-premium' )
-							),
-							'script_tag',
-							'[name="script_type"]',
-							'iframe'
+								esc_html__( 'iFrame Tag', 'wpconsent-premium' ),
+								$this->get_input_textarea(
+										'iframe_tag',
+										'',
+										esc_html__( 'Enter a unique string that identifies the iframe to block. Example: "youtube.com/embed"', 'wpconsent-premium' )
+								),
+								'script_tag',
+								'[name="script_type"]',
+								'iframe'
 						);
 
 						$this->metabox_row(
-							esc_html__( 'Blocked Elements', 'wpconsent-premium' ),
-							$this->get_input_text(
+								esc_html__( 'Blocked Elements', 'wpconsent-premium' ),
+								$this->get_input_text(
+										'iframe_blocked_elements',
+										'',
+										esc_html__( 'CSS selectors for elements to block and add a placeholder for until consent is given (comma separated). Example: "#my-chat-widget, #my-chat-widget-2"', 'wpconsent-premium' )
+								),
 								'iframe_blocked_elements',
-								'',
-								esc_html__( 'CSS selectors for elements to block and add a placeholder for until consent is given (comma separated). Example: "#my-chat-widget, #my-chat-widget-2"', 'wpconsent-premium' )
-							),
-							'iframe_blocked_elements',
-							'[name="script_type"]',
-							'iframe'
+								'[name="script_type"]',
+								'iframe'
 						);
 						?>
 						<div class="wpconsent-modal-buttons">
@@ -924,13 +1392,13 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 			wp_nonce_field( 'wpconsent_save_settings', 'wpconsent_save_settings_nonce' );
 
 			$this->metabox(
-				__( 'Custom Iframes/Scripts', 'wpconsent-premium' ),
-				$this->get_custom_scripts_content()
+					__( 'Custom Iframes/Scripts', 'wpconsent-premium' ),
+					$this->get_custom_scripts_content()
 			);
 
 			$this->metabox(
-				__( 'Advanced Settings', 'wpconsent-premium' ),
-				$this->get_advanced_settings_content()
+					__( 'Advanced Settings', 'wpconsent-premium' ),
+					$this->get_advanced_settings_content()
 			);
 
 			?>
@@ -969,14 +1437,14 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 			$categories     = array();
 			if ( isset( $all_categories['statistics'] ) ) {
 				$categories[ $all_categories['statistics']['id'] ] = array(
-					'name'        => esc_html( $all_categories['statistics']['name'] ) . ' ' . esc_html__( 'Scripts', 'wpconsent-premium' ),
-					'description' => esc_html__( 'Add scripts for analytics and statistics tracking.', 'wpconsent-premium' ),
+						'name'        => esc_html( $all_categories['statistics']['name'] ) . ' ' . esc_html__( 'Scripts', 'wpconsent-premium' ),
+						'description' => esc_html__( 'Add scripts for analytics and statistics tracking.', 'wpconsent-premium' ),
 				);
 			}
 			if ( isset( $all_categories['marketing'] ) ) {
 				$categories[ $all_categories['marketing']['id'] ] = array(
-					'name'        => esc_html( $all_categories['marketing']['name'] ) . ' ' . esc_html__( 'Scripts', 'wpconsent-premium' ),
-					'description' => esc_html__( 'Add scripts for marketing and advertising purposes.', 'wpconsent-premium' ),
+						'name'        => esc_html( $all_categories['marketing']['name'] ) . ' ' . esc_html__( 'Scripts', 'wpconsent-premium' ),
+						'description' => esc_html__( 'Add scripts for marketing and advertising purposes.', 'wpconsent-premium' ),
 				);
 			}
 
@@ -1017,10 +1485,10 @@ class WPConsent_Admin_Page_Cookies_Pro extends WPConsent_Admin_Page_Cookies {
 							}
 
 							usort(
-								$category_scripts,
-								function ( $a, $b ) {
-									return strcmp( $a['service_name'], $b['service_name'] );
-								}
+									$category_scripts,
+									function ( $a, $b ) {
+										return strcmp( $a['service_name'], $b['service_name'] );
+									}
 							);
 
 							foreach ( $category_scripts as $script ) {

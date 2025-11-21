@@ -69,18 +69,53 @@ function wpconsent_admin_scripts() {
 				),
 				'upgrade_button'            => esc_html__( 'Upgrade to PRO', 'wpconsent-cookies-banner-privacy-suite' ),
 				'languages_upsell'          => array(
-					'title' => esc_html__( 'Multilanguage is a PRO feature', 'wpconsent-cookies-banner-privacy-suite' ),
-					'text'  => esc_html__( 'Upgrade to WPConsent PRO today and unlock the ability to show your cookie banner in multiple languages.', 'wpconsent-cookies-banner-privacy-suite' ),
+					'title' => esc_html__( 'Multilanguage + Automatic Translations', 'wpconsent-cookies-banner-privacy-suite' ),
+					'text'  => esc_html__( 'Upgrade to WPConsent PRO today and unlock the ability to show your cookie banner in multiple languages. Automatic AI-powered translations get you set up with a new language in minutes.', 'wpconsent-cookies-banner-privacy-suite' ),
 					'url'   => wpconsent_utm_url( 'https://wpconsent.com/lite/', 'language-switcher', $current_screen->id ),
 				),
 				'import_warning_title'      => esc_html__( 'Warning: Import Settings', 'wpconsent-cookies-banner-privacy-suite' ),
 				'import_warning_message'    => esc_html__( 'This action will overwrite all your current settings. This cannot be undone. We recommend exporting your current settings as a backup before proceeding.', 'wpconsent-cookies-banner-privacy-suite' ),
 				'import_button'             => esc_html__( 'Import Settings', 'wpconsent-cookies-banner-privacy-suite' ),
 				'cancel_button'             => esc_html__( 'Cancel', 'wpconsent-cookies-banner-privacy-suite' ),
+				'reset_warning_title'       => esc_html__( 'Warning: Reset To Defaults', 'wpconsent-cookies-banner-privacy-suite' ),
+				'reset_warning_message'     => esc_html__( 'This action will reset all banner content and default categories/cookies to the default English state. This cannot be undone. We recommend exporting your current settings as a backup before proceeding.', 'wpconsent-cookies-banner-privacy-suite' ),
+				'reset_button'              => esc_html__( 'Reset to Defaults', 'wpconsent-cookies-banner-privacy-suite' ),
 				'service_library_upsell'    => array(
 					'title' => esc_html__( 'Service Library Import is a PRO feature', 'wpconsent-cookies-banner-privacy-suite' ),
 					'text'  => esc_html__( 'Upgrade to WPConsent PRO today and 1-click import cookie data for any service in our library.', 'wpconsent-cookies-banner-privacy-suite' ),
 					'url'   => wpconsent_utm_url( 'https://wpconsent.com/lite/', 'service-library', $current_screen->id ),
+				),
+				'translation_complete'      => sprintf(
+					// Translators: %1$s and %2$s are strong tags, %3$s is the target language name, %4$s is the closing strong tag, %5$s is the languages admin URL, %6$s is the link closing tag.
+					esc_html__( '%1$sTranslation Complete!%2$s Your WPConsent content has been successfully translated to %1$s%3$s%4$s. Please %5$sreview the translation%6$s for accuracy.', 'wpconsent-cookies-banner-privacy-suite' ),
+					'<strong>',
+					'</strong>',
+					'%LANGUAGE_NAME%',
+					'</strong>',
+					'<a href="' . esc_url( admin_url( 'admin.php?page=wpconsent-cookies&view=languages' ) ) . '">',
+					'</a>'
+				),
+				'translation_title'         => esc_html__( 'Start Translation Process', 'wpconsent-cookies-banner-privacy-suite' ),
+				'translation_message'       => sprintf(
+					// Translators: %1$s and %2$s are strong tags, %3$s and %4$s are strong tags.
+					esc_html__( 'This will automatically translate all content into the selected language. This process runs in the background and may take several minutes to complete. %1$s%2$sPlease Note:%3$s%1$s This will overwrite any existing content in the target language and cannot be undone. Automated translations may contain errors - please review for accuracy when complete.%4$s', 'wpconsent-cookies-banner-privacy-suite' ),
+					'<br>',
+					'<span class="wpconsent-notice-warning"><strong>',
+					'</strong>',
+					'</span>'
+				),
+				'translation_button'        => esc_html__( 'Continue Translation', 'wpconsent-cookies-banner-privacy-suite' ),
+				'translation_block_message' => esc_html__( 'A translation is currently running in the background. Please wait for it to complete before starting a new translation.', 'wpconsent-cookies-banner-privacy-suite' ),
+				'translation_block_title'   => esc_html__( 'Translation In Progress', 'wpconsent-cookies-banner-privacy-suite' ),
+				'translation_failed'        => sprintf(
+					// Translators: %1$s and %2$s are strong tags, %3$s is the target language name, %4$s is the closing strong tag, %5$s is the languages admin URL, %6$s is the link closing tag.
+					esc_html__( '%1$sTranslation Failed%2$s - The translation to %1$s%3$s%4$s could not be completed. You can manually %5$smanage your languages%6$s to add content.', 'wpconsent-cookies-banner-privacy-suite' ),
+					'<strong>',
+					'</strong>',
+					'%LANGUAGE_NAME%',
+					'</strong>',
+					'<a href="' . esc_url( admin_url( 'admin.php?page=wpconsent-cookies&view=languages' ) ) . '">',
+					'</a>'
 				),
 			)
 		)

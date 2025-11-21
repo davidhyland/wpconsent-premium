@@ -236,6 +236,18 @@
 	}
 }
 
+/* Match notice text size when button-text is used inside WordPress notices. */
+.notice .wpconsent-button-text {
+	font-size: 13px;
+}
+
+.wpconsent-translation-progress-notice {
+	.wpconsent-button-text {
+		float: right;
+		margin-top: 2px;
+	}
+}
+
 /* AI Button styles. */
 
 #wpbody-content .wpconsent-button-ai-generate {
