@@ -1,0 +1,19 @@
+
+.wpconsent-onboarding-content {
+	.wpconsent-license-key-container {
+		text-align: left;
+
+		p {
+			font-size: 14px;
+			font-weight: 400;
+		}
+	}
+}
+
+.wpconsent-license-key-container {
+	label {
+		display: block;
+		font-weight: 600;
+		margin-bottom: 10px;
+	}
+}

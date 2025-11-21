@@ -1,0 +1,20 @@
+.wpconsent-banner-holder.wpconsent-banner-modal {
+
+	&.wpconsent-banner-preview-visible {
+		display: flex;
+	}
+}
+
+:host(.wpconsent-preview-mode) {
+	.wpconsent-banner-modal {
+		position: relative;
+
+		.wpconsent-banner {
+			max-width: 60%;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+			position: absolute;
+		}
+	}
+}

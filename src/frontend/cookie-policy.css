@@ -1,0 +1,12 @@
+.wpconsent-cookie-policy-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 20px;
+}
+
+.wpconsent-cookie-policy-table th,
+.wpconsent-cookie-policy-table td {
+	padding: 10px;
+	text-align: left;
+	border-bottom: 1px solid #ddd;
+}

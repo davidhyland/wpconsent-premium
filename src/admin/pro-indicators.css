@@ -1,0 +1,19 @@
+/* Indicators of pro features used throughout the plugin */
+
+.wpconsent-pro-pill {
+	background: #bbb;
+	color: var(--wpconsent-background-white);
+	text-transform: uppercase;
+	padding: 4px 7px;
+	border-radius: 9px;
+	font-size: 8px;
+	line-height: 1;
+	display: inline-block;
+	vertical-align: text-top;
+}
+
+.wpconsent-form-row-pro {
+	.wpconsent-metabox-form-row-input {
+		opacity: 0.5;
+	}
+}

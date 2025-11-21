@@ -1,0 +1,121 @@
+/** Pro-specific styles */
+.wpconsent-banner-holder.wpconsent-banner-modal {
+	background: rgba(0, 0, 0, 0.5);
+	justify-content: center;
+	align-items: center;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 999999;
+	overflow: auto;
+	padding: 20px;
+
+	&.wpconsent-banner-visible {
+		display: flex;
+	}
+
+	.wpconsent-banner {
+		/** Center middle of the screen **/
+		position: relative;
+		top: auto;
+		left: auto;
+		right: auto;
+		bottom: auto;
+	}
+
+	.wpconsent-banner-footer {
+		@media (max-width: 767px) {
+			width: 100%;
+			flex-direction: column;
+			gap: 5px;
+		}
+	}
+}
+
+.wpconsent-language-switch-button {
+	border: none;
+	background: transparent;
+	padding: 2px 2px 0;
+	box-shadow: none;
+	position: absolute;
+	cursor: pointer;
+
+	path {
+		fill: var(--wpconsent-text);
+	}
+}
+
+.wpconsent-language-picker {
+	position: absolute;
+	left: 5px;
+	top: 5px;
+	display: inline-block;
+
+	.wpconsent-banner-long & {
+		left: auto;
+		right: 50px;
+		top: 6px;
+	}
+}
+
+.wpconsent-language-dropdown {
+	display: none;
+	position: absolute;
+	top: 20px;
+	left: 0;
+	background: var(--wpconsent-background);
+	border: 1px solid var(--wpconsent-border);
+	border-radius: 4px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	min-width: 200px;
+	z-index: 1000000;
+	margin-top: 5px;
+
+	.wpconsent-banner-long & {
+		left: auto;
+		right: 0;
+	}
+}
+
+.wpconsent-language-picker.active .wpconsent-language-dropdown {
+	display: block;
+}
+
+.wpconsent-language-list {
+	max-height: 100px;
+	overflow-y: auto;
+}
+
+.wpconsent-language-item {
+	display: block;
+	width: 100%;
+	padding: 8px 12px;
+	text-align: left;
+	background: transparent;
+	border: none;
+	color: var(--wpconsent-text);
+	cursor: pointer;
+	transition: opacity 0.2s ease;
+
+	&:hover {
+		opacity: 0.7;
+	}
+
+	&.active {
+		font-weight: 600;
+	}
+}
+
+.wpconsent-has-language-switcher {
+	&.wpconsent-banner-long {
+		.wpconsent-banner {
+			padding-right: 60px;
+
+			@media (max-width: 767px) {
+				padding-right: 20px;
+			}
+		}
+	}
+}

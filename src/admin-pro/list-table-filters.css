@@ -1,0 +1,42 @@
+/* Date range filter styles */
+.wpconsent-date-range {
+    min-width: 220px;
+    height: 30px;
+    margin-right: 6px;
+    padding: 0 8px;
+    vertical-align: middle;
+}
+
+.tablenav.top {
+    margin: 16px 0 20px;
+}
+
+/* Flatpickr customizations */
+.flatpickr-calendar {
+    z-index: 99999 !important;
+    width: 307px !important;
+}
+
+/* Style selected dates with WordPress blue */
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+    background: #2271b1 !important;
+    border-color: #2271b1 !important;
+}
+
+.flatpickr-day.inRange {
+    background: #e6f0fa !important;
+    border-color: #e6f0fa !important;
+    box-shadow: -5px 0 0 #e6f0fa, 5px 0 0 #e6f0fa;
+}
+
+/* Make calendar more visible on WordPress admin */
+.flatpickr-calendar.open {
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
+}
+
+/* Fix input appearance */
+#filter-by-date-range {
+    border-color: #8c8f94;
+}
